@@ -46,6 +46,7 @@
     "vite-plugin-dart": "file:vendor/vite-plugin-dart"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.1",
     "morphdom": "^2.7.7"
   }
 }

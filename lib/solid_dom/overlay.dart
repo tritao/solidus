@@ -361,6 +361,17 @@ DismissableLayerHandle dismissableLayer(
   _layerStack.add(entry);
   _syncPointerBlocking();
 
+  bool isWithinNestedLayer(web.Element target) {
+    final index = _layerStack.indexOf(entry);
+    if (index == -1) return false;
+    for (var i = index + 1; i < _layerStack.length; i++) {
+      final other = _layerStack[i].element;
+      if (identical(other, layer)) continue;
+      if (other.contains(target)) return true;
+    }
+    return false;
+  }
+
   bool shouldExclude(web.Element target) {
     if (excludedElements != null) {
       for (final get in excludedElements) {
@@ -369,6 +380,8 @@ DismissableLayerHandle dismissableLayer(
         if (el.contains(target) || identical(el, target)) return true;
       }
     }
+    // Ignore interactions inside nested layers (e.g. submenus / nested dialogs).
+    if (isWithinNestedLayer(target)) return true;
     // Ignore events targeting any top-layer element (e.g. toasts).
     if (target.closest("[data-solid-top-layer]") != null) return true;
     return false;
@@ -410,25 +423,53 @@ DismissableLayerHandle dismissableLayer(
     onDismiss("escape");
   }
 
-  final jsOutside = (maybeDismissOutside).toJS;
+  var disposed = false;
+  JSFunction? jsClick;
+
+  void onClick(web.Event e) {
+    if (disposed) return;
+    maybeDismissOutside(e);
+  }
+
+  void onPointerDown(web.Event e) {
+    if (disposed) return;
+    if (e is web.PointerEvent && e.pointerType == "touch") {
+      // On touch, defer to the follow-up click. Browsers can delay click, and
+      // pointer events may be canceled by scrolling/long-press.
+      if (jsClick != null) {
+        web.document.removeEventListener("click", jsClick, true.toJS);
+      }
+      jsClick = (onClick).toJS;
+      web.document.addEventListener("click", jsClick, true.toJS);
+      return;
+    }
+    maybeDismissOutside(e);
+  }
+
+  final jsPointerDown = (onPointerDown).toJS;
   final jsFocusOutside = (maybeDismissFocusOutside).toJS;
   final jsEscape = (maybeDismissEscape).toJS;
 
   Timer? registerTimer;
   registerTimer = Timer(Duration.zero, () {
-    web.document.addEventListener("pointerdown", jsOutside, true.toJS);
+    web.document.addEventListener("pointerdown", jsPointerDown, true.toJS);
+    web.document.addEventListener("focusin", jsFocusOutside, true.toJS);
     registerTimer = null;
   });
 
-  web.document.addEventListener("focusin", jsFocusOutside, true.toJS);
   web.document.addEventListener("keydown", jsEscape, true.toJS);
 
   void dispose() {
+    disposed = true;
     registerTimer?.cancel();
     registerTimer = null;
-    web.document.removeEventListener("pointerdown", jsOutside, true.toJS);
+    web.document.removeEventListener("pointerdown", jsPointerDown, true.toJS);
     web.document.removeEventListener("focusin", jsFocusOutside, true.toJS);
     web.document.removeEventListener("keydown", jsEscape, true.toJS);
+    if (jsClick != null) {
+      web.document.removeEventListener("click", jsClick, true.toJS);
+      jsClick = null;
+    }
     _restoreEntryPointerPatch(entry);
     _layerStack.remove(entry);
     _syncPointerBlocking();

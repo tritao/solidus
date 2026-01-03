@@ -4,6 +4,7 @@ import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "./floating.dart";
+import "./focus_scope.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -42,7 +43,6 @@ web.DocumentFragment DropdownMenu({
     children: () => Portal(
       id: portalId,
       children: () {
-        final previousActive = web.document.activeElement;
         var closeReason = "close";
 
         void close([String reason = "close"]) {
@@ -113,7 +113,16 @@ web.DocumentFragment DropdownMenu({
         }
 
         // Focus a reasonable item on mount.
-        scheduleMicrotask(() => focusActive());
+        focusScope(
+          menu,
+          trapFocus: false,
+          restoreFocus: true,
+          onMountAutoFocus: () {
+            scheduleMicrotask(() => focusActive());
+            return true;
+          },
+          onUnmountAutoFocus: () => closeReason == "tab",
+        );
 
         Timer? typeaheadTimer;
         var typeahead = "";
@@ -184,19 +193,6 @@ web.DocumentFragment DropdownMenu({
 
         onCleanup(() {
           clearTypeahead();
-          // Restore focus to the trigger for typical close reasons.
-          if (closeReason == "tab") return;
-          if (anchor is web.HTMLElement) {
-            try {
-              anchor.focus();
-              return;
-            } catch (_) {}
-          }
-          if (previousActive is web.HTMLElement) {
-            try {
-              previousActive.focus();
-            } catch (_) {}
-          }
         });
 
         return menu;

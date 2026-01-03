@@ -3,6 +3,7 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
+import "./focus_scope.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -64,7 +65,11 @@ web.DocumentFragment Dialog({
           onDismiss: (reason) => close(reason),
         );
         if (modal) {
-          focusTrap(dialog, initialFocus: initialFocus);
+          focusScope(
+            dialog,
+            trapFocus: true,
+            initialFocus: initialFocus,
+          );
         } else if (initialFocus != null) {
           scheduleMicrotask(() {
             try {

@@ -4,6 +4,7 @@ import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "./floating.dart";
+import "./focus_scope.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -30,8 +31,6 @@ web.DocumentFragment Popover({
     children: () => Portal(
       id: portalId,
       children: () {
-        final previousActive = web.document.activeElement;
-
         void close([String reason = "close"]) {
           onClose?.call(reason);
           setOpen(false);
@@ -59,7 +58,11 @@ web.DocumentFragment Popover({
                 ],
           onDismiss: (reason) => close(reason),
         );
-        if (trapFocus) focusTrap(popover, initialFocus: initialFocus);
+        focusScope(
+          popover,
+          trapFocus: trapFocus,
+          initialFocus: initialFocus,
+        );
         if (!trapFocus && initialFocus != null) {
           scheduleMicrotask(() {
             try {
@@ -67,14 +70,6 @@ web.DocumentFragment Popover({
             } catch (_) {}
           });
         }
-
-        onCleanup(() {
-          if (previousActive is web.HTMLElement) {
-            try {
-              previousActive.focus();
-            } catch (_) {}
-          }
-        });
 
         return popover;
       },

@@ -1,5 +1,6 @@
 import "dart:async";
 import "dart:js_interop";
+import "dart:js_util" as js_util;
 
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
@@ -118,8 +119,54 @@ FloatingHandle floatToAnchor({
   bool flip = true,
   bool updateOnAnimationFrame = false,
   bool updateOnScrollParents = true,
+  bool preferFloatingUi = true,
 }) {
   var disposed = false;
+
+  Object? jsHandle;
+  void disposeJsHandle() {
+    final h = jsHandle;
+    jsHandle = null;
+    if (h == null) return;
+    try {
+      js_util.callMethod(h, "dispose", const []);
+    } catch (_) {}
+  }
+
+  if (preferFloatingUi) {
+    try {
+      final global = js_util.globalThis;
+      if (js_util.hasProperty(global, "__solidFloatToAnchor")) {
+        jsHandle = js_util.callMethod(
+          global,
+          "__solidFloatToAnchor",
+          [
+            anchor,
+            floating,
+            js_util.jsify({
+              "placement": placement,
+              "offset": offset,
+              "viewportPadding": viewportPadding,
+              "flip": flip,
+              "updateOnAnimationFrame": updateOnAnimationFrame,
+            }),
+          ],
+        );
+      }
+    } catch (_) {
+      jsHandle = null;
+    }
+  }
+
+  if (jsHandle != null) {
+    void dispose() {
+      disposed = true;
+      disposeJsHandle();
+    }
+
+    onCleanup(dispose);
+    return FloatingHandle._(dispose);
+  }
 
   void compute() {
     if (disposed) return;
@@ -179,6 +226,7 @@ FloatingHandle floatToAnchor({
 
   void dispose() {
     disposed = true;
+    disposeJsHandle();
   }
 
   onCleanup(dispose);

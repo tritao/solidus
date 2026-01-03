@@ -25,6 +25,35 @@ final class Ref<T> {
   T value;
 }
 
+final class ReducerHandle<S, A> {
+  ReducerHandle._(this._component, this._boxRef);
+
+  final Component _component;
+  final Ref<_ReducerBox<S, A>?> _boxRef;
+
+  S get state => _boxRef.value!.state;
+
+  void dispatch(A action) {
+    final box = _boxRef.value;
+    if (box == null) return;
+    _component.setState(() {
+      box.state = box.reducer(box.state, action);
+    });
+  }
+}
+
+final class _Memo<T> {
+  _Memo({required this.deps, required this.value});
+  final List<Object?> deps;
+  final T value;
+}
+
+final class _ReducerBox<S, A> {
+  _ReducerBox({required this.state, required this.reducer});
+  S state;
+  S Function(S state, A action) reducer;
+}
+
 final class RenderScheduler {
   RenderScheduler._();
 
@@ -98,6 +127,42 @@ abstract class Component {
     final ref = Ref<T>(initialValue);
     _refs[key] = ref;
     return ref;
+  }
+
+  T useMemo<T>(
+    String key,
+    List<Object?> deps,
+    T Function() compute,
+  ) {
+    final memo = useRef<_Memo<T>?>(key, null);
+    final current = memo.value;
+    if (current == null || !_depsEqual(current.deps, deps)) {
+      final next = _Memo<T>(deps: deps, value: compute());
+      memo.value = next;
+      return next.value;
+    }
+    return current.value;
+  }
+
+  T useCallback<T extends Function>(
+    String key,
+    List<Object?> deps,
+    T fn,
+  ) =>
+      useMemo<T>(key, deps, () => fn);
+
+  ReducerHandle<S, A> useReducer<S, A>(
+    String key,
+    S initialState,
+    S Function(S state, A action) reducer,
+  ) {
+    final boxRef = useRef<_ReducerBox<S, A>?>(key, null);
+    if (boxRef.value == null) {
+      boxRef.value = _ReducerBox<S, A>(state: initialState, reducer: reducer);
+    } else {
+      boxRef.value!.reducer = reducer;
+    }
+    return ReducerHandle<S, A>._(this, boxRef);
   }
 
   bool _depsEqual(List<Object?> a, List<Object?> b) {

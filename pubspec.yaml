@@ -8,3 +8,5 @@ dependencies:
   web: ^1.1.1
   http: ^1.6.0
 
+dev_dependencies:
+  test: ^1.25.0

@@ -1,0 +1,221 @@
+part of "solid.dart";
+
+typedef Dispose = void Function();
+typedef Cleanup = void Function();
+
+abstract class Disposable {
+  void dispose();
+}
+
+final class Owner implements Disposable {
+  Owner(this.parent);
+
+  final Owner? parent;
+  final List<Cleanup> _cleanups = <Cleanup>[];
+  final List<Disposable> _owned = <Disposable>[];
+  bool _disposed = false;
+
+  bool get disposed => _disposed;
+
+  void _own(Disposable disposable) {
+    if (_disposed) {
+      disposable.dispose();
+      return;
+    }
+    _owned.add(disposable);
+  }
+
+  void _addCleanup(Cleanup cleanup) {
+    if (_disposed) {
+      try {
+        cleanup();
+      } catch (_) {}
+      return;
+    }
+    _cleanups.add(cleanup);
+  }
+
+  @override
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+
+    for (final disposable in _owned.reversed) {
+      try {
+        disposable.dispose();
+      } catch (_) {}
+    }
+    _owned.clear();
+
+    for (final cleanup in _cleanups.reversed) {
+      try {
+        cleanup();
+      } catch (_) {}
+    }
+    _cleanups.clear();
+  }
+}
+
+Owner? _currentOwner;
+Computation? _currentComputation;
+int _batchDepth = 0;
+bool _flushScheduled = false;
+final Set<Computation> _queue = <Computation>{};
+
+T createRoot<T>(T Function(Dispose dispose) fn) {
+  final previous = _currentOwner;
+  final owner = Owner(previous);
+  _currentOwner = owner;
+
+  final Dispose dispose = owner.dispose;
+  try {
+    return fn(dispose);
+  } finally {
+    _currentOwner = previous;
+  }
+}
+
+void onCleanup(Cleanup cleanup) {
+  final computation = _currentComputation;
+  if (computation != null) {
+    computation._addCleanup(cleanup);
+    return;
+  }
+  final owner = _currentOwner;
+  if (owner == null) {
+    throw StateError("onCleanup() called with no active owner");
+  }
+  owner._addCleanup(cleanup);
+}
+
+T untrack<T>(T Function() fn) {
+  final previous = _currentComputation;
+  _currentComputation = null;
+  try {
+    return fn();
+  } finally {
+    _currentComputation = previous;
+  }
+}
+
+void batch(void Function() fn) {
+  _batchDepth++;
+  try {
+    fn();
+  } finally {
+    _batchDepth--;
+    if (_batchDepth == 0) {
+      _flushSync();
+    }
+  }
+}
+
+void _enqueue(Computation computation) {
+  if (computation._disposed) return;
+  if (!computation._queued) {
+    computation._queued = true;
+    _queue.add(computation);
+  }
+
+  if (_batchDepth > 0) return;
+  if (_flushScheduled) return;
+  _flushScheduled = true;
+  scheduleMicrotask(() {
+    _flushScheduled = false;
+    _flushSync();
+  });
+}
+
+void _flushSync() {
+  if (_queue.isEmpty) return;
+  while (_queue.isNotEmpty) {
+    final batch = _queue.toList(growable: false);
+    _queue.clear();
+    for (final computation in batch) {
+      computation._queued = false;
+      computation._run();
+    }
+  }
+}
+
+abstract class Dependency {
+  void _subscribe(Computation computation);
+  void _unsubscribe(Computation computation);
+}
+
+final class Computation implements Disposable {
+  Computation._(this._fn, this._owner, {required this.isMemo}) {
+    _owner._own(this);
+    _run();
+  }
+
+  final Owner _owner;
+  final bool isMemo;
+  void Function() _fn;
+
+  final Set<Dependency> _deps = <Dependency>{};
+  final List<Cleanup> _cleanups = <Cleanup>[];
+
+  bool _disposed = false;
+  bool _running = false;
+  bool _queued = false;
+
+  void _addCleanup(Cleanup cleanup) => _cleanups.add(cleanup);
+
+  void _track(Dependency dependency) {
+    if (_deps.add(dependency)) dependency._subscribe(this);
+  }
+
+  void _clearDeps() {
+    for (final dep in _deps) {
+      dep._unsubscribe(this);
+    }
+    _deps.clear();
+  }
+
+  void _cleanup() {
+    if (_cleanups.isEmpty) return;
+    for (final cleanup in _cleanups.reversed) {
+      try {
+        cleanup();
+      } catch (_) {}
+    }
+    _cleanups.clear();
+  }
+
+  void _markStale() => _enqueue(this);
+
+  void _run() {
+    if (_disposed) return;
+    if (_running) {
+      throw StateError("Computation re-entered while already running");
+    }
+    _running = true;
+
+    final previous = _currentComputation;
+    _currentComputation = this;
+
+    _clearDeps();
+    _cleanup();
+
+    try {
+      _fn();
+    } finally {
+      _currentComputation = previous;
+      _running = false;
+    }
+  }
+
+  void _setFn(void Function() fn, {bool runNow = false}) {
+    _fn = fn;
+    if (runNow) _run();
+  }
+
+  @override
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _clearDeps();
+    _cleanup();
+  }
+}

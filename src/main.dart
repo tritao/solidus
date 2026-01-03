@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
-import './morph_patch.dart';
+import './ui/component.dart';
 
 void main() {
   final mount = web.document.querySelector('#app');
   if (mount == null) return;
 
-  final app = _App(mount: mount);
-  app.init();
+  final app = AppComponent();
+  app.mountInto(mount);
 }
 
 class _Todo {
@@ -49,11 +49,8 @@ abstract final class _Actions {
   static const usersClear = 'users-clear';
 }
 
-class _App {
-  _App({required this.mount});
-
-  final web.Element mount;
-  late final web.Element _root;
+final class AppComponent extends Component {
+  AppComponent();
   web.HTMLInputElement? _todoInput;
 
   int counter = 0;
@@ -65,32 +62,27 @@ class _App {
   String? _usersError;
   List<Map<String, Object?>> _users = const [];
 
-  void init() {
+  @override
+  void onMount() {
     _loadTodos();
-    _root = _buildShell();
-    mount.append(_root);
-    _attachDelegatedEvents(_root);
+    _attachDelegatedEvents(root);
     _cacheRefs();
+    invalidate();
   }
 
-  void _setState(void Function() fn) {
-    fn();
-    _render();
-  }
-
-  void _render() {
-    final next = _buildShell();
-    morphPatch(_root, next);
-    _cacheRefs();
-  }
+  @override
+  void onAfterPatch() => _cacheRefs();
 
   void _cacheRefs() {
     try {
-      _todoInput = _root.querySelector('#todo-input') as web.HTMLInputElement?;
+      _todoInput = root.querySelector('#todo-input') as web.HTMLInputElement?;
     } catch (_) {
       _todoInput = null;
     }
   }
+
+  @override
+  web.Element render() => _buildShell();
 
   web.Element _buildShell() {
     final container = web.HTMLDivElement()
@@ -144,15 +136,15 @@ class _App {
 
     switch (action) {
       case _Actions.counterDec:
-        _setState(() => counter--);
+        setState(() => counter--);
       case _Actions.counterInc:
-        _setState(() => counter++);
+        setState(() => counter++);
       case _Actions.counterReset:
-        _setState(() => counter = 0);
+        setState(() => counter = 0);
       case _Actions.todoAdd:
         _addTodoFromInput();
       case _Actions.todoClearDone:
-        _setState(() {
+        setState(() {
           _todos.removeWhere((t) => t.done);
           _saveTodos();
         });
@@ -160,14 +152,14 @@ class _App {
         final idRaw = actionEl.getAttribute('data-id');
         final id = int.tryParse(idRaw ?? '');
         if (id == null) return;
-        _setState(() {
+        setState(() {
           _todos.removeWhere((t) => t.id == id);
           _saveTodos();
         });
       case _Actions.usersLoad:
         _loadUsers();
       case _Actions.usersClear:
-        _setState(() {
+        setState(() {
           _usersError = null;
           _users = const [];
         });
@@ -188,7 +180,7 @@ class _App {
     try {
       final checkbox = actionEl as web.HTMLInputElement;
       final checked = checkbox.checked == true;
-      _setState(() {
+      setState(() {
         final index = _todos.indexWhere((t) => t.id == id);
         if (index == -1) return;
         _todos[index] = _todos[index].copyWith(done: checked);
@@ -387,7 +379,7 @@ class _App {
     final text = input.value.trim();
     if (text.isEmpty) return;
 
-    _setState(() {
+    setState(() {
       _todos.insert(0, _Todo(id: _nextTodoId++, text: text));
       _saveTodos();
     });
@@ -430,7 +422,7 @@ class _App {
   }
 
   Future<void> _loadUsers() async {
-    _setState(() {
+    setState(() {
       _isLoadingUsers = true;
       _usersError = null;
     });
@@ -452,15 +444,15 @@ class _App {
         .whereType<Map>()
         .map((e) => e.map((k, v) => MapEntry(k.toString(), v)))
         .toList(growable: false);
-      _setState(() {
+      setState(() {
         _users = users;
       });
     } catch (e) {
-      _setState(() {
+      setState(() {
         _usersError = "Failed to load users: $e";
       });
     } finally {
-      _setState(() {
+      setState(() {
         _isLoadingUsers = false;
       });
     }

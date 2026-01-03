@@ -89,7 +89,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     ..id = id
     ..setAttribute("role", "listbox")
     ..tabIndex = shouldUseVirtualFocus ? -1 : -1
-    ..className = "card";
+    ..className = "card listbox";
 
   final ids =
       idRegistry ?? ListboxIdRegistry<T, O>(listboxId: id, getOptionKey: getOptionKey);

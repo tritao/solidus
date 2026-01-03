@@ -131,6 +131,10 @@ a.btn {
   backdrop-filter: blur(10px);
 }
 
+.listbox {
+  overflow: hidden;
+}
+
 .card h2 {
   margin: 0 0 12px;
   font-size: 20px;
@@ -244,6 +248,15 @@ a.btn {
 
 .menuItem:hover {
   background: rgba(255, 255, 255, 0.05);
+}
+
+.menuItem[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menuItem[aria-disabled="true"]:hover {
+  background: transparent;
 }
 
 .menuItem:focus {

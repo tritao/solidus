@@ -39,6 +39,27 @@ npm run dev
 
 Open the URL Vite prints and you should see the demo UI rendered from `src/main.dart`.
 
+## Debug (headless)
+
+Runs a reproducible Playwright smoke check (starts the server, captures console/network/page errors, asserts `#app` is non-empty, and writes artifacts to `.cache/`):
+
+```bash
+npm run debug:ui
+```
+
+Variants:
+
+```bash
+npm run debug:ui:dev
+npm run debug:ui:preview
+```
+
+## Build output / GitHub Pages
+
+- `npm run build` defaults to a relative `base` (`./`) so `dist/index.html` can be opened from a subpath.
+- To override explicitly, set `BASE` (or `VITE_BASE`), e.g. `BASE=/my-subpath/ npm run build`.
+- Note: the build output is an ES module; open it via a server (e.g. `npm run preview`) instead of `file://...` to avoid browser CORS blocks.
+
 ## Troubleshooting
 
 - `npm run dev` says `dart: not found`: run `npm run provision:dart` (Linux x64) or install Dart; you can also set `DART=/path/to/dart`.

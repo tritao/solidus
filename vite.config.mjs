@@ -3,7 +3,7 @@ import path from "node:path";
 import { defineConfig, loadEnv } from "vite";
 import Dart from "vite-plugin-dart";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const provisionedDart = path.join(
     process.cwd(),
@@ -19,8 +19,19 @@ export default defineConfig(({ mode }) => {
 
   // GitHub Pages serves the app at /<repo>/, so the build must use that base.
   const githubRepo = process.env.GITHUB_REPOSITORY?.split("/")[1];
-  const base =
-    process.env.GITHUB_ACTIONS && githubRepo ? `/${githubRepo}/` : "/";
+  const explicitBase =
+    env.BASE ??
+    env.VITE_BASE ??
+    process.env.BASE ??
+    process.env.VITE_BASE ??
+    null;
+  const base = explicitBase
+    ? explicitBase
+    : process.env.GITHUB_ACTIONS && githubRepo
+      ? `/${githubRepo}/`
+      : command === "build"
+        ? "./"
+        : "/";
 
   return {
     base,

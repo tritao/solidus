@@ -10,7 +10,10 @@
     "dev": "vite",
     "prebuild": "npm run dart:get",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "debug:ui": "node scripts/debug-ui.mjs",
+    "debug:ui:dev": "node scripts/debug-ui.mjs --mode dev",
+    "debug:ui:preview": "node scripts/debug-ui.mjs --mode preview"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

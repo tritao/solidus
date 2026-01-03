@@ -57,9 +57,7 @@ final class AppComponent extends Component {
     const full = 'https://jsonplaceholder.typicode.com/users';
     const limited = 'https://jsonplaceholder.typicode.com/users?_limit=5';
 
-    users.update(() {
-      users.endpoint = users.endpoint == full ? limited : full;
-    });
+    users.setEndpoint(users.endpoint == full ? limited : full);
   }
 
   @override

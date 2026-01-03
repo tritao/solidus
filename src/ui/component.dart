@@ -150,6 +150,8 @@ abstract class Component {
 
   void update(void Function() fn) => setState(fn);
 
+  void invalidateChild(Component child) => child.invalidate();
+
   void invalidate() {
     if (!_mounted) return;
     RenderScheduler.instance.invalidate(this);

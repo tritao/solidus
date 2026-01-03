@@ -54,6 +54,10 @@ a {
   padding: 0 18px;
 }
 
+.spacer {
+  height: 12px;
+}
+
 .header h1 {
   margin: 0 0 8px;
   font-size: 34px;
@@ -187,4 +191,3 @@ a {
 .user {
   font-weight: 600;
 }
-

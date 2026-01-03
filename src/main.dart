@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
+import './morph_patch.dart';
+
 void main() {
   final mount = web.document.querySelector('#app');
   if (mount == null) return;
@@ -37,6 +39,7 @@ class _App {
   _App({required this.mount});
 
   final web.Element mount;
+  late final web.Element _root;
 
   int counter = 0;
 
@@ -49,7 +52,9 @@ class _App {
 
   void init() {
     _loadTodos();
-    _render();
+    _root = _buildShell();
+    mount.append(_root);
+    _attachDelegatedEvents(_root);
   }
 
   void _setState(void Function() fn) {
@@ -58,12 +63,14 @@ class _App {
   }
 
   void _render() {
-    mount.textContent = '';
-    mount.append(_buildShell());
+    final next = _buildShell();
+    morphPatch(_root, next);
   }
 
   web.Element _buildShell() {
-    final container = web.HTMLDivElement()..className = "container";
+    final container = web.HTMLDivElement()
+      ..id = "app-root"
+      ..className = "container";
 
     final header = web.HTMLDivElement()
       ..className = "header"
@@ -77,11 +84,104 @@ class _App {
     container
       ..append(header)
       ..append(_buildCounterView())
-      ..append(web.HTMLDivElement()..style.height = "12px")
+      ..append(web.HTMLDivElement()..className = "spacer")
       ..append(_buildTodosView())
-      ..append(web.HTMLDivElement()..style.height = "12px")
+      ..append(web.HTMLDivElement()..className = "spacer")
       ..append(_buildFetchView());
     return container;
+  }
+
+  void _attachDelegatedEvents(web.Element root) {
+    root.onClick.listen(_onClick);
+    root.onChange.listen(_onChange);
+    root.onKeyDown.listen(_onKeyDown);
+  }
+
+  web.Element? _eventTargetAsElement(web.Event event) {
+    final target = event.target;
+    if (target == null) return null;
+    try {
+      return target as web.Element;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _onClick(web.MouseEvent event) {
+    final target = _eventTargetAsElement(event);
+    if (target == null) return;
+
+    final actionEl = target.closest('[data-action]');
+    if (actionEl == null) return;
+
+    final action = actionEl.getAttribute('data-action');
+    if (action == null) return;
+
+    switch (action) {
+      case 'counter-dec':
+        _setState(() => counter--);
+      case 'counter-inc':
+        _setState(() => counter++);
+      case 'counter-reset':
+        _setState(() => counter = 0);
+      case 'todo-add':
+        _addTodoFromInput();
+      case 'todo-clear-done':
+        _setState(() {
+          _todos.removeWhere((t) => t.done);
+          _saveTodos();
+        });
+      case 'todo-delete':
+        final idRaw = actionEl.getAttribute('data-id');
+        final id = int.tryParse(idRaw ?? '');
+        if (id == null) return;
+        _setState(() {
+          _todos.removeWhere((t) => t.id == id);
+          _saveTodos();
+        });
+      case 'users-load':
+        _loadUsers();
+      case 'users-clear':
+        _setState(() {
+          _usersError = null;
+          _users = const [];
+        });
+    }
+  }
+
+  void _onChange(web.Event event) {
+    final target = _eventTargetAsElement(event);
+    if (target == null) return;
+
+    final actionEl = target.closest('[data-action="todo-toggle"]');
+    if (actionEl == null) return;
+
+    final idRaw = actionEl.getAttribute('data-id');
+    final id = int.tryParse(idRaw ?? '');
+    if (id == null) return;
+
+    try {
+      final checkbox = actionEl as web.HTMLInputElement;
+      final checked = checkbox.checked == true;
+      _setState(() {
+        final index = _todos.indexWhere((t) => t.id == id);
+        if (index == -1) return;
+        _todos[index] = _todos[index].copyWith(done: checked);
+        _saveTodos();
+      });
+    } catch (_) {
+      return;
+    }
+  }
+
+  void _onKeyDown(web.KeyboardEvent event) {
+    if (event.key != 'Enter') return;
+    final target = _eventTargetAsElement(event);
+    if (target == null) return;
+
+    if (target.getAttribute('id') == 'todo-input') {
+      _addTodoFromInput();
+    }
   }
 
   web.Element _buildCard({
@@ -99,10 +199,10 @@ class _App {
   web.Element _buildCounterView() {
     final row = web.HTMLDivElement()..className = "row";
     row
-      ..append(_button("−1", onClick: () => _setState(() => counter--)))
-      ..append(_button("+1", onClick: () => _setState(() => counter++)))
+      ..append(_button("−1", action: "counter-dec"))
+      ..append(_button("+1", action: "counter-inc"))
       ..append(_button("Reset",
-          kind: "secondary", onClick: () => _setState(() => counter = 0)));
+          kind: "secondary", action: "counter-reset"));
 
     return _buildCard(title: "Counter", children: [
       web.HTMLParagraphElement()
@@ -119,21 +219,8 @@ class _App {
     final input = web.HTMLInputElement()
       ..type = "text"
       ..placeholder = "New todo…"
-      ..className = "input";
-
-    void addTodo() {
-      final text = input.value?.trim() ?? "";
-      if (text.isEmpty) return;
-      _setState(() {
-        _todos.insert(0, _Todo(id: _nextTodoId++, text: text));
-        _saveTodos();
-        input.value = "";
-      });
-    }
-
-    input.onKeyDown.listen((e) {
-      if (e.key == "Enter") addTodo();
-    });
+      ..className = "input"
+      ..id = "todo-input";
 
     final list = web.HTMLUListElement()..className = "list";
     if (_todos.isEmpty) {
@@ -151,15 +238,12 @@ class _App {
     final row = web.HTMLDivElement()..className = "row";
     row
       ..append(input)
-      ..append(_button("Add", onClick: addTodo))
+      ..append(_button("Add", action: "todo-add"))
       ..append(_button(
         "Clear done",
         kind: "secondary",
         disabled: _todos.every((t) => !t.done),
-        onClick: () => _setState(() {
-          _todos.removeWhere((t) => t.done);
-          _saveTodos();
-        }),
+        action: "todo-clear-done",
       ));
 
     return _buildCard(title: "Todos", children: [
@@ -174,30 +258,25 @@ class _App {
 
   web.HTMLLIElement _buildTodoItem(_Todo todo) {
     final item = web.HTMLLIElement()..className = "item";
+    item.setAttribute('data-key', 'todo-${todo.id}');
 
     final checkbox = web.HTMLInputElement()
       ..type = "checkbox"
       ..checked = todo.done
-      ..className = "checkbox";
-    checkbox.onChange.listen((_) {
-      _setState(() {
-        final index = _todos.indexWhere((t) => t.id == todo.id);
-        if (index == -1) return;
-        _todos[index] = _todos[index].copyWith(done: checkbox.checked == true);
-        _saveTodos();
-      });
-    });
+      ..className = "checkbox"
+      ..setAttribute('data-action', 'todo-toggle')
+      ..setAttribute('data-id', '${todo.id}');
 
     final label = web.HTMLSpanElement()
       ..textContent = todo.text
       ..className = todo.done ? "todoText done" : "todoText";
 
-    final remove = _button("Delete", kind: "danger", onClick: () {
-      _setState(() {
-        _todos.removeWhere((t) => t.id == todo.id);
-        _saveTodos();
-      });
-    });
+    final remove = _button(
+      "Delete",
+      kind: "danger",
+      action: "todo-delete",
+      dataId: todo.id,
+    );
 
     item..append(checkbox)..append(label)..append(remove);
     return item;
@@ -238,16 +317,13 @@ class _App {
       ..append(_button(
         _isLoadingUsers ? "Loading…" : "Load users",
         disabled: _isLoadingUsers,
-        onClick: _loadUsers,
+        action: "users-load",
       ))
       ..append(_button(
         "Clear",
         kind: "secondary",
         disabled: _isLoadingUsers && _users.isEmpty,
-        onClick: () => _setState(() {
-          _usersError = null;
-          _users = const [];
-        }),
+        action: "users-clear",
       ));
 
     return _buildCard(title: "Fetch (async)", children: [
@@ -262,19 +338,41 @@ class _App {
 
   web.HTMLButtonElement _button(
     String label, {
-    required void Function() onClick,
     String kind = "primary",
     bool disabled = false,
+    required String action,
+    int? dataId,
   }) {
     final button = web.HTMLButtonElement()
       ..type = "button"
       ..textContent = label
       ..disabled = disabled
       ..className = "btn $kind";
-    button.onClick.listen((_) {
-      if (!button.disabled) onClick();
-    });
+    button.setAttribute('data-action', action);
+    if (dataId != null) {
+      button.setAttribute('data-id', '$dataId');
+    }
     return button;
+  }
+
+  void _addTodoFromInput() {
+    web.HTMLInputElement? input;
+    try {
+      input = web.document.querySelector('#todo-input') as web.HTMLInputElement?;
+    } catch (_) {
+      input = null;
+    }
+    if (input == null) return;
+
+    final text = input.value.trim();
+    if (text.isEmpty) return;
+
+    _setState(() {
+      _todos.insert(0, _Todo(id: _nextTodoId++, text: text));
+      _saveTodos();
+    });
+
+    input.value = '';
   }
 
   void _loadTodos() {

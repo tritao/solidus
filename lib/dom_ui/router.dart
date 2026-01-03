@@ -30,4 +30,3 @@ void setQueryParam(
     web.window.history.pushState(null, '', url);
   }
 }
-

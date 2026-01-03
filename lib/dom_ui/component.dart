@@ -111,7 +111,7 @@ abstract class Component {
 
   void debugLog(String message) {
     if (!debugEnabled) return;
-    web.console.log('[vite_ui] ${runtimeType}: $message'.toJS);
+    web.console.log('[dom_ui] ${runtimeType}: $message'.toJS);
   }
 
   void provide<T>(String key, T value) {

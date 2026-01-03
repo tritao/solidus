@@ -1,4 +1,4 @@
-import 'package:dart_web_test/vite_ui/router.dart' as router;
+import 'package:dart_web_test/dom_ui/router.dart' as router;
 
 import './config.dart';
 
@@ -25,4 +25,3 @@ void setUsersMode(String mode) => router.setQueryParam('users', mode);
 
 void setShowUsers(bool show) =>
     router.setQueryParam('showUsers', show ? '1' : '0');
-

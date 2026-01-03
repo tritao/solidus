@@ -1,8 +1,8 @@
 import 'package:web/web.dart' as web;
 
-import 'package:dart_web_test/vite_ui/component.dart';
-import 'package:dart_web_test/vite_ui/action_dispatch.dart';
-import 'package:dart_web_test/vite_ui/dom.dart' as dom;
+import 'package:dart_web_test/dom_ui/action_dispatch.dart';
+import 'package:dart_web_test/dom_ui/component.dart';
+import 'package:dart_web_test/dom_ui/dom.dart' as dom;
 
 abstract final class _CounterDomActions {
   static const dec = 'counter-dec';

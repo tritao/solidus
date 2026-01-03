@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
+import '../ui/dom.dart' as dom;
 
 final class _Todo {
   _Todo({
@@ -46,17 +47,15 @@ final class TodosComponent extends Component {
 
   @override
   web.Element render() {
-    final input = web.HTMLInputElement()
-      ..type = 'text'
-      ..placeholder = 'New todo…'
-      ..className = 'input'
-      ..id = 'todos-input';
+    final input = dom.inputText(
+      id: 'todos-input',
+      className: 'input',
+      placeholder: 'New todo…',
+    );
 
-    final list = web.HTMLUListElement()..className = 'list';
+    final list = dom.ul(className: 'list');
     if (_todos.isEmpty) {
-      list.append(web.HTMLLIElement()
-        ..className = 'muted'
-        ..textContent = 'No todos yet.');
+      list.append(dom.li(className: 'muted', text: 'No todos yet.'));
     } else {
       for (final todo in _todos) {
         list.append(_todoItem(todo));
@@ -65,23 +64,23 @@ final class TodosComponent extends Component {
 
     final remaining = _todos.where((t) => !t.done).length;
 
-    final row = web.HTMLDivElement()..className = 'row';
+    final row = dom.div(className: 'row');
     row
       ..append(input)
-      ..append(_button('Add', action: _TodosActions.add))
-      ..append(_button(
+      ..append(dom.button('Add', action: _TodosActions.add))
+      ..append(dom.button(
         'Clear done',
         kind: 'secondary',
         disabled: _todos.every((t) => !t.done),
         action: _TodosActions.clearDone,
       ));
 
-    return _card(title: 'Todos', children: [
+    return dom.card(title: 'Todos', children: [
       row,
-      web.HTMLParagraphElement()
-        ..className = 'muted'
-        ..textContent =
-            '${_todos.length} total • $remaining remaining • persists to localStorage',
+      dom.p(
+        '${_todos.length} total • $remaining remaining • persists to localStorage',
+        className: 'muted',
+      ),
       list,
     ]);
   }
@@ -237,21 +236,24 @@ final class TodosComponent extends Component {
   }
 
   web.HTMLLIElement _todoItem(_Todo todo) {
-    final item = web.HTMLLIElement()..className = 'item';
-    item.setAttribute('data-key', 'todos-${todo.id}');
+    final item = dom.li(
+      className: 'item',
+      attrs: {'data-key': 'todos-${todo.id}'},
+    );
 
-    final checkbox = web.HTMLInputElement()
-      ..type = 'checkbox'
-      ..checked = todo.done
-      ..className = 'checkbox'
-      ..setAttribute('data-action', _TodosActions.toggle)
-      ..setAttribute('data-id', '${todo.id}');
+    final checkbox = dom.checkbox(
+      checked: todo.done,
+      className: 'checkbox',
+      attrs: {
+        'data-action': _TodosActions.toggle,
+        'data-id': '${todo.id}',
+      },
+    );
 
-    final label = web.HTMLSpanElement()
-      ..textContent = todo.text
-      ..className = todo.done ? 'todoText done' : 'todoText';
+    final label =
+        dom.span(todo.text, className: todo.done ? 'todoText done' : 'todoText');
 
-    final remove = _button(
+    final remove = dom.button(
       'Delete',
       kind: 'danger',
       action: _TodosActions.remove,
@@ -261,31 +263,4 @@ final class TodosComponent extends Component {
     item..append(checkbox)..append(label)..append(remove);
     return item;
   }
-
-  web.Element _card({required String title, required List<web.Element> children}) {
-    final card = web.HTMLDivElement()..className = 'card';
-    card.append(web.HTMLHeadingElement.h2()..textContent = title);
-    for (final child in children) {
-      card.append(child);
-    }
-    return card;
-  }
-
-  web.HTMLButtonElement _button(
-    String label, {
-    String kind = 'primary',
-    bool disabled = false,
-    required String action,
-    int? dataId,
-  }) {
-    final button = web.HTMLButtonElement()
-      ..type = 'button'
-      ..textContent = label
-      ..disabled = disabled
-      ..className = 'btn $kind';
-    button.setAttribute('data-action', action);
-    if (dataId != null) button.setAttribute('data-id', '$dataId');
-    return button;
-  }
 }
-

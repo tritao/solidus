@@ -1,6 +1,7 @@
 import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
+import '../ui/dom.dart' as dom;
 
 abstract final class _CounterActions {
   static const dec = 'counter-dec';
@@ -15,20 +16,19 @@ final class CounterComponent extends Component {
 
   @override
   web.Element render() {
-    final row = web.HTMLDivElement()..className = 'row';
+    final row = dom.div(className: 'row');
     row
-      ..append(_button('−1', action: _CounterActions.dec))
-      ..append(_button('+1', action: _CounterActions.inc))
-      ..append(_button('Reset', kind: 'secondary', action: _CounterActions.reset));
+      ..append(dom.button('−1', action: _CounterActions.dec))
+      ..append(dom.button('+1', action: _CounterActions.inc))
+      ..append(
+        dom.button('Reset',
+            kind: 'secondary', action: _CounterActions.reset),
+      );
 
-    return _card(title: 'Counter', children: [
-      web.HTMLParagraphElement()
-        ..className = 'big'
-        ..textContent = '$counter',
+    return dom.card(title: 'Counter', children: [
+      dom.p('$counter', className: 'big'),
       row,
-      web.HTMLParagraphElement()
-        ..className = 'muted'
-        ..textContent = 'Exercises state updates and re-rendering.',
+      dom.p('Exercises state updates and re-rendering.', className: 'muted'),
     ]);
   }
 
@@ -63,29 +63,4 @@ final class CounterComponent extends Component {
         setState(() => counter = 0);
     }
   }
-
-  web.Element _card({required String title, required List<web.Element> children}) {
-    final card = web.HTMLDivElement()..className = 'card';
-    card.append(web.HTMLHeadingElement.h2()..textContent = title);
-    for (final child in children) {
-      card.append(child);
-    }
-    return card;
-  }
-
-  web.HTMLButtonElement _button(
-    String label, {
-    String kind = 'primary',
-    bool disabled = false,
-    required String action,
-  }) {
-    final button = web.HTMLButtonElement()
-      ..type = 'button'
-      ..textContent = label
-      ..disabled = disabled
-      ..className = 'btn $kind';
-    button.setAttribute('data-action', action);
-    return button;
-  }
 }
-

@@ -4,6 +4,7 @@ import './app/counter_component.dart';
 import './app/todos_component.dart';
 import './app/users_component.dart';
 import './ui/component.dart';
+import './ui/dom.dart' as dom;
 
 void main() {
   final mount = web.document.querySelector('#app');
@@ -36,27 +37,19 @@ final class AppComponent extends Component {
 
   @override
   web.Element render() {
-    final container = web.HTMLDivElement()
-      ..id = 'app-root'
-      ..className = 'container';
-
-    final header = web.HTMLDivElement()
-      ..className = 'header'
-      ..append(web.HTMLHeadingElement.h1()..textContent = 'Dart + Vite (DOM demo)')
-      ..append(web.HTMLParagraphElement()
-        ..className = 'muted'
-        ..textContent =
-            'Counter + Todos (localStorage) + Fetch (async) to validate the integration.');
-
-    container
-      ..append(header)
-      ..append(web.HTMLDivElement()..id = 'counter-root')
-      ..append(web.HTMLDivElement()..className = 'spacer')
-      ..append(web.HTMLDivElement()..id = 'todos-root')
-      ..append(web.HTMLDivElement()..className = 'spacer')
-      ..append(web.HTMLDivElement()..id = 'users-root');
-
-    return container;
+    return dom.div(id: 'app-root', className: 'container', children: [
+      dom.div(className: 'header', children: [
+        dom.h1('Dart + Vite (DOM demo)'),
+        dom.p(
+          'Counter + Todos (localStorage) + Fetch (async) to validate the integration.',
+          className: 'muted',
+        ),
+      ]),
+      dom.div(id: 'counter-root'),
+      dom.div(className: 'spacer'),
+      dom.div(id: 'todos-root'),
+      dom.div(className: 'spacer'),
+      dom.div(id: 'users-root'),
+    ]);
   }
 }
-

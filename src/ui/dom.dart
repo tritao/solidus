@@ -1,0 +1,125 @@
+import 'package:web/web.dart' as web;
+
+T _apply<T extends web.Element>(
+  T element, {
+  String? id,
+  String? className,
+  String? text,
+  Map<String, String>? attrs,
+  List<web.Element>? children,
+}) {
+  if (id != null) element.setAttribute('id', id);
+  if (className != null) element.setAttribute('class', className);
+  if (text != null) element.textContent = text;
+  if (attrs != null) {
+    for (final entry in attrs.entries) {
+      element.setAttribute(entry.key, entry.value);
+    }
+  }
+  if (children != null) {
+    for (final child in children) {
+      element.append(child);
+    }
+  }
+  return element;
+}
+
+web.HTMLDivElement div({
+  String? id,
+  String? className,
+  Map<String, String>? attrs,
+  List<web.Element>? children,
+}) =>
+    _apply(web.HTMLDivElement(),
+        id: id, className: className, attrs: attrs, children: children);
+
+web.HTMLParagraphElement p(
+  String text, {
+  String? className,
+}) =>
+    _apply(web.HTMLParagraphElement(), className: className, text: text);
+
+web.HTMLHeadingElement h1(
+  String text, {
+  String? className,
+}) =>
+    _apply(web.HTMLHeadingElement.h1(), className: className, text: text);
+
+web.HTMLHeadingElement h2(
+  String text, {
+  String? className,
+}) =>
+    _apply(web.HTMLHeadingElement.h2(), className: className, text: text);
+
+web.HTMLSpanElement span(
+  String text, {
+  String? className,
+}) =>
+    _apply(web.HTMLSpanElement(), className: className, text: text);
+
+web.HTMLUListElement ul({
+  String? className,
+  List<web.Element>? children,
+}) =>
+    _apply(web.HTMLUListElement(), className: className, children: children);
+
+web.HTMLLIElement li({
+  String? className,
+  String? text,
+  Map<String, String>? attrs,
+  List<web.Element>? children,
+}) =>
+    _apply(web.HTMLLIElement(),
+        className: className, text: text, attrs: attrs, children: children);
+
+web.HTMLInputElement inputText({
+  String? id,
+  String? className,
+  String? placeholder,
+  Map<String, String>? attrs,
+}) {
+  final input = web.HTMLInputElement()..type = 'text';
+  if (placeholder != null) input.placeholder = placeholder;
+  return _apply(input, id: id, className: className, attrs: attrs);
+}
+
+web.HTMLInputElement checkbox({
+  bool checked = false,
+  String? className,
+  Map<String, String>? attrs,
+}) {
+  final input = web.HTMLInputElement()
+    ..type = 'checkbox'
+    ..checked = checked;
+  return _apply(input, className: className, attrs: attrs);
+}
+
+web.HTMLButtonElement button(
+  String label, {
+  String kind = 'primary',
+  bool disabled = false,
+  String? action,
+  int? dataId,
+}) {
+  final btn = web.HTMLButtonElement()
+    ..type = 'button'
+    ..textContent = label
+    ..disabled = disabled
+    ..className = 'btn $kind';
+  if (action != null) btn.setAttribute('data-action', action);
+  if (dataId != null) btn.setAttribute('data-id', '$dataId');
+  return btn;
+}
+
+web.Element card({
+  required String title,
+  required List<web.Element> children,
+}) {
+  final cardEl = div(className: 'card');
+  cardEl.append(h2(title));
+  for (final child in children) {
+    cardEl.append(child);
+  }
+  return cardEl;
+}
+

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
+import '../ui/dom.dart' as dom;
 
 abstract final class _UsersActions {
   static const load = 'users-load';
@@ -19,7 +20,7 @@ final class UsersComponent extends Component {
 
   @override
   web.Element render() {
-    final status = web.HTMLParagraphElement()..className = 'muted';
+    final status = dom.p('', className: 'muted');
     if (_isLoading) {
       status.textContent = 'Loading users…';
     } else if (_error != null) {
@@ -32,44 +33,39 @@ final class UsersComponent extends Component {
       status.textContent = 'Loaded ${_users.length} users.';
     }
 
-    final row = web.HTMLDivElement()..className = 'row';
+    final row = dom.div(className: 'row');
     row
-      ..append(_button(
+      ..append(dom.button(
         _isLoading ? 'Loading…' : 'Load users',
         disabled: _isLoading,
         action: _UsersActions.load,
       ))
-      ..append(_button(
+      ..append(dom.button(
         'Clear',
         kind: 'secondary',
         disabled: _isLoading && _users.isEmpty,
         action: _UsersActions.clear,
       ));
 
-    final list = web.HTMLUListElement()..className = 'list';
+    final list = dom.ul(className: 'list');
     for (final user in _users) {
       final name = (user['name'] as String?) ?? '(no name)';
       final email = (user['email'] as String?) ?? '';
 
-      final li = web.HTMLLIElement()..className = 'item';
-      li.append(web.HTMLSpanElement()
-        ..className = 'user'
-        ..textContent = name);
+      final li = dom.li(className: 'item');
+      li.append(dom.span(name, className: 'user'));
       if (email.isNotEmpty) {
-        li.append(web.HTMLSpanElement()
-          ..className = 'muted'
-          ..textContent = ' • $email');
+        li.append(dom.span(' • $email', className: 'muted'));
       }
       list.append(li);
     }
 
-    return _card(title: 'Fetch (async)', children: [
+    return dom.card(title: 'Fetch (async)', children: [
       row,
       status,
       if (_users.isNotEmpty) list,
-      web.HTMLParagraphElement()
-        ..className = 'muted'
-        ..textContent = 'Endpoint: https://jsonplaceholder.typicode.com/users',
+      dom.p('Endpoint: https://jsonplaceholder.typicode.com/users',
+          className: 'muted'),
     ]);
   }
 
@@ -135,29 +131,4 @@ final class UsersComponent extends Component {
       setState(() => _isLoading = false);
     }
   }
-
-  web.Element _card({required String title, required List<web.Element> children}) {
-    final card = web.HTMLDivElement()..className = 'card';
-    card.append(web.HTMLHeadingElement.h2()..textContent = title);
-    for (final child in children) {
-      card.append(child);
-    }
-    return card;
-  }
-
-  web.HTMLButtonElement _button(
-    String label, {
-    String kind = 'primary',
-    bool disabled = false,
-    required String action,
-  }) {
-    final button = web.HTMLButtonElement()
-      ..type = 'button'
-      ..textContent = label
-      ..disabled = disabled
-      ..className = 'btn $kind';
-    button.setAttribute('data-action', action);
-    return button;
-  }
 }
-

@@ -924,6 +924,74 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-popover-position") {
+      try {
+        const trigger = page.locator("#popover-trigger");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-popover-position",
+            ok: false,
+            details: { reason: "missing #popover-trigger" },
+          });
+        } else {
+          await page.evaluate(() => {
+            document.body.style.height = "3000px";
+            document.documentElement.style.height = "3000px";
+            window.scrollTo(0, 0);
+          });
+
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel") != null,
+            { timeout: timeoutMs },
+          );
+
+          const readPos = async () =>
+            await page.evaluate(() => {
+              const el = document.querySelector("#popover-panel");
+              if (!el) return null;
+              // @ts-ignore
+              const left = el.style.left ?? "";
+              // @ts-ignore
+              const top = el.style.top ?? "";
+              // @ts-ignore
+              const pos = el.style.position ?? "";
+              return { left, top, pos };
+            });
+
+          const before = await readPos();
+
+          await page.evaluate(() => window.scrollTo(0, 200));
+          await page.waitForFunction(() => window.scrollY >= 150, {
+            timeout: timeoutMs,
+          });
+          await page.waitForTimeout(150);
+
+          const after = await readPos();
+
+          const ok =
+            before != null &&
+            before.pos === "fixed" &&
+            typeof before.left === "string" &&
+            typeof before.top === "string" &&
+            before.left.endsWith("px") &&
+            before.top.endsWith("px") &&
+            after != null &&
+            (after.top !== before.top || after.left !== before.left);
+
+          interactionResults.push({
+            name: "solid-popover-position",
+            ok,
+            details: { before, after, scrollY: await page.evaluate(() => window.scrollY) },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-position",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
     } else if (scenario === "solid-toast") {
       try {
         const trigger = page.locator("#toast-trigger");

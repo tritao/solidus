@@ -3,6 +3,7 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
+import "./floating.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -17,6 +18,9 @@ web.DocumentFragment Popover({
   int exitMs = 120,
   web.HTMLElement? initialFocus,
   bool trapFocus = false,
+  web.Element? anchor,
+  String placement = "bottom-start",
+  double offset = 8,
   String role = "dialog",
   String? portalId,
 }) {
@@ -36,6 +40,15 @@ web.DocumentFragment Popover({
         final popover = builder(close);
         popover.setAttribute("role", role);
         popover.tabIndex = -1;
+
+        if (anchor != null) {
+          floatToAnchor(
+            anchor: anchor,
+            floating: popover,
+            placement: placement,
+            offset: offset,
+          );
+        }
 
         dismissableLayer(
           popover,

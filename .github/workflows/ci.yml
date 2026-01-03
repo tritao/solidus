@@ -78,6 +78,12 @@ jobs:
           DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
         run: npm run debug:solid-popover:ci
 
+      - name: Solid Popover positioning smoke (Playwright)
+        if: runner.os == 'Linux'
+        env:
+          DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
+        run: npm run debug:solid-popover-position:ci
+
       - name: Solid Toast semantics smoke (Playwright)
         if: runner.os == 'Linux'
         env:

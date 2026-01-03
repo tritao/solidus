@@ -8,6 +8,9 @@ void mountSolidPopoverDemo(web.Element mount) {
       ..id = "popover-root"
       ..className = "container";
 
+    // Ensure the page can scroll so we can validate repositioning on scroll.
+    root.style.minHeight = "2000px";
+
     final open = createSignal(false);
     final lastDismiss = createSignal("none");
 
@@ -32,6 +35,9 @@ void mountSolidPopoverDemo(web.Element mount) {
         open: () => open.value,
         setOpen: (next) => open.value = next,
         portalId: "popover-portal",
+        anchor: trigger,
+        placement: "bottom-start",
+        offset: 8,
         onClose: (reason) => lastDismiss.value = reason,
         builder: (close) {
           final panel = web.HTMLDivElement()
@@ -54,4 +60,3 @@ void mountSolidPopoverDemo(web.Element mount) {
     return root;
   });
 }
-

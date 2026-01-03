@@ -1689,6 +1689,26 @@ async function inspectUrl(
             inputValue: document.querySelector("#combobox-input")?.value ?? null,
           }));
 
+          // If the list is open and filtering results in an empty collection,
+          // the default combobox closes and resets the input back to selection.
+          step = "open then empty closes and resets";
+          await input.fill("t", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") != null,
+            { timeout: timeoutMs },
+          );
+          await input.fill("zzz", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const afterEmptyQuery = await page.evaluate(() => ({
+            listboxOpen: document.querySelector("#combobox-listbox") != null,
+            inputValue: document.querySelector("#combobox-input")?.value ?? null,
+            status: document.querySelector("#combobox-status")?.textContent ?? null,
+          }));
+
           // Tab while open closes and allows navigation to next element.
           step = "open and tab";
           await input.fill("t", { timeout: timeoutMs });
@@ -1710,6 +1730,46 @@ async function inspectUrl(
             activeId: document.activeElement?.id ?? null,
           }));
 
+          // Keep-open-on-empty combobox should stay open and show an empty state.
+          step = "empty-state combobox opens";
+          const emptyInput = page.locator("#combobox-input-empty");
+          await emptyInput.fill("zzz", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox-empty") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          const emptyStateOpen = await page.evaluate(() => ({
+            emptyText:
+              document.querySelector("#combobox-listbox-empty [data-empty]")?.textContent ??
+              null,
+            expanded: document
+              .querySelector("#combobox-input-empty")
+              ?.getAttribute("aria-expanded") ?? null,
+            optionsCount: document.querySelectorAll(
+              "#combobox-listbox-empty [role=option]",
+            ).length,
+          }));
+
+          // Programmatic blur should close and reset.
+          step = "empty-state blur closes";
+          await page.evaluate(() => {
+            const btn = document.querySelector("#combobox-after");
+            // @ts-ignore
+            btn?.focus?.();
+          });
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox-empty") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          const emptyStateAfterBlur = await page.evaluate(() => ({
+            status:
+              document.querySelector("#combobox-status-empty")?.textContent ?? null,
+            inputValue: document.querySelector("#combobox-input-empty")?.value ?? null,
+            activeId: document.activeElement?.id ?? null,
+          }));
+
           const ok =
             afterType.expanded === "true" &&
             afterType.optionsCount >= 1 &&
@@ -1720,8 +1780,18 @@ async function inspectUrl(
             (afterSelect.inputValue ?? "").length > 0 &&
             afterSelect.activeId === "combobox-input" &&
             afterEscapeClosed.inputValue === "" &&
+            afterEmptyQuery.listboxOpen === false &&
+            (afterEmptyQuery.inputValue ?? "").includes("Dart") &&
+            (afterEmptyQuery.status ?? "").includes("Last: empty") &&
             (afterTab.status ?? "").includes("Last: tab") &&
-            afterTab.activeId === "combobox-after";
+            afterTab.activeId === "combobox-after" &&
+            emptyStateOpen.expanded === "true" &&
+            emptyStateOpen.optionsCount === 0 &&
+            (emptyStateOpen.emptyText ?? "").includes("No matches.") &&
+            ((emptyStateAfterBlur.status ?? "").includes("Last: blur") ||
+              (emptyStateAfterBlur.status ?? "").includes("Last: focus-outside")) &&
+            emptyStateAfterBlur.inputValue === "" &&
+            emptyStateAfterBlur.activeId === "combobox-after";
 
           interactionResults.push({
             name: "solid-combobox",
@@ -1731,7 +1801,10 @@ async function inspectUrl(
               afterDown,
               afterSelect,
               afterEscapeClosed,
+              afterEmptyQuery,
               afterTab,
+              emptyStateOpen,
+              emptyStateAfterBlur,
             },
           });
         }

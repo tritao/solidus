@@ -5,6 +5,7 @@ import "package:web/web.dart" as web;
 
 import "./floating.dart";
 import "./listbox_core.dart";
+import "./listbox.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -59,8 +60,11 @@ web.DocumentFragment Combobox<T>({
   double viewportPadding = 8,
   bool flip = true,
   bool allowsEmptyCollection = false,
+  bool keepOpenOnEmpty = false,
+  String emptyText = "No results.",
   bool closeOnSelection = true,
   ComboboxFilter<T>? filter,
+  String triggerMode = "input",
   void Function(String reason)? onClose,
   int exitMs = 120,
   String? portalId,
@@ -73,6 +77,10 @@ web.DocumentFragment Combobox<T>({
   // Input state mirrors Kobalte: user types -> filter -> open/close.
   final inputValue = createSignal<String>("");
   final activeIndex = createSignal<int>(-1);
+  web.HTMLElement? listboxRef;
+  var isComposing = false;
+  final allowEmpty = allowsEmptyCollection || keepOpenOnEmpty;
+  final showEmptyState = keepOpenOnEmpty;
 
   void syncInputFromSelection() {
     final v = value();
@@ -111,19 +119,36 @@ web.DocumentFragment Combobox<T>({
     return all.where((o) => f(o, q)).toList(growable: false);
   }
 
+  void ensureActiveIndexWithin(List<ComboboxOption<T>> opts) {
+    if (opts.isEmpty) {
+      activeIndex.value = -1;
+      return;
+    }
+    var idx = activeIndex.value;
+    if (idx < 0) {
+      final selIdx = findSelectedIndex<T, ComboboxOption<T>>(
+        opts,
+        value(),
+        equals: eq,
+      );
+      idx = selIdx == -1 ? firstEnabledIndex(opts) : selIdx;
+    }
+    if (idx >= opts.length) idx = opts.length - 1;
+    if (idx >= 0 && opts[idx].disabled) idx = nextEnabledIndex(opts, idx, 1);
+    activeIndex.value = idx;
+  }
+
   void openNow([int? focusIndex]) {
     setOpen(true);
+    final opts = filteredOptions();
     if (focusIndex != null) {
       activeIndex.value = focusIndex;
     } else {
-      final opts = filteredOptions();
-      if (opts.isEmpty && !allowsEmptyCollection) {
+      if (opts.isEmpty && !allowEmpty) {
         setOpen(false);
         return;
       }
-      if (activeIndex.value < 0 || activeIndex.value >= opts.length) {
-        activeIndex.value = firstEnabledIndex(opts);
-      }
+      ensureActiveIndexWithin(opts);
     }
   }
 
@@ -168,27 +193,69 @@ web.DocumentFragment Combobox<T>({
 
   on(input, "input", (e) {
     if (e.target is! web.HTMLInputElement) return;
-    inputValue.value = (e.target as web.HTMLInputElement).value;
+    final target = e.target as web.HTMLInputElement;
+    inputValue.value = target.value;
+    // Keep DOM value in sync (inputs can drift even if "controlled").
+    target.value = inputValue.value;
+    if (isComposing) return;
 
     // If empty, keep it open only if configured.
     final opts = filteredOptions();
     if (open()) {
-      if (opts.isEmpty && !allowsEmptyCollection) {
+      ensureActiveIndexWithin(opts);
+      if (opts.isEmpty && !allowEmpty) {
         closeNow("empty");
         resetInputToSelection();
         return;
       }
     } else {
-      if (opts.isNotEmpty || allowsEmptyCollection) openNow();
+      if (triggerMode == "manual") return;
+      if (opts.isNotEmpty || allowEmpty) openNow();
     }
   });
 
   on(input, "focusin", (_) {
-    // Kobalte can open on focus based on triggerMode; default to closed here.
+    if (triggerMode != "focus") return;
+    if (open()) return;
+    final opts = filteredOptions();
+    if (opts.isNotEmpty || allowEmpty) openNow();
+  });
+
+  on(input, "focusout", (e) {
+    if (!open()) return;
+    if (e is! web.FocusEvent) return;
+    final next = e.relatedTarget;
+    if (next is web.Node) {
+      if (anchor.contains(next)) return;
+      final lb = listboxRef;
+      if (lb != null && lb.contains(next)) return;
+    }
+    // Close on genuine blur.
+    closeNow("blur");
+    resetInputToSelection();
+  });
+
+  on(input, "compositionstart", (_) {
+    isComposing = true;
+  });
+  on(input, "compositionend", (_) {
+    isComposing = false;
+    inputValue.value = input.value;
+    if (triggerMode == "manual") return;
+    final opts = filteredOptions();
+    if (opts.isEmpty && !allowEmpty) {
+      if (open()) {
+        closeNow("empty");
+        resetInputToSelection();
+      }
+      return;
+    }
+    if (!open() && (opts.isNotEmpty || allowEmpty)) openNow();
   });
 
   on(input, "keydown", (e) {
     if (e is! web.KeyboardEvent) return;
+    if (isComposing) return;
 
     final opts = filteredOptions();
     if (e.key == "ArrowDown") {
@@ -240,8 +307,9 @@ web.DocumentFragment Combobox<T>({
   // Clicking the input should open if there are results.
   on(input, "click", (_) {
     if (open()) return;
+    if (triggerMode == "manual") return;
     final opts = filteredOptions();
-    if (opts.isNotEmpty || allowsEmptyCollection) openNow();
+    if (opts.isNotEmpty || allowEmpty) openNow();
   });
 
   return Presence(
@@ -250,16 +318,37 @@ web.DocumentFragment Combobox<T>({
     children: () => Portal(
       id: portalId,
       children: () {
-        final listbox = web.HTMLDivElement()
-          ..id = resolvedListboxId
-          ..setAttribute("role", "listbox")
-          ..className = "card";
-        listbox.style.padding = "6px";
-        listbox.style.minWidth = "240px";
+        final listbox = createListbox<T, ComboboxOption<T>>(
+          id: resolvedListboxId,
+          options: filteredOptions,
+          selected: value,
+          equals: eq,
+          activeIndex: activeIndex,
+          shouldUseVirtualFocus: true,
+          shouldFocusOnHover: true,
+          enableKeyboardNavigation: false,
+          showEmptyState: showEmptyState,
+          emptyText: emptyText,
+          onSelect: (opt, idx) {
+            setValue(opt.value);
+            inputValue.value = opt.label;
+            if (closeOnSelection) closeNow("select");
+          },
+          optionBuilder: optionBuilder == null
+              ? null
+              : (opt, {required selected, required active}) =>
+                  optionBuilder(opt, selected: selected, active: active),
+        );
+        listbox.element.style.padding = "6px";
+        listbox.element.style.minWidth = "240px";
+        listboxRef = listbox.element;
+        onCleanup(() {
+          if (identical(listboxRef, listbox.element)) listboxRef = null;
+        });
 
         floatToAnchor(
           anchor: anchor,
-          floating: listbox,
+          floating: listbox.element,
           placement: placement,
           offset: offset,
           viewportPadding: viewportPadding,
@@ -269,7 +358,7 @@ web.DocumentFragment Combobox<T>({
 
         // Close and reset input when interacting outside.
         dismissableLayer(
-          listbox,
+          listbox.element,
           excludedElements: <web.Element? Function()>[
             () => anchor,
           ],
@@ -278,60 +367,17 @@ web.DocumentFragment Combobox<T>({
             resetInputToSelection();
           },
         );
-
-        void rebuild() {
-          listbox.textContent = "";
+        createRenderEffect(() {
           final opts = filteredOptions();
-          if (opts.isEmpty && !allowsEmptyCollection) {
+          if (opts.isEmpty && !allowEmpty) {
             closeNow("empty");
             resetInputToSelection();
             return;
           }
+          ensureActiveIndexWithin(opts);
+        });
 
-          // Clamp active index.
-          var idx = activeIndex.value;
-          if (idx >= opts.length) idx = opts.length - 1;
-          if (idx < -1) idx = -1;
-          if (idx == -1) idx = firstEnabledIndex(opts);
-          activeIndex.value = idx;
-
-          for (var i = 0; i < opts.length; i++) {
-            final opt = opts[i];
-            final selected = value() != null && eq(opt.value, value() as T);
-            final active = i == activeIndex.value;
-            final el = optionBuilder != null
-                ? optionBuilder(opt, selected: selected, active: active)
-                : (web.HTMLDivElement()
-                  ..className = "menuItem"
-                  ..textContent = opt.label);
-
-            el.setAttribute("role", "option");
-            el.id = optionIdFor(opts, resolvedListboxId, i);
-            el.setAttribute("aria-selected", selected ? "true" : "false");
-            if (opt.disabled) el.setAttribute("aria-disabled", "true");
-            if (active) el.setAttribute("data-active", "true");
-
-            on(el, "pointermove", (_) {
-              if (opt.disabled) return;
-              activeIndex.value = i;
-            });
-            on(el, "pointerdown", (ev) {
-              // Prevent moving focus away from the input.
-              ev.preventDefault();
-            });
-            on(el, "click", (_) {
-              if (opt.disabled) return;
-              activeIndex.value = i;
-              selectActive(opts: opts);
-            });
-
-            listbox.appendChild(el);
-          }
-        }
-
-        createRenderEffect(rebuild);
-
-        return listbox;
+        return listbox.element;
       },
     ),
   );

@@ -49,6 +49,10 @@ void mountSolidComboboxDemo(web.Element mount) {
 
     root.appendChild(control);
 
+    root.appendChild(web.HTMLParagraphElement()
+      ..className = "muted"
+      ..textContent = "Default: closes when no results.");
+
     final opts = <ComboboxOption<String>>[
       const ComboboxOption(value: "One", label: "One"),
       const ComboboxOption(value: "Two", label: "Two"),
@@ -74,7 +78,64 @@ void mountSolidComboboxDemo(web.Element mount) {
       ),
     );
 
+    root.appendChild(web.HTMLHRElement());
+
+    final emptyOpen = createSignal(false);
+    final emptySelected = createSignal<String?>(null);
+    final emptyLast = createSignal("none");
+
+    root.appendChild(web.HTMLHeadingElement.h2()
+      ..textContent = "Combobox (keep open on empty)");
+
+    final emptyStatus = web.HTMLParagraphElement()
+      ..id = "combobox-status-empty"
+      ..className = "muted";
+    emptyStatus.appendChild(
+      text(() =>
+          "Value: ${emptySelected.value ?? "none"} • Last: ${emptyLast.value}"),
+    );
+    root.appendChild(emptyStatus);
+
+    final emptyControl = web.HTMLDivElement()
+      ..id = "combobox-control-empty"
+      ..className = "row";
+    emptyControl.style.gap = "8px";
+    emptyControl.style.alignItems = "center";
+
+    final emptyInput = web.HTMLInputElement()
+      ..id = "combobox-input-empty"
+      ..className = "input"
+      ..placeholder = "Type to filter (keeps open on empty)...";
+    emptyControl.appendChild(emptyInput);
+
+    final emptyAfter = web.HTMLButtonElement()
+      ..id = "combobox-after-empty"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "After";
+    emptyControl.appendChild(emptyAfter);
+
+    root.appendChild(emptyControl);
+
+    root.appendChild(
+      Combobox<String>(
+        open: () => emptyOpen.value,
+        setOpen: (next) => emptyOpen.value = next,
+        anchor: emptyControl,
+        input: emptyInput,
+        options: () => opts,
+        value: () => emptySelected.value,
+        setValue: (next) => emptySelected.value = next,
+        listboxId: "combobox-listbox-empty",
+        portalId: "combobox-portal-empty",
+        onClose: (reason) => emptyLast.value = reason,
+        placement: "bottom-start",
+        offset: 8,
+        keepOpenOnEmpty: true,
+        emptyText: "No matches.",
+      ),
+    );
+
     return root;
   });
 }
-

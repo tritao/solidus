@@ -6,6 +6,7 @@ import "package:web/web.dart" as web;
 import "./floating.dart";
 import "./focus_scope.dart";
 import "./listbox_core.dart";
+import "./listbox.dart";
 import "./overlay.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
@@ -102,18 +103,34 @@ web.DocumentFragment Select<T>({
           close(reason);
         }
 
-        final listbox = web.HTMLDivElement()
-          ..id = resolvedListboxId
-          ..setAttribute("role", "listbox")
-          ..tabIndex = -1
-          ..className = "card";
-
-        listbox.style.minWidth = "220px";
-        listbox.style.padding = "6px";
+        final handle = createListbox<T, SelectOption<T>>(
+          id: resolvedListboxId,
+          options: () => options().toList(growable: false),
+          selected: value,
+          equals: eq,
+          shouldUseVirtualFocus: false,
+          shouldFocusOnHover: true,
+          onTabOut: () {
+            closeWith("tab");
+            try {
+              trigger.focus();
+            } catch (_) {}
+          },
+          onEscape: () => closeWith("escape"),
+          onSelect: (opt, idx) {
+            setValue(opt.value);
+            closeWith("select");
+          },
+          optionBuilder: optionBuilder == null
+              ? null
+              : (opt, {required selected, required active}) =>
+                  optionBuilder(opt, selected, active),
+        );
+        handle.element.setAttribute("data-solid-select-listbox", "1");
 
         floatToAnchor(
           anchor: trigger,
-          floating: listbox,
+          floating: handle.element,
           placement: placement,
           offset: offset,
           viewportPadding: viewportPadding,
@@ -124,198 +141,32 @@ web.DocumentFragment Select<T>({
         // Outside dismissal should not consider the trigger "outside" (otherwise
         // trigger click can close + immediately re-open).
         dismissableLayer(
-          listbox,
+          handle.element,
           excludedElements: <web.Element? Function()>[
             () => trigger,
           ],
           onDismiss: (reason) => closeWith(reason),
         );
-
-        final optionEls = <web.HTMLElement>[];
-        final optionValues = <T>[];
-        final typeahead = ListboxTypeahead();
-
-        int initialActiveIndex() {
-          final current = value();
-          final opts = options().toList(growable: false);
-          final idx = findSelectedIndex<T, SelectOption<T>>(
-            opts,
-            current,
-            equals: eq,
-          );
-          return idx == -1 ? 0 : idx;
-        }
-
-        final activeIndex = createSignal<int>(initialActiveIndex());
-
-        void focusActive() {
-          final idx = activeIndex.value.clamp(
-            0,
-            optionEls.isEmpty ? 0 : optionEls.length - 1,
-          );
-          if (optionEls.isEmpty) {
-            try {
-              listbox.focus();
-            } catch (_) {}
-            return;
-          }
-          try {
-            optionEls[idx].focus();
-          } catch (_) {}
-        }
-
-        void selectIndex(int idx, {bool closeAfter = true}) {
-          if (idx < 0 || idx >= optionValues.length) return;
-          final el = optionEls[idx];
-          if (el.getAttribute("aria-disabled") == "true") return;
-          setValue(optionValues[idx]);
-          if (closeAfter) closeWith("select");
-        }
-
-        web.HTMLElement buildOptionEl(
-          SelectOption<T> option,
-          int idx, {
-          required bool selected,
-          required bool active,
-        }) {
-          final el = optionBuilder != null
-              ? optionBuilder(option, selected, active)
-              : (web.HTMLDivElement()
-                ..className = "btn secondary"
-                ..style.display = "block"
-                ..style.width = "100%"
-                ..style.textAlign = "left"
-                ..textContent = option.label);
-
-          el.setAttribute("role", "option");
-          el.tabIndex = active ? 0 : -1;
-          el.setAttribute("aria-selected", selected ? "true" : "false");
-          if (option.disabled) el.setAttribute("aria-disabled", "true");
-
-          final optId = option.id ?? "$resolvedListboxId-opt-$idx";
-          el.id = optId;
-
-          on(el, "pointermove", (_) {
-            if (option.disabled) return;
-            activeIndex.value = idx;
-          });
-          on(el, "click", (_) {
-            if (option.disabled) return;
-            activeIndex.value = idx;
-            selectIndex(idx);
-          });
-
-          return el;
-        }
-
-        createRenderEffect(() {
-          // Rebuild listbox content (simple approach).
-          listbox.textContent = "";
-          optionEls.clear();
-          optionValues.clear();
-
-          final opts = options().toList(growable: false);
-          final current = value();
-
-          final idxMax = opts.isEmpty ? 0 : opts.length - 1;
-          final nextActive = activeIndex.value.clamp(0, idxMax);
-          if (activeIndex.value != nextActive) activeIndex.value = nextActive;
-
-          for (var i = 0; i < opts.length; i++) {
-            final opt = opts[i];
-            final selected = current != null && eq(opt.value, current);
-            final active = i == activeIndex.value;
-            final el = buildOptionEl(opt, i, selected: selected, active: active);
-            optionEls.add(el);
-            optionValues.add(opt.value);
-            listbox.appendChild(el);
-          }
-        });
+        // Use the created listbox element as our positioned element.
+        // (createListbox already set id/role/className).
+        // Ensure styles match previous defaults.
+        handle.element.style.minWidth = "220px";
+        handle.element.style.padding = "6px";
 
         // Focus management: focus active option on mount, restore focus unless Tab-close.
         focusScope(
-          listbox,
+          handle.element,
           trapFocus: false,
           restoreFocus: true,
           onMountAutoFocus: (e) {
             e.preventDefault();
-            scheduleMicrotask(focusActive);
+            scheduleMicrotask(handle.focusActive);
           },
           onUnmountAutoFocus: (e) {
             if (closeReason == "tab") e.preventDefault();
           },
         );
-
-        void clearTypeahead() {
-          typeahead.clear();
-        }
-
-        void onKeydown(web.Event e) {
-          if (e is! web.KeyboardEvent) return;
-
-          if (e.key == "Tab") {
-            // The listbox lives in a portal, so default Tab navigation would move
-            // through the portal subtree. Close and move focus back to the trigger
-            // so the browser continues tab order from the trigger position.
-            closeWith("tab");
-            try {
-              trigger.focus();
-            } catch (_) {}
-            return;
-          }
-          if (e.key == "Escape") {
-            e.preventDefault();
-            closeWith("escape");
-            return;
-          }
-
-          if (optionEls.isEmpty) return;
-          final opts = options().toList(growable: false);
-          final active = activeIndex.value.clamp(0, optionEls.length - 1);
-
-          int? next;
-          switch (e.key) {
-            case "ArrowDown":
-              next = nextEnabledIndex(opts, active, 1);
-              break;
-            case "ArrowUp":
-              next = nextEnabledIndex(opts, active, -1);
-              break;
-            case "Home":
-              next = firstEnabledIndex(opts);
-              break;
-            case "End":
-              next = lastEnabledIndex(opts);
-              break;
-            case "Enter":
-            case " ":
-              e.preventDefault();
-              selectIndex(active);
-              return;
-          }
-
-          if (next != null) {
-            e.preventDefault();
-            activeIndex.value = next;
-            scheduleMicrotask(focusActive);
-            return;
-          }
-
-          final match = typeahead.handleKey(e, opts, startIndex: active);
-          if (match != null) {
-            e.preventDefault();
-            activeIndex.value = match;
-            scheduleMicrotask(focusActive);
-            return;
-          }
-        }
-
-        on(listbox, "keydown", onKeydown);
-
-        onCleanup(clearTypeahead);
-        onCleanup(typeahead.dispose);
-
-        return listbox;
+        return handle.element;
       },
     ),
   );

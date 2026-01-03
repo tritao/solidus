@@ -37,6 +37,7 @@ abstract class Component {
 
   late final web.Element _root;
   bool _mounted = false;
+  final List<void Function()> _cleanups = <void Function()>[];
 
   web.Element render();
 
@@ -44,7 +45,33 @@ abstract class Component {
 
   void onAfterPatch() {}
 
+  void onDispose() {}
+
   web.Element get root => _root;
+
+  bool get isMounted => _mounted;
+
+  void addCleanup(void Function() cleanup) {
+    if (!_mounted) return;
+    _cleanups.add(cleanup);
+  }
+
+  StreamSubscription<T> listen<T>(
+    Stream<T> stream,
+    void Function(T event) onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    final sub = stream.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+    addCleanup(() => sub.cancel());
+    return sub;
+  }
 
   void mountInto(web.Element mount) {
     if (_mounted) return;
@@ -71,5 +98,18 @@ abstract class Component {
     morphPatch(_root, next);
     onAfterPatch();
   }
-}
 
+  void dispose() {
+    if (!_mounted) return;
+    try {
+      onDispose();
+    } catch (_) {}
+    for (final cleanup in _cleanups.reversed) {
+      try {
+        cleanup();
+      } catch (_) {}
+    }
+    _cleanups.clear();
+    _mounted = false;
+  }
+}

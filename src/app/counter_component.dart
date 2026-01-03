@@ -34,7 +34,7 @@ final class CounterComponent extends Component {
 
   @override
   void onMount() {
-    root.onClick.listen(_onClick);
+    listen(root.onClick, _onClick);
   }
 
   void _onClick(web.MouseEvent event) {

@@ -88,9 +88,9 @@ final class TodosComponent extends Component {
   @override
   void onMount() {
     _loadTodos();
-    root.onClick.listen(_onClick);
-    root.onChange.listen(_onChange);
-    root.onKeyDown.listen(_onKeyDown);
+    listen(root.onClick, _onClick);
+    listen(root.onChange, _onChange);
+    listen(root.onKeyDown, _onKeyDown);
     _cacheRefs();
     invalidate();
   }

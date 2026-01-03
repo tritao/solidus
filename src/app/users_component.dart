@@ -14,6 +14,8 @@ abstract final class _UsersActions {
 final class UsersComponent extends Component {
   UsersComponent();
 
+  int _requestToken = 0;
+
   bool _isLoading = false;
   String? _error;
   List<Map<String, Object?>> _users = const [];
@@ -71,7 +73,12 @@ final class UsersComponent extends Component {
 
   @override
   void onMount() {
-    root.onClick.listen(_onClick);
+    listen(root.onClick, _onClick);
+  }
+
+  @override
+  void onDispose() {
+    _requestToken++;
   }
 
   void _onClick(web.MouseEvent event) {
@@ -103,6 +110,7 @@ final class UsersComponent extends Component {
   }
 
   Future<void> _loadUsers() async {
+    final token = ++_requestToken;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -112,6 +120,7 @@ final class UsersComponent extends Component {
       final response = await http.get(
         Uri.parse('https://jsonplaceholder.typicode.com/users'),
       );
+      if (!isMounted || token != _requestToken) return;
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('HTTP ${response.statusCode}');
       }
@@ -126,8 +135,10 @@ final class UsersComponent extends Component {
 
       setState(() => _users = users);
     } catch (e) {
+      if (!isMounted || token != _requestToken) return;
       setState(() => _error = 'Failed to load users: $e');
     } finally {
+      if (!isMounted || token != _requestToken) return;
       setState(() => _isLoading = false);
     }
   }

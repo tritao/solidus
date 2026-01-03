@@ -51,6 +51,12 @@ web.HTMLParagraphElement danger(String text) => p(text, className: 'muted error'
 
 web.HTMLLIElement mutedLi(String text) => li(className: 'muted', text: text);
 
+web.HTMLParagraphElement statusText({
+  required String text,
+  bool isError = false,
+}) =>
+    isError ? danger(text) : muted(text);
+
 web.HTMLHeadingElement h1(
   String text, {
   String? className,

@@ -317,5 +317,96 @@ void main() {
 
       dispose();
     });
+
+    test("selector: only affected keys rerun", () async {
+      late Signal<int> selected;
+      late Selector<int> sel;
+      late Dispose dispose;
+
+      var aRuns = 0;
+      var bRuns = 0;
+      var cRuns = 0;
+      final aStates = <bool>[];
+      final bStates = <bool>[];
+      final cStates = <bool>[];
+
+      createRoot<void>((d) {
+        dispose = d;
+        selected = createSignal<int>(1);
+        sel = createSelector<int>(() => selected.value);
+
+        createEffect(() {
+          aRuns++;
+          aStates.add(sel.isSelected(1));
+        });
+        createEffect(() {
+          bRuns++;
+          bStates.add(sel.isSelected(2));
+        });
+        createEffect(() {
+          cRuns++;
+          cStates.add(sel.isSelected(3));
+        });
+      });
+
+      expect([aRuns, bRuns, cRuns], [1, 1, 1]);
+      expect(aStates.last, true);
+      expect(bStates.last, false);
+      expect(cStates.last, false);
+
+      selected.value = 2;
+      await pump();
+      flushSync();
+
+      // Only keys 1 and 2 flip. Key 3 stays false and should not re-run.
+      expect([aRuns, bRuns, cRuns], [2, 2, 1]);
+      expect(aStates.last, false);
+      expect(bStates.last, true);
+      expect(cStates.last, false);
+
+      selected.value = 3;
+      await pump();
+      flushSync();
+      expect([aRuns, bRuns, cRuns], [2, 3, 2]);
+      expect(bStates.last, false);
+      expect(cStates.last, true);
+
+      dispose();
+    });
+
+    test("selector: effect can switch which key it tracks", () async {
+      late Signal<int> selected;
+      late Signal<int> key;
+      late Selector<int> sel;
+      late Dispose dispose;
+
+      final seen = <bool>[];
+      createRoot<void>((d) {
+        dispose = d;
+        selected = createSignal<int>(1);
+        key = createSignal<int>(1);
+        sel = createSelector<int>(() => selected.value);
+        createEffect(() => seen.add(sel.isSelected(key.value)));
+      });
+
+      expect(seen, [true]);
+
+      key.value = 2;
+      await pump();
+      flushSync();
+      expect(seen.last, false);
+
+      selected.value = 2;
+      await pump();
+      flushSync();
+      expect(seen.last, true);
+
+      selected.value = 3;
+      await pump();
+      flushSync();
+      expect(seen.last, false);
+
+      dispose();
+    });
   });
 }

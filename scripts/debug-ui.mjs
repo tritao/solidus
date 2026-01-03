@@ -613,6 +613,35 @@ async function inspectUrl(
             };
           });
 
+          // Loop focus with tab/shift+tab and prevent programmatic escape.
+          await page.keyboard.press("Shift+Tab");
+          await page.waitForTimeout(50);
+          const activeAfterShiftTab = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+          await page.keyboard.press("Tab");
+          await page.waitForTimeout(30);
+          const activeAfterTabFromLast = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+          await page.keyboard.press("Tab");
+          await page.waitForTimeout(30);
+          const activeAfterSecondTab = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+
+          // Programmatic focus outside should not dismiss; focus should be brought back.
+          await page.evaluate(() => {
+            const t = document.querySelector("#dialog-trigger");
+            // @ts-ignore
+            t?.focus?.();
+          });
+          await page.waitForTimeout(50);
+          const afterProgrammaticOutside = await page.evaluate(() => ({
+            dialogOpen: document.querySelector("#dialog-panel") != null,
+            activeId: document.activeElement?.id ?? null,
+          }));
+
           await page.keyboard.press("Tab");
           await page.waitForTimeout(100);
           const activeAfterTab = await page.evaluate(
@@ -711,6 +740,12 @@ async function inspectUrl(
             afterOpen.appInert === true &&
             afterOpen.bodyOverflow === "hidden" &&
             afterOpen.activeId === "dialog-close" &&
+            activeAfterShiftTab === "dialog-nested-trigger" &&
+            activeAfterTabFromLast === "dialog-close" &&
+            activeAfterSecondTab === "dialog-nested-trigger" &&
+            afterProgrammaticOutside.dialogOpen === true &&
+            typeof afterProgrammaticOutside.activeId === "string" &&
+            afterProgrammaticOutside.activeId.startsWith("dialog-") &&
             activeAfterTab != null &&
             activeAfterTab.startsWith("dialog-") &&
             overflowWithNested === "hidden" &&
@@ -726,6 +761,10 @@ async function inspectUrl(
             ok,
             details: {
               bodyOverflowBefore,
+              activeAfterShiftTab,
+              activeAfterTabFromLast,
+              activeAfterSecondTab,
+              afterProgrammaticOutside,
               afterOpen,
               activeAfterTab,
               overflowWithNested,
@@ -1153,6 +1192,39 @@ async function inspectUrl(
             () => document.querySelector("#menu-content") != null,
             { timeout: timeoutMs },
           );
+          await page.waitForTimeout(50);
+
+          // Touch outside should defer dismissal to click.
+          const touchDismiss = await page.evaluate(() => {
+            const menu = document.querySelector("#menu-content");
+            if (!menu) return { ok: false, reason: "menu missing" };
+            const down = new PointerEvent("pointerdown", {
+              bubbles: true,
+              cancelable: true,
+              pointerType: "touch",
+              pointerId: 1,
+              isPrimary: true,
+              clientX: 2,
+              clientY: 2,
+            });
+            document.body.dispatchEvent(down);
+            const stillOpenAfterDown = document.querySelector("#menu-content") != null;
+
+            const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+            document.body.dispatchEvent(click);
+            return { ok: true, stillOpenAfterDown };
+          });
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") == null,
+            { timeout: timeoutMs },
+          );
+
+          // Reopen for keyboard tests.
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") != null,
+            { timeout: timeoutMs },
+          );
 
           const initialFocus = await page.evaluate(() => document.activeElement?.id ?? "");
           await page.keyboard.press("ArrowDown");
@@ -1168,6 +1240,8 @@ async function inspectUrl(
           const focusAfterClose = await page.evaluate(() => document.activeElement?.id ?? "");
 
           const ok =
+            touchDismiss.ok === true &&
+            touchDismiss.stillOpenAfterDown === true &&
             initialFocus === "menu-item-profile" &&
             afterDown === "menu-item-billing" &&
             afterEnd === "menu-item-logout" &&
@@ -1176,7 +1250,7 @@ async function inspectUrl(
           interactionResults.push({
             name: "solid-menu",
             ok,
-            details: { initialFocus, afterDown, afterEnd, focusAfterClose },
+            details: { touchDismiss, initialFocus, afterDown, afterEnd, focusAfterClose },
           });
         }
       } catch (e) {

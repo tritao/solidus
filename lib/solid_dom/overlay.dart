@@ -347,6 +347,7 @@ DismissableLayerHandle dismissableLayer(
   web.Element layer, {
   required void Function(String reason) onDismiss,
   bool disableOutsidePointerEvents = false,
+  bool dismissOnFocusOutside = true,
   List<web.Element? Function()>? excludedElements,
   void Function(web.Event event)? onPointerDownOutside,
   void Function(web.Event event)? onFocusOutside,
@@ -406,6 +407,7 @@ DismissableLayerHandle dismissableLayer(
   }
 
   void maybeDismissFocusOutside(web.Event e) {
+    if (!dismissOnFocusOutside) return;
     if (!bypassTopMostLayerCheck && !_isTopMostLayer(entry)) return;
     if (e is! web.FocusEvent) return;
     if (!isEventOutside(e)) return;

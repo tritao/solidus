@@ -94,6 +94,7 @@ bool _isLikelyFocusableOutside(web.Element container) {
 FocusScopeHandle focusScope(
   web.Element container, {
   bool trapFocus = false,
+  bool? loop,
   web.HTMLElement? initialFocus,
   bool restoreFocus = true,
 
@@ -103,6 +104,7 @@ FocusScopeHandle focusScope(
   /// Return true to prevent the default restore-focus behavior.
   bool Function()? onUnmountAutoFocus,
 }) {
+  final shouldLoop = loop ?? trapFocus;
   final entry = _FocusScopeEntry(container);
   entry.previouslyFocused = web.document.activeElement is web.HTMLElement
       ? web.document.activeElement as web.HTMLElement
@@ -111,12 +113,17 @@ FocusScopeHandle focusScope(
   _pausePreviousScope();
   _focusScopeStack.add(entry);
 
-  final start = _createSentinel();
-  final end = _createSentinel();
-  entry.startSentinel = start;
-  entry.endSentinel = end;
+  web.HTMLElement? start;
+  web.HTMLElement? end;
+  if (shouldLoop) {
+    start = _createSentinel();
+    end = _createSentinel();
+    entry.startSentinel = start;
+    entry.endSentinel = end;
+  }
 
   void attachSentinelsWhenConnected() {
+    if (!shouldLoop) return;
     if (entry.disposed) return;
     if (!container.isConnected) {
       scheduleMicrotask(attachSentinelsWhenConnected);
@@ -124,14 +131,16 @@ FocusScopeHandle focusScope(
     }
     final first = container.firstChild;
     if (first != null) {
-      container.insertBefore(start, first);
+      container.insertBefore(start!, first);
     } else {
-      container.appendChild(start);
+      container.appendChild(start!);
     }
-    container.appendChild(end);
+    container.appendChild(end!);
   }
 
-  scheduleMicrotask(attachSentinelsWhenConnected);
+  if (shouldLoop) {
+    scheduleMicrotask(attachSentinelsWhenConnected);
+  }
 
   void focusInitial() {
     if (entry.disposed) return;
@@ -214,20 +223,48 @@ FocusScopeHandle focusScope(
     focusInitial();
   }
 
+  void onKeydown(web.Event e) {
+    if (!shouldLoop) return;
+    if (entry.disposed) return;
+    if (entry.paused) return;
+    if (!_isTopMostScope(entry)) return;
+    if (e is! web.KeyboardEvent) return;
+    if (e.key != "Tab") return;
+
+    final tabbables = _tabbablesWithin(container);
+    if (tabbables.isEmpty) return;
+
+    final active = web.document.activeElement;
+    var index = tabbables.indexWhere((el) => identical(el, active));
+    if (index == -1) index = 0;
+
+    final nextIndex = e.shiftKey
+        ? (index - 1 + tabbables.length) % tabbables.length
+        : (index + 1) % tabbables.length;
+    e.preventDefault();
+    _focusElement(tabbables[nextIndex]);
+  }
+
   final jsContainerFocus = (onContainerFocusIn).toJS;
+  final jsKeydown = (onKeydown).toJS;
   final jsStartFocus = (onStartSentinelFocus).toJS;
   final jsEndFocus = (onEndSentinelFocus).toJS;
   final jsDocFocus = (onDocumentFocusIn).toJS;
 
   container.addEventListener("focusin", jsContainerFocus, true.toJS);
-  start.addEventListener("focus", jsStartFocus);
-  end.addEventListener("focus", jsEndFocus);
+  container.addEventListener("keydown", jsKeydown, true.toJS);
+  if (shouldLoop) {
+    start!.addEventListener("focus", jsStartFocus);
+    end!.addEventListener("focus", jsEndFocus);
+  }
 
   Timer? docRegister;
-  docRegister = Timer(Duration.zero, () {
-    web.document.addEventListener("focusin", jsDocFocus, true.toJS);
-    docRegister = null;
-  });
+  if (trapFocus) {
+    docRegister = Timer(Duration.zero, () {
+      web.document.addEventListener("focusin", jsDocFocus, true.toJS);
+      docRegister = null;
+    });
+  }
 
   void detachSentinel(web.HTMLElement? el) {
     if (el == null) return;
@@ -243,9 +280,14 @@ FocusScopeHandle focusScope(
     docRegister = null;
 
     container.removeEventListener("focusin", jsContainerFocus, true.toJS);
-    start.removeEventListener("focus", jsStartFocus);
-    end.removeEventListener("focus", jsEndFocus);
-    web.document.removeEventListener("focusin", jsDocFocus, true.toJS);
+    container.removeEventListener("keydown", jsKeydown, true.toJS);
+    if (shouldLoop) {
+      start!.removeEventListener("focus", jsStartFocus);
+      end!.removeEventListener("focus", jsEndFocus);
+    }
+    if (trapFocus) {
+      web.document.removeEventListener("focusin", jsDocFocus, true.toJS);
+    }
 
     detachSentinel(start);
     detachSentinel(end);

@@ -62,6 +62,7 @@ web.DocumentFragment Dialog({
 
         dismissableLayer(
           dialog,
+          dismissOnFocusOutside: false,
           onDismiss: (reason) => close(reason),
         );
         if (modal) {

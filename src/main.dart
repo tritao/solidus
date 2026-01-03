@@ -1,22 +1,13 @@
 import 'package:web/web.dart' as web;
 
+import './app/config.dart';
 import './app/counter_component.dart';
+import './app/route.dart' as route;
 import './app/todos_component.dart';
 import './app/users_component.dart';
 import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
 import 'package:dart_web_test/vite_ui/dom.dart' as dom;
-import 'package:dart_web_test/vite_ui/router.dart' as router;
-
-final class AppConfig {
-  const AppConfig({
-    required this.usersAll,
-    required this.usersLimited,
-  });
-
-  final String usersAll;
-  final String usersLimited;
-}
 
 abstract final class _AppActions {
   static const toggleUsersEndpoint = 'app-toggle-users-endpoint';
@@ -52,7 +43,7 @@ final class AppComponent extends Component {
   @override
   void onMount() {
     provide<AppConfig>(
-      'config',
+      AppConfig.contextKey,
       const AppConfig(
         usersAll: UsersComponent.usersAll,
         usersLimited: UsersComponent.usersLimited,
@@ -66,12 +57,10 @@ final class AppComponent extends Component {
   }
 
   void _applyRoute() {
-    final usersParam = router.getQueryParam('users');
-    final config = useContext<AppConfig>('config');
-    final endpoint = usersParam == 'limited'
-        ? config.usersLimited
-        : config.usersAll;
-    final showUsers = router.getQueryFlag('showUsers', defaultValue: true);
+    final config = useContext<AppConfig>(AppConfig.contextKey);
+    final state = route.readRoute(config);
+    final endpoint = state.usersEndpoint;
+    final showUsers = state.showUsers;
 
     if (endpoint != _usersEndpoint) {
       _usersEndpoint = endpoint;
@@ -110,13 +99,13 @@ final class AppComponent extends Component {
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
       _AppActions.toggleUsersEndpoint: (_) {
-        final config = useContext<AppConfig>('config');
+        final config = useContext<AppConfig>(AppConfig.contextKey);
         final next = _usersEndpoint == config.usersAll ? 'limited' : 'all';
-        router.setQueryParam('users', next);
+        route.setUsersMode(next);
         _applyRoute();
       },
       _AppActions.toggleUsersVisible: (_) {
-        router.setQueryParam('showUsers', _showUsers ? '0' : '1');
+        route.setShowUsers(!_showUsers);
         _applyRoute();
       }
     });

@@ -2,6 +2,7 @@ import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
 import '../ui/dom.dart' as dom;
+import '../ui/events.dart' as events;
 
 abstract final class _CounterActions {
   static const dec = 'counter-dec';
@@ -18,10 +19,10 @@ final class CounterComponent extends Component {
   web.Element render() {
     final row = dom.div(className: 'row');
     row
-      ..append(dom.button('−1', action: _CounterActions.dec))
-      ..append(dom.button('+1', action: _CounterActions.inc))
+      ..append(dom.actionButton('−1', action: _CounterActions.dec))
+      ..append(dom.actionButton('+1', action: _CounterActions.inc))
       ..append(
-        dom.button('Reset',
+        dom.actionButton('Reset',
             kind: 'secondary', action: _CounterActions.reset),
       );
 
@@ -38,20 +39,7 @@ final class CounterComponent extends Component {
   }
 
   void _onClick(web.MouseEvent event) {
-    final target = event.target;
-    if (target == null) return;
-
-    web.Element? targetEl;
-    try {
-      targetEl = target as web.Element;
-    } catch (_) {
-      return;
-    }
-
-    final actionEl = targetEl.closest('[data-action]');
-    if (actionEl == null) return;
-
-    final action = actionEl.getAttribute('data-action');
+    final action = events.actionNameFromEvent(event);
     if (action == null) return;
 
     switch (action) {

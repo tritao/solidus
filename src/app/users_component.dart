@@ -5,6 +5,7 @@ import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
 import '../ui/dom.dart' as dom;
+import '../ui/events.dart' as events;
 
 abstract final class _UsersActions {
   static const load = 'users-load';
@@ -66,12 +67,12 @@ final class UsersComponent extends Component {
 
     final row = dom.div(className: 'row');
     row
-      ..append(dom.button(
+      ..append(dom.actionButton(
         _isLoading ? 'Loading…' : 'Load users',
         disabled: _isLoading,
         action: _UsersActions.load,
       ))
-      ..append(dom.button(
+      ..append(dom.actionButton(
         'Clear',
         kind: 'secondary',
         disabled: _isLoading && _users.isEmpty,
@@ -110,20 +111,7 @@ final class UsersComponent extends Component {
   }
 
   void _onClick(web.MouseEvent event) {
-    final target = event.target;
-    if (target == null) return;
-
-    web.Element? targetEl;
-    try {
-      targetEl = target as web.Element;
-    } catch (_) {
-      return;
-    }
-
-    final actionEl = targetEl.closest('[data-action]');
-    if (actionEl == null) return;
-
-    final action = actionEl.getAttribute('data-action');
+    final action = events.actionNameFromEvent(event);
     if (action == null) return;
 
     switch (action) {

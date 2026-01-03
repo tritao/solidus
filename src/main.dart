@@ -5,6 +5,7 @@ import './app/todos_component.dart';
 import './app/users_component.dart';
 import './ui/component.dart';
 import './ui/dom.dart' as dom;
+import './ui/events.dart' as events;
 
 abstract final class _AppActions {
   static const toggleUsersEndpoint = 'app-toggle-users-endpoint';
@@ -41,18 +42,8 @@ final class AppComponent extends Component {
   }
 
   void _onClick(web.MouseEvent event) {
-    final target = event.target;
-    if (target == null) return;
-    web.Element? targetEl;
-    try {
-      targetEl = target as web.Element;
-    } catch (_) {
-      return;
-    }
-
-    final actionEl =
-        targetEl.closest('[data-action="${_AppActions.toggleUsersEndpoint}"]');
-    if (actionEl == null) return;
+    final action = events.actionNameFromEvent(event);
+    if (action != _AppActions.toggleUsersEndpoint) return;
 
     const full = 'https://jsonplaceholder.typicode.com/users';
     const limited = 'https://jsonplaceholder.typicode.com/users?_limit=5';
@@ -70,7 +61,7 @@ final class AppComponent extends Component {
           className: 'muted',
         ),
         dom.div(className: 'row', children: [
-          dom.button(
+          dom.actionButton(
             'Toggle users endpoint',
             kind: 'secondary',
             action: _AppActions.toggleUsersEndpoint,

@@ -4,6 +4,7 @@ import 'package:web/web.dart' as web;
 
 import '../ui/component.dart';
 import '../ui/dom.dart' as dom;
+import '../ui/events.dart' as events;
 
 final class _Todo {
   _Todo({
@@ -67,8 +68,8 @@ final class TodosComponent extends Component {
     final row = dom.div(className: 'row');
     row
       ..append(input)
-      ..append(dom.button('Add', action: _TodosActions.add))
-      ..append(dom.button(
+      ..append(dom.actionButton('Add', action: _TodosActions.add))
+      ..append(dom.actionButton(
         'Clear done',
         kind: 'secondary',
         disabled: _todos.every((t) => !t.done),
@@ -107,10 +108,8 @@ final class TodosComponent extends Component {
   }
 
   void _onClick(web.MouseEvent event) {
-    final actionEl = _actionElement(event.target);
-    if (actionEl == null) return;
-
-    final action = actionEl.getAttribute('data-action');
+    final actionEl = events.closestActionElement(event);
+    final action = actionEl?.getAttribute('data-action');
     if (action == null) return;
 
     switch (action) {
@@ -122,7 +121,7 @@ final class TodosComponent extends Component {
           _saveTodos();
         });
       case _TodosActions.remove:
-        final id = int.tryParse(actionEl.getAttribute('data-id') ?? '');
+        final id = actionEl == null ? null : events.actionIdFromElement(actionEl);
         if (id == null) return;
         setState(() {
           _todos.removeWhere((t) => t.id == id);
@@ -132,20 +131,13 @@ final class TodosComponent extends Component {
   }
 
   void _onChange(web.Event event) {
-    final target = event.target;
-    if (target == null) return;
-
-    web.Element? targetEl;
-    try {
-      targetEl = target as web.Element;
-    } catch (_) {
-      return;
-    }
+    final targetEl = events.eventTargetElement(event);
+    if (targetEl == null) return;
 
     final actionEl = targetEl.closest('[data-action="${_TodosActions.toggle}"]');
     if (actionEl == null) return;
 
-    final id = int.tryParse(actionEl.getAttribute('data-id') ?? '');
+    final id = events.actionIdFromElement(actionEl);
     if (id == null) return;
 
     try {
@@ -164,28 +156,11 @@ final class TodosComponent extends Component {
 
   void _onKeyDown(web.KeyboardEvent event) {
     if (event.key != 'Enter') return;
-    final target = event.target;
-    if (target == null) return;
-
-    web.Element? targetEl;
-    try {
-      targetEl = target as web.Element;
-    } catch (_) {
-      return;
-    }
+    final targetEl = events.eventTargetElement(event);
+    if (targetEl == null) return;
 
     if (targetEl.getAttribute('id') == 'todos-input') {
       _addFromInput();
-    }
-  }
-
-  web.Element? _actionElement(web.EventTarget? target) {
-    if (target == null) return null;
-    try {
-      final targetEl = target as web.Element;
-      return targetEl.closest('[data-action]');
-    } catch (_) {
-      return null;
     }
   }
 
@@ -241,19 +216,17 @@ final class TodosComponent extends Component {
       attrs: {'data-key': 'todos-${todo.id}'},
     );
 
-    final checkbox = dom.checkbox(
+    final checkbox = dom.actionCheckbox(
       checked: todo.done,
       className: 'checkbox',
-      attrs: {
-        'data-action': _TodosActions.toggle,
-        'data-id': '${todo.id}',
-      },
+      action: _TodosActions.toggle,
+      dataId: todo.id,
     );
 
     final label =
         dom.span(todo.text, className: todo.done ? 'todoText done' : 'todoText');
 
-    final remove = dom.button(
+    final remove = dom.actionButton(
       'Delete',
       kind: 'danger',
       action: _TodosActions.remove,

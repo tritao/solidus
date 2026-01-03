@@ -111,6 +111,35 @@ web.HTMLButtonElement button(
   return btn;
 }
 
+web.HTMLButtonElement actionButton(
+  String label, {
+  String kind = 'primary',
+  bool disabled = false,
+  required String action,
+  int? dataId,
+}) =>
+    button(label,
+        kind: kind,
+        disabled: disabled,
+        action: action,
+        dataId: dataId);
+
+web.HTMLInputElement actionCheckbox({
+  bool checked = false,
+  String? className,
+  required String action,
+  int? dataId,
+  Map<String, String>? attrs,
+}) {
+  final merged = <String, String>{
+    if (attrs != null) ...attrs,
+    'data-action': action,
+    if (dataId != null) 'data-id': '$dataId',
+  };
+
+  return checkbox(checked: checked, className: className, attrs: merged);
+}
+
 web.Element card({
   required String title,
   required List<web.Element> children,
@@ -122,4 +151,3 @@ web.Element card({
   }
   return cardEl;
 }
-

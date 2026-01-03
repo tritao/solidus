@@ -104,9 +104,17 @@ Resource<T> createResource<T>(
   owner._own(resource);
 
   void run(int version) {
-    fetcher()
-        .then<void>((value) => resource._resolve(version, value))
-        .catchError((Object e, StackTrace _) => resource._reject(version, e));
+    try {
+      fetcher()
+          .then<void>((value) => resource._resolve(version, value))
+          .catchError((Object e, StackTrace st) {
+        resource._reject(version, e);
+        _maybeReportError(owner, e, st);
+      });
+    } catch (e, st) {
+      resource._reject(version, e);
+      _maybeReportError(owner, e, st);
+    }
   }
 
   resource.refetch(run);
@@ -127,9 +135,17 @@ Resource<T> createResourceWithSource<S, T>(
   owner._own(resource);
 
   void runFetch(int version, S s) {
-    fetcher(s)
-        .then<void>((value) => resource._resolve(version, value))
-        .catchError((Object e, StackTrace _) => resource._reject(version, e));
+    try {
+      fetcher(s)
+          .then<void>((value) => resource._resolve(version, value))
+          .catchError((Object e, StackTrace st) {
+        resource._reject(version, e);
+        _maybeReportError(owner, e, st);
+      });
+    } catch (e, st) {
+      resource._reject(version, e);
+      _maybeReportError(owner, e, st);
+    }
   }
 
   createEffect(() {

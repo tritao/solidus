@@ -2,6 +2,7 @@ part of "solid.dart";
 
 typedef Dispose = void Function();
 typedef Cleanup = void Function();
+typedef ErrorHandler = void Function(Object error, StackTrace stackTrace);
 
 abstract class Disposable {
   void dispose();
@@ -13,9 +14,16 @@ final class Owner implements Disposable {
   final Owner? parent;
   final List<Cleanup> _cleanups = <Cleanup>[];
   final List<Disposable> _owned = <Disposable>[];
+  ErrorHandler? _errorHandler;
   bool _disposed = false;
 
   bool get disposed => _disposed;
+
+  ErrorHandler? get errorHandler => _errorHandler ?? parent?.errorHandler;
+
+  void setErrorHandler(ErrorHandler handler) {
+    _errorHandler = handler;
+  }
 
   void _own(Disposable disposable) {
     if (_disposed) {
@@ -61,6 +69,27 @@ Computation? _currentComputation;
 int _batchDepth = 0;
 bool _flushScheduled = false;
 final Set<Computation> _queue = <Computation>{};
+ErrorHandler? _globalErrorHandler;
+
+void setGlobalErrorHandler(ErrorHandler handler) {
+  _globalErrorHandler = handler;
+}
+
+void clearGlobalErrorHandler() {
+  _globalErrorHandler = null;
+}
+
+/// Sets an error handler scoped to the current owner/root.
+///
+/// This overrides the global error handler for computations created under the
+/// same owner subtree.
+void setErrorHandler(ErrorHandler handler) {
+  final owner = _currentOwner;
+  if (owner == null) {
+    throw StateError("setErrorHandler() called with no active owner");
+  }
+  owner.setErrorHandler(handler);
+}
 
 T createRoot<T>(T Function(Dispose dispose) fn) {
   final previous = _currentOwner;
@@ -155,9 +184,34 @@ void _flushSync() {
     _queue.clear();
     for (final computation in batch) {
       computation._queued = false;
-      computation._run();
+      try {
+        computation._run();
+      } catch (e, st) {
+        _reportError(computation._owner, e, st);
+      }
     }
   }
+}
+
+void _reportError(Owner? owner, Object error, StackTrace stackTrace) {
+  final handler = owner?.errorHandler ?? _globalErrorHandler;
+  if (handler != null) {
+    try {
+      handler(error, stackTrace);
+      return;
+    } catch (_) {
+      // fall through to throwing original error
+    }
+  }
+  Zone.current.handleUncaughtError(error, stackTrace);
+}
+
+void _maybeReportError(Owner? owner, Object error, StackTrace stackTrace) {
+  final handler = owner?.errorHandler ?? _globalErrorHandler;
+  if (handler == null) return;
+  try {
+    handler(error, stackTrace);
+  } catch (_) {}
 }
 
 abstract class Dependency {

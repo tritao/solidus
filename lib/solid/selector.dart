@@ -35,7 +35,13 @@ final class Selector<K> {
   }
 
   void _update() {
-    final next = _source();
+    Object? next;
+    try {
+      next = _source();
+    } catch (e, st) {
+      _reportError(_owner, e, st);
+      return;
+    }
     if (!_hasCurrent) {
       _current = next;
       _hasCurrent = true;

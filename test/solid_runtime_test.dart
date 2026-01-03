@@ -503,5 +503,68 @@ void main() {
       expect(log, ["run", "cleanup"]);
       disposeParent();
     });
+
+    test(
+        "error handling: global handler captures effect errors and scheduler continues",
+        () async {
+      final errors = <String>[];
+      setGlobalErrorHandler((error, _) => errors.add(error.toString()));
+
+      late Signal<int> s;
+      final okRuns = <int>[];
+      late Dispose dispose;
+
+      createRoot<void>((d) {
+        dispose = d;
+        s = createSignal<int>(0);
+        createEffect(() {
+          if (s.value == 1) throw StateError("boom");
+        });
+        createEffect(() => okRuns.add(s.value));
+      });
+
+      expect(okRuns, [0]);
+
+      s.value = 1;
+      await pump();
+      flushSync();
+      expect(errors.any((e) => e.contains("boom")), true);
+      // Second effect should still run even if the first throws.
+      expect(okRuns.last, 1);
+
+      s.value = 2;
+      await pump();
+      flushSync();
+      expect(okRuns.last, 2);
+
+      dispose();
+      clearGlobalErrorHandler();
+    });
+
+    test("error handling: owner handler overrides global handler", () async {
+      final global = <String>[];
+      final local = <String>[];
+      setGlobalErrorHandler((error, _) => global.add("g:$error"));
+
+      late Dispose dispose;
+      createRoot<void>((d) {
+        dispose = d;
+        // Set an owner-scoped handler.
+        setErrorHandler((error, _) => local.add("l:$error"));
+        final s = createSignal<int>(0);
+        createEffect(() {
+          if (s.value == 1) throw StateError("local-boom");
+        });
+        s.value = 1;
+      });
+
+      await pump();
+      flushSync();
+      expect(local.any((e) => e.contains("local-boom")), true);
+      expect(global.any((e) => e.contains("local-boom")), false);
+
+      dispose();
+      clearGlobalErrorHandler();
+    });
   });
 }

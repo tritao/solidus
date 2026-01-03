@@ -40,11 +40,15 @@ Signal<T> createSignal<T>(T initial) => Signal<T>(initial);
 final class Memo<T> implements Dependency {
   Memo(this._compute, this._owner) {
     _computation = Computation._(() {
-      final next = _compute();
-      final changed = !_hasValue || next != _cached;
-      _cached = next;
-      _hasValue = true;
-      if (changed) _notify();
+      try {
+        final next = _compute();
+        final changed = !_hasValue || next != _cached;
+        _cached = next;
+        _hasValue = true;
+        if (changed) _notify();
+      } catch (e, st) {
+        _reportError(_owner, e, st);
+      }
     }, _owner, isMemo: true);
   }
 
@@ -102,5 +106,11 @@ Effect createEffect(void Function() fn) {
   final owner = _currentOwner;
   if (owner == null)
     throw StateError("createEffect() called with no active owner");
-  return Effect._(Computation._(fn, owner, isMemo: false));
+  return Effect._(Computation._(() {
+    try {
+      fn();
+    } catch (e, st) {
+      _reportError(owner, e, st);
+    }
+  }, owner, isMemo: false));
 }

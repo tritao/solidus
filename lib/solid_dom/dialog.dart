@@ -13,6 +13,9 @@ web.DocumentFragment Dialog({
   required DialogBuilder builder,
   void Function(String reason)? onClose,
   bool modal = true,
+  bool backdrop = false,
+  String? backdropId,
+  String? backdropClassName,
   int exitMs = 120,
   web.HTMLElement? initialFocus,
   String? labelledBy,
@@ -42,6 +45,18 @@ web.DocumentFragment Dialog({
         }
         dialog.tabIndex = -1;
 
+        web.HTMLElement? backdropEl;
+        if (backdrop) {
+          final el = web.HTMLDivElement()
+            ..setAttribute("data-solid-backdrop", "1");
+          if (backdropId != null) el.id = backdropId;
+          if (backdropClassName != null) el.className = backdropClassName;
+          el.style.position = "fixed";
+          el.style.inset = "0";
+          el.style.background = "transparent";
+          backdropEl = el;
+        }
+
         dismissableLayer(
           dialog,
           onDismiss: (reason) => close(reason),
@@ -52,9 +67,13 @@ web.DocumentFragment Dialog({
           ariaHideOthers(dialog);
         }
 
-        return dialog;
+        if (backdropEl == null) return dialog;
+        final wrapper = web.HTMLDivElement()
+          ..setAttribute("data-solid-dialog-wrapper", "1");
+        wrapper.appendChild(backdropEl);
+        wrapper.appendChild(dialog);
+        return wrapper;
       },
     ),
   );
 }
-

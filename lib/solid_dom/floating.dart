@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:js_interop";
 
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
@@ -15,19 +16,45 @@ void _setPx(web.HTMLElement el, String prop, double value) {
   el.style.setProperty(prop, "${value.toStringAsFixed(2)}px");
 }
 
+double _clampSafe(double value, double min, double max) {
+  if (max < min) return min;
+  return value.clamp(min, max);
+}
+
 void _positionFixed({
   required web.Element anchor,
   required web.HTMLElement floating,
   required String placement,
   required double offset,
+  required double viewportPadding,
+  required bool flip,
 }) {
   final a = anchor.getBoundingClientRect();
   final f = floating.getBoundingClientRect();
 
+  final viewportWidth = web.window.innerWidth.toDouble();
+  final viewportHeight = web.window.innerHeight.toDouble();
+
+  String effective = placement;
+  if (flip) {
+    if (placement.startsWith("bottom") &&
+        a.bottom + offset + f.height > viewportHeight) {
+      effective = placement.replaceFirst("bottom", "top");
+    } else if (placement.startsWith("top") &&
+        a.top - offset - f.height < 0) {
+      effective = placement.replaceFirst("top", "bottom");
+    } else if (placement.startsWith("right") &&
+        a.right + offset + f.width > viewportWidth) {
+      effective = placement.replaceFirst("right", "left");
+    } else if (placement.startsWith("left") && a.left - offset - f.width < 0) {
+      effective = placement.replaceFirst("left", "right");
+    }
+  }
+
   double left;
   double top;
 
-  switch (placement) {
+  switch (effective) {
     case "top":
       left = a.left + (a.width - f.width) / 2;
       top = a.top - f.height - offset;
@@ -55,6 +82,9 @@ void _positionFixed({
       break;
   }
 
+  left = _clampSafe(left, viewportPadding, viewportWidth - f.width - viewportPadding);
+  top = _clampSafe(top, viewportPadding, viewportHeight - f.height - viewportPadding);
+
   floating.style.position = "fixed";
   _setPx(floating, "left", left);
   _setPx(floating, "top", top);
@@ -65,6 +95,9 @@ FloatingHandle floatToAnchor({
   required web.HTMLElement floating,
   String placement = "bottom-start",
   double offset = 8,
+  double viewportPadding = 8,
+  bool flip = true,
+  bool updateOnAnimationFrame = false,
 }) {
   var disposed = false;
 
@@ -76,6 +109,8 @@ FloatingHandle floatToAnchor({
       floating: floating,
       placement: placement,
       offset: offset,
+      viewportPadding: viewportPadding,
+      flip: flip,
     );
   }
 
@@ -92,6 +127,18 @@ FloatingHandle floatToAnchor({
   on(web.window, "scroll", (_) => compute());
   on(web.window, "resize", (_) => compute());
 
+  if (updateOnAnimationFrame) {
+    late final JSFunction jsLoop;
+    void rafLoop(num _) {
+      if (disposed) return;
+      compute();
+      web.window.requestAnimationFrame(jsLoop);
+    }
+
+    jsLoop = (rafLoop).toJS;
+    web.window.requestAnimationFrame(jsLoop);
+  }
+
   void dispose() {
     disposed = true;
   }
@@ -99,4 +146,3 @@ FloatingHandle floatToAnchor({
   onCleanup(dispose);
   return FloatingHandle._(dispose);
 }
-

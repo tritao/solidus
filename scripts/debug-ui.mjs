@@ -632,7 +632,23 @@ async function inspectUrl(
             () => document.body?.style?.overflow ?? null,
           );
 
+          // Clicking outside nested (on its backdrop) should close nested only.
+          await page.click("#dialog-nested-backdrop", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-nested-panel") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") != null,
+            { timeout: timeoutMs },
+          );
+
           // Escape closes nested only.
+          await page.click("#dialog-nested-trigger", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-nested-panel") != null,
+            { timeout: timeoutMs },
+          );
           await page.keyboard.press("Escape");
           await page.waitForFunction(
             () => document.querySelector("#dialog-nested-panel") == null,
@@ -988,6 +1004,63 @@ async function inspectUrl(
       } catch (e) {
         interactionResults.push({
           name: "solid-popover-position",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
+    } else if (scenario === "solid-popover-flip") {
+      try {
+        const trigger = page.locator("#popover-trigger-bottom");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-popover-flip",
+            ok: false,
+            details: { reason: "missing #popover-trigger-bottom" },
+          });
+        } else {
+          await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+          await page.waitForTimeout(150);
+
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel-bottom") != null,
+            { timeout: timeoutMs },
+          );
+
+          const metrics = await page.evaluate(() => {
+            const anchor = document.querySelector("#popover-trigger-bottom");
+            const panel = document.querySelector("#popover-panel-bottom");
+            if (!anchor || !panel) return null;
+            const a = anchor.getBoundingClientRect();
+            const p = panel.getBoundingClientRect();
+            return {
+              anchorTop: a.top,
+              anchorBottom: a.bottom,
+              panelTop: p.top,
+              panelBottom: p.bottom,
+              panelStyleTop: // @ts-ignore
+                panel.style.top ?? "",
+              panelStyleLeft: // @ts-ignore
+                panel.style.left ?? "",
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            typeof metrics.panelStyleTop === "string" &&
+            metrics.panelStyleTop.endsWith("px") &&
+            // If flipped/clamped, panel should be above the anchor.
+            metrics.panelTop < metrics.anchorTop;
+
+          interactionResults.push({
+            name: "solid-popover-flip",
+            ok,
+            details: { metrics, scrollY: await page.evaluate(() => window.scrollY) },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-flip",
           ok: false,
           details: { error: String(e) },
         });

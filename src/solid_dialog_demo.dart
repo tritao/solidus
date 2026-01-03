@@ -35,6 +35,8 @@ void mountSolidDialogDemo(web.Element mount) {
       Dialog(
         open: () => open.value,
         setOpen: (next) => open.value = next,
+        backdrop: true,
+        backdropId: "dialog-backdrop",
         labelledBy: titleId,
         describedBy: descId,
         onClose: (reason) => lastDismiss.value = reason,
@@ -74,6 +76,8 @@ void mountSolidDialogDemo(web.Element mount) {
             Dialog(
               open: () => nestedOpen.value,
               setOpen: (next) => nestedOpen.value = next,
+              backdrop: true,
+              backdropId: "dialog-nested-backdrop",
               portalId: "dialog-nested-portal",
               onClose: (reason) => lastDismiss.value = "nested:$reason",
               builder: (nestedClose) {
@@ -105,4 +109,3 @@ void mountSolidDialogDemo(web.Element mount) {
     return root;
   });
 }
-

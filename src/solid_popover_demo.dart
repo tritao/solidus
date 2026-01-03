@@ -12,6 +12,7 @@ void mountSolidPopoverDemo(web.Element mount) {
     root.style.minHeight = "2000px";
 
     final open = createSignal(false);
+    final bottomOpen = createSignal(false);
     final lastDismiss = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Popover Demo");
@@ -23,6 +24,17 @@ void mountSolidPopoverDemo(web.Element mount) {
       ..textContent = "Toggle popover";
     on(trigger, "click", (_) => open.value = !open.value);
     root.appendChild(trigger);
+
+    final bottomTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-bottom"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Open bottom popover";
+    on(bottomTrigger, "click", (_) => bottomOpen.value = !bottomOpen.value);
+    final bottomWrap = web.HTMLDivElement()
+      ..style.marginTop = "1600px";
+    bottomWrap.appendChild(bottomTrigger);
+    root.appendChild(bottomWrap);
 
     final status = web.HTMLParagraphElement()
       ..id = "popover-status"
@@ -47,6 +59,34 @@ void mountSolidPopoverDemo(web.Element mount) {
             ..textContent = "Popover content");
           final closeBtn = web.HTMLButtonElement()
             ..id = "popover-close"
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => bottomOpen.value,
+        setOpen: (next) => bottomOpen.value = next,
+        portalId: "popover-bottom-portal",
+        anchor: bottomTrigger,
+        placement: "bottom-start",
+        offset: 8,
+        onClose: (reason) => lastDismiss.value = "bottom:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-bottom"
+            ..className = "card";
+          panel.style.height = "400px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent = "Bottom popover");
+          final closeBtn = web.HTMLButtonElement()
+            ..id = "popover-close-bottom"
             ..type = "button"
             ..className = "btn secondary"
             ..textContent = "Close";

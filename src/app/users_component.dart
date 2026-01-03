@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
-import './endpoints.dart';
 import './user.dart';
 import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
@@ -15,9 +14,12 @@ abstract final class _UsersActions {
 }
 
 final class UsersComponent extends Component {
+  static const usersAll = 'https://jsonplaceholder.typicode.com/users';
+  static const usersLimited = 'https://jsonplaceholder.typicode.com/users?_limit=5';
+
   UsersComponent({
     String title = 'Fetch (async)',
-    String endpoint = Endpoints.usersAll,
+    String endpoint = usersAll,
   })  : _title = title,
         _endpoint = endpoint;
 

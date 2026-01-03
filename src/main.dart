@@ -2,7 +2,6 @@ import 'package:web/web.dart' as web;
 
 import './app/counter_component.dart';
 import './app/todos_component.dart';
-import './app/endpoints.dart';
 import './app/users_component.dart';
 import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
@@ -46,9 +45,9 @@ final class AppComponent extends Component {
     dispatchAction(event, {
       _AppActions.toggleUsersEndpoint: (_) {
         users.setEndpoint(
-          users.endpoint == Endpoints.usersAll
-              ? Endpoints.usersLimited
-              : Endpoints.usersAll,
+          users.endpoint == UsersComponent.usersAll
+              ? UsersComponent.usersLimited
+              : UsersComponent.usersAll,
         );
       }
     });

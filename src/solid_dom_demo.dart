@@ -4,11 +4,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidDomDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "solid-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "solid-dom"));
 
     final count = createSignal<int>(0);
     final showExtra = createSignal<bool>(false);

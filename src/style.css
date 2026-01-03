@@ -52,6 +52,22 @@ a.btn {
   text-decoration: none;
 }
 
+.solid-demo-nav {
+  margin-bottom: 16px;
+}
+
+.solid-demo-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.solid-demo-nav [aria-current="page"] {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
 .container {
   max-width: 920px;
   margin: 48px auto;

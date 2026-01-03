@@ -2,11 +2,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidOverlayDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "overlay-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "overlay"));
 
     final open = createSignal<bool>(false);
     final lastDismiss = createSignal<String>("none");

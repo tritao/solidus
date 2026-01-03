@@ -4,11 +4,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidDialogDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "dialog-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "dialog"));
 
     final open = createSignal(false);
     final noBackdropOpen = createSignal(false);

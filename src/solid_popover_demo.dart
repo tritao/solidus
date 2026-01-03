@@ -2,11 +2,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidPopoverDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "popover-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "popover"));
 
     // Ensure the page can scroll so we can validate repositioning on scroll.
     root.style.minHeight = "2000px";

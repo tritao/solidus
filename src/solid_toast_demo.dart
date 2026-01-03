@@ -2,11 +2,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidToastDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "toast-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "toast"));
 
     final toaster = createToaster(exitMs: 80, defaultDurationMs: 200);
     final count = createSignal(0);
@@ -28,4 +32,3 @@ void mountSolidToastDemo(web.Element mount) {
     return root;
   });
 }
-

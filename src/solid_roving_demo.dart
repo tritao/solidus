@@ -4,11 +4,15 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_nav.dart";
+
 void mountSolidRovingDemo(web.Element mount) {
   render(mount, () {
     final root = web.HTMLDivElement()
       ..id = "roving-root"
       ..className = "container";
+
+    root.appendChild(solidDemoNav(active: "roving"));
 
     final show = createSignal(true);
     final active = createSignal(0);

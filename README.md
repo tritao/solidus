@@ -2,6 +2,8 @@
 
 Minimal Vite project that imports `.dart` directly via `vite-plugin-dart`, with a small UI written in Dart (plain DOM) to validate compilation + runtime behavior.
 
+Live demo: https://tritao.github.io/vite-dart-dom-demo/
+
 ## Prerequisites
 
 - Node.js `^20.19.0 || >=22.12.0` (required by latest Vite)

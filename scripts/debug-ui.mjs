@@ -1548,6 +1548,111 @@ async function inspectUrl(
           details: { error: String(e), step },
         });
       }
+    } else if (scenario === "solid-listbox") {
+      let step = "init";
+      try {
+        const listbox = page.locator("#listbox-sections");
+        const vfInput = page.locator("#listbox-virtual-input");
+        if (!(await listbox.count()) || !(await vfInput.count())) {
+          interactionResults.push({
+            name: "solid-listbox",
+            ok: false,
+            details: { reason: "missing listbox elements" },
+          });
+        } else {
+          step = "count groups";
+          const groupCount = await page.evaluate(
+            () => document.querySelectorAll("#listbox-sections [role=group]").length,
+          );
+
+          step = "focus first option";
+          await page
+            .locator("#listbox-sections [role=option]")
+            .first()
+            .click({ timeout: timeoutMs });
+          await page.waitForTimeout(60);
+
+          const before = await page.evaluate(() => {
+            const el = document.querySelector("#listbox-sections");
+            return {
+              activeId: document.activeElement?.id ?? null,
+              scrollTop: el ? el.scrollTop : null,
+            };
+          });
+
+          step = "PageDown moves active and scrolls container";
+          await page.keyboard.press("PageDown");
+          await page.waitForTimeout(80);
+          const afterPageDown = await page.evaluate(() => {
+            const el = document.querySelector("#listbox-sections");
+            return {
+              activeId: document.activeElement?.id ?? null,
+              scrollTop: el ? el.scrollTop : null,
+            };
+          });
+
+          step = "End then Home";
+          await page.keyboard.press("End");
+          await page.waitForTimeout(60);
+          const afterEnd = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+          await page.keyboard.press("Home");
+          await page.waitForTimeout(60);
+          const afterHome = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+
+          step = "virtual focus updates aria-activedescendant";
+          await vfInput.first().click({ timeout: timeoutMs });
+          await page.keyboard.press("ArrowDown");
+          await page.waitForTimeout(60);
+          const afterVirtual = await page.evaluate(() => ({
+            activeId: document.activeElement?.id ?? null,
+            activeDescendant:
+              document
+                .querySelector("#listbox-virtual-input")
+                ?.getAttribute("aria-activedescendant") ?? null,
+            activeOptionId:
+              document.querySelector("#listbox-virtual [data-active=true]")?.id ??
+              null,
+          }));
+
+          const ok =
+            groupCount >= 2 &&
+            typeof before.activeId === "string" &&
+            typeof afterPageDown.activeId === "string" &&
+            before.activeId !== afterPageDown.activeId &&
+            typeof before.scrollTop === "number" &&
+            typeof afterPageDown.scrollTop === "number" &&
+            afterPageDown.scrollTop > before.scrollTop &&
+            typeof afterEnd === "string" &&
+            typeof afterHome === "string" &&
+            afterEnd !== afterHome &&
+            afterVirtual.activeId === "listbox-virtual-input" &&
+            typeof afterVirtual.activeDescendant === "string" &&
+            afterVirtual.activeDescendant === afterVirtual.activeOptionId;
+
+          interactionResults.push({
+            name: "solid-listbox",
+            ok,
+            details: {
+              groupCount,
+              before,
+              afterPageDown,
+              afterEnd,
+              afterHome,
+              afterVirtual,
+            },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-listbox",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-toast") {
       try {
         const trigger = page.locator("#toast-trigger");

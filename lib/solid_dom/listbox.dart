@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:math";
 
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
@@ -44,7 +45,8 @@ final class ListboxHandle<T, O extends ListboxItem<T>> {
 
 ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   required String id,
-  required List<O> Function() options,
+  List<O> Function()? options,
+  Iterable<ListboxSection<T, O>> Function()? sections,
   required T? Function() selected,
   required void Function(O option, int index) onSelect,
   bool Function(T a, T b)? equals,
@@ -59,20 +61,42 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   void Function()? onEscape,
   String emptyText = "No results.",
   bool showEmptyState = false,
+  Object? Function(O option)? getOptionKey,
+  ListboxIdRegistry<T, O>? idRegistry,
+  web.HTMLElement? Function()? scrollContainer,
+  void Function(int index)? scrollToIndex,
+  int Function()? pageSize,
   ListboxOptionBuilder<T, O>? optionBuilder,
 }) {
   final eq = equals ?? defaultListboxEquals<T>;
+  if (options == null && sections == null) {
+    throw StateError("createListbox: provide options or sections");
+  }
   final listbox = web.HTMLDivElement()
     ..id = id
     ..setAttribute("role", "listbox")
     ..tabIndex = shouldUseVirtualFocus ? -1 : -1
     ..className = "card";
 
+  final ids =
+      idRegistry ?? ListboxIdRegistry<T, O>(listboxId: id, getOptionKey: getOptionKey);
+
+  List<O> currentOptions() {
+    if (sections != null) {
+      final out = <O>[];
+      for (final section in sections()) {
+        out.addAll(section.options);
+      }
+      return out;
+    }
+    return options!();
+  }
+
   final activeIndexSig = activeIndex ??
       createSignal<int>(
         initialActiveIndex?.call() ??
             (() {
-              final opts = options();
+              final opts = currentOptions();
               final sel = selected();
               final idx = findSelectedIndex<T, O>(opts, sel, equals: eq);
               return idx == -1 ? firstEnabledIndex(opts) : idx;
@@ -83,18 +107,42 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   String? activeId() {
     final idx = activeIndexSig.value;
-    final opts = options();
+    final opts = currentOptions();
     if (idx < 0 || idx >= opts.length) return null;
-    return optionIdFor(opts, id, idx);
+    return ids.idForIndex(opts, idx);
+  }
+
+  void scrollElementIntoView(web.HTMLElement container, web.HTMLElement el) {
+    try {
+      final cRect = container.getBoundingClientRect();
+      final eRect = el.getBoundingClientRect();
+      final viewTop = container.scrollTop;
+      final viewBottom = viewTop + cRect.height;
+      final elTop = (eRect.top - cRect.top) + viewTop;
+      final elBottom = elTop + eRect.height;
+
+      if (elTop < viewTop) {
+        container.scrollTop = elTop;
+      } else if (elBottom > viewBottom) {
+        container.scrollTop = elBottom - cRect.height;
+      }
+    } catch (_) {
+      try {
+        el.scrollIntoView();
+      } catch (_) {}
+    }
   }
 
   void scrollActiveIntoView() {
     final idx = activeIndexSig.value;
     if (idx < 0 || idx >= optionEls.length) return;
+    if (scrollToIndex != null) {
+      scrollToIndex(idx);
+      return;
+    }
     final el = optionEls[idx];
-    try {
-      el.scrollIntoView();
-    } catch (_) {}
+    final container = scrollContainer?.call() ?? listbox;
+    scrollElementIntoView(container, el);
   }
 
   void focusActive() {
@@ -120,7 +168,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   }
 
   void setActiveIndex(int next) {
-    final opts = options();
+    final opts = currentOptions();
     if (opts.isEmpty) {
       activeIndexSig.value = -1;
       return;
@@ -129,7 +177,9 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     if (idx < 0) idx = 0;
     if (idx >= opts.length) idx = opts.length - 1;
     if (opts[idx].disabled) {
-      idx = nextEnabledIndex(opts, idx, 1);
+      idx = shouldFocusWrap
+          ? nextEnabledIndex(opts, idx, 1)
+          : nextEnabledIndexNoWrap(opts, idx, 1);
     }
     activeIndexSig.value = idx;
     scheduleMicrotask(() {
@@ -140,14 +190,16 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   }
 
   void moveActive(int delta) {
-    final opts = options();
+    final opts = currentOptions();
     if (opts.isEmpty) return;
     final current = activeIndexSig.value;
     int next;
     if (!shouldFocusWrap) {
       next = (current + delta).clamp(0, opts.length - 1);
       if (opts[next].disabled) {
-        next = delta > 0 ? nextEnabledIndex(opts, next, 1) : nextEnabledIndex(opts, next, -1);
+        next = delta > 0
+            ? nextEnabledIndexNoWrap(opts, next, 1)
+            : nextEnabledIndexNoWrap(opts, next, -1);
       }
     } else {
       next = nextEnabledIndex(opts, current < 0 ? 0 : current, delta);
@@ -157,7 +209,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   void selectActive() {
     final idx = activeIndexSig.value;
-    final opts = options();
+    final opts = currentOptions();
     if (idx < 0 || idx >= opts.length) return;
     final opt = opts[idx];
     if (opt.disabled) return;
@@ -166,10 +218,51 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   final typeahead = ListboxTypeahead();
 
+  int computePageSize() {
+    try {
+      final fromProp = pageSize?.call();
+      if (fromProp != null && fromProp > 0) return fromProp;
+    } catch (_) {}
+
+    if (optionEls.isEmpty) return 5;
+    final container = scrollContainer?.call() ?? listbox;
+    final idx = activeIndexSig.value;
+    final base =
+        (idx >= 0 && idx < optionEls.length) ? optionEls[idx] : optionEls.first;
+    try {
+      final cH = container.getBoundingClientRect().height;
+      final eH = base.getBoundingClientRect().height;
+      if (cH <= 0 || eH <= 0) return 5;
+      return max(1, (cH / eH).floor() - 1);
+    } catch (_) {
+      return 5;
+    }
+  }
+
+  void moveActiveByPage(int direction) {
+    final opts = currentOptions();
+    if (opts.isEmpty) return;
+    final step = computePageSize();
+    final current = activeIndexSig.value < 0 ? 0 : activeIndexSig.value;
+    var next = current + (direction * step);
+    if (shouldFocusWrap) {
+      next = ((next % opts.length) + opts.length) % opts.length;
+      if (opts[next].disabled) {
+        next = nextEnabledIndex(opts, next, direction >= 0 ? 1 : -1);
+      }
+    } else {
+      next = next.clamp(0, opts.length - 1);
+      if (opts[next].disabled) {
+        next = nextEnabledIndexNoWrap(opts, next, direction >= 0 ? 1 : -1);
+      }
+    }
+    setActiveIndex(next);
+  }
+
   void onKeydown(web.Event e) {
     if (!enableKeyboardNavigation) return;
     if (e is! web.KeyboardEvent) return;
-    final opts = options();
+    final opts = currentOptions();
     if (e.key == "Tab") {
       onTabOut?.call();
       return;
@@ -184,14 +277,20 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     int? next;
     switch (e.key) {
       case "ArrowDown":
-        next = shouldFocusWrap
-            ? nextEnabledIndex(opts, activeIndexSig.value, 1)
-            : (activeIndexSig.value + 1).clamp(0, opts.length - 1);
+        if (shouldFocusWrap) {
+          next = nextEnabledIndex(opts, activeIndexSig.value, 1);
+        } else {
+          next = (activeIndexSig.value + 1).clamp(0, opts.length - 1);
+          if (opts[next].disabled) next = nextEnabledIndexNoWrap(opts, next, 1);
+        }
         break;
       case "ArrowUp":
-        next = shouldFocusWrap
-            ? nextEnabledIndex(opts, activeIndexSig.value, -1)
-            : (activeIndexSig.value - 1).clamp(0, opts.length - 1);
+        if (shouldFocusWrap) {
+          next = nextEnabledIndex(opts, activeIndexSig.value, -1);
+        } else {
+          next = (activeIndexSig.value - 1).clamp(0, opts.length - 1);
+          if (opts[next].disabled) next = nextEnabledIndexNoWrap(opts, next, -1);
+        }
         break;
       case "Home":
         next = firstEnabledIndex(opts);
@@ -199,6 +298,14 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
       case "End":
         next = lastEnabledIndex(opts);
         break;
+      case "PageDown":
+        e.preventDefault();
+        moveActiveByPage(1);
+        return;
+      case "PageUp":
+        e.preventDefault();
+        moveActiveByPage(-1);
+        return;
       case "Enter":
       case " ":
         e.preventDefault();
@@ -232,7 +339,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
           ..textContent = option.label);
 
     el.setAttribute("role", "option");
-    el.id = optionIdFor(options(), id, idx);
+    el.id = ids.idForOption(option);
     el.setAttribute("aria-selected", selected ? "true" : "false");
     if (option.disabled) el.setAttribute("aria-disabled", "true");
     if (active) el.setAttribute("data-active", "true");
@@ -266,9 +373,18 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   }
 
   createRenderEffect(() {
+    final shouldRestoreFocus = !shouldUseVirtualFocus &&
+        (() {
+          try {
+            final activeEl = web.document.activeElement;
+            if (activeEl is web.Node) return listbox.contains(activeEl);
+          } catch (_) {}
+          return false;
+        })();
+
     listbox.textContent = "";
     optionEls.clear();
-    final opts = options();
+    final opts = currentOptions();
     final sel = selected();
 
     if (opts.isEmpty) {
@@ -291,18 +407,52 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     if (active >= 0 && opts[active].disabled) active = nextEnabledIndex(opts, active, 1);
     activeIndexSig.value = active;
 
-    for (var i = 0; i < opts.length; i++) {
-      final opt = opts[i];
-      final isSelected = sel != null && eq(opt.value, sel);
-      final isActive = i == activeIndexSig.value;
-      final el = buildOption(opt, i, isSelected, isActive);
-      optionEls.add(el);
-      listbox.appendChild(el);
+    if (sections != null) {
+      var flatIdx = 0;
+      var sectionIdx = 0;
+      for (final section in sections()) {
+        final labelId =
+            section.id != null ? "$id-section-${section.id}-label" : "$id-section-$sectionIdx-label";
+        final group = web.HTMLDivElement()
+          ..setAttribute("role", "group")
+          ..setAttribute("aria-labelledby", labelId);
+        group.style.padding = "4px 0";
+
+        final label = web.HTMLDivElement()
+          ..id = labelId
+          ..textContent = section.label;
+        label.style.fontSize = "12px";
+        label.style.opacity = "0.7";
+        label.style.padding = "4px 8px";
+        group.appendChild(label);
+
+        for (final opt in section.options) {
+          final isSelected = sel != null && eq(opt.value, sel);
+          final isActive = flatIdx == activeIndexSig.value;
+          final el = buildOption(opt, flatIdx, isSelected, isActive);
+          optionEls.add(el);
+          group.appendChild(el);
+          flatIdx++;
+        }
+
+        listbox.appendChild(group);
+        sectionIdx++;
+      }
+    } else {
+      for (var i = 0; i < opts.length; i++) {
+        final opt = opts[i];
+        final isSelected = sel != null && eq(opt.value, sel);
+        final isActive = i == activeIndexSig.value;
+        final el = buildOption(opt, i, isSelected, isActive);
+        optionEls.add(el);
+        listbox.appendChild(el);
+      }
     }
 
     scheduleMicrotask(() {
       syncTabIndex();
       scrollActiveIntoView();
+      if (shouldRestoreFocus) focusActive();
     });
   });
 

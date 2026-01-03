@@ -40,6 +40,8 @@
     "debug:solid-tooltip:ci": "node scripts/debug-ui.mjs --mode dev --timeout-ms 240000 --path \"/?solid=tooltip\" --scenario solid-tooltip --expect-h1 \"Solid Tooltip Demo\" --expect-selector \"#tooltip-root\"",
     "debug:solid-select": "node scripts/debug-ui.mjs --mode dev --path \"/?solid=select\" --scenario solid-select --expect-h1 \"Solid Select Demo\" --expect-selector \"#select-root\"",
     "debug:solid-select:ci": "node scripts/debug-ui.mjs --mode dev --timeout-ms 240000 --path \"/?solid=select\" --scenario solid-select --expect-h1 \"Solid Select Demo\" --expect-selector \"#select-root\"",
+    "debug:solid-listbox": "node scripts/debug-ui.mjs --mode dev --path \"/?solid=listbox\" --scenario solid-listbox --expect-h1 \"Solid Listbox Demo\" --expect-selector \"#listbox-root\"",
+    "debug:solid-listbox:ci": "node scripts/debug-ui.mjs --mode dev --timeout-ms 240000 --path \"/?solid=listbox\" --scenario solid-listbox --expect-h1 \"Solid Listbox Demo\" --expect-selector \"#listbox-root\"",
     "debug:solid-combobox": "node scripts/debug-ui.mjs --mode dev --path \"/?solid=combobox\" --scenario solid-combobox --expect-h1 \"Solid Combobox Demo\" --expect-selector \"#combobox-root\"",
     "debug:solid-combobox:ci": "node scripts/debug-ui.mjs --mode dev --timeout-ms 240000 --path \"/?solid=combobox\" --scenario solid-combobox --expect-h1 \"Solid Combobox Demo\" --expect-selector \"#combobox-root\""
   },

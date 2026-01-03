@@ -62,6 +62,7 @@ web.DocumentFragment Combobox<T>({
   bool allowsEmptyCollection = false,
   bool keepOpenOnEmpty = false,
   String emptyText = "No results.",
+  bool noResetInputOnBlur = false,
   bool closeOnSelection = true,
   ComboboxFilter<T>? filter,
   String triggerMode = "input",
@@ -73,10 +74,12 @@ web.DocumentFragment Combobox<T>({
   bool eq(T a, T b) => equals != null ? equals(a, b) : a == b;
   final resolvedListboxId =
       listboxId ?? _nextComboboxId("solid-combobox-listbox");
+  final ids = ListboxIdRegistry<T, ComboboxOption<T>>(listboxId: resolvedListboxId);
 
   // Input state mirrors Kobalte: user types -> filter -> open/close.
   final inputValue = createSignal<String>("");
   final activeIndex = createSignal<int>(-1);
+  final showAllOptions = createSignal(false);
   web.HTMLElement? listboxRef;
   var isComposing = false;
   final allowEmpty = allowsEmptyCollection || keepOpenOnEmpty;
@@ -119,6 +122,11 @@ web.DocumentFragment Combobox<T>({
     return all.where((o) => f(o, q)).toList(growable: false);
   }
 
+  List<ComboboxOption<T>> displayedOptions() {
+    if (showAllOptions.value) return options().toList(growable: false);
+    return filteredOptions();
+  }
+
   void ensureActiveIndexWithin(List<ComboboxOption<T>> opts) {
     if (opts.isEmpty) {
       activeIndex.value = -1;
@@ -138,13 +146,15 @@ web.DocumentFragment Combobox<T>({
     activeIndex.value = idx;
   }
 
-  void openNow([int? focusIndex]) {
+  void openNow({int? focusIndex, bool showAll = false}) {
+    showAllOptions.value = showAll;
     setOpen(true);
-    final opts = filteredOptions();
+    final opts = displayedOptions();
     if (focusIndex != null) {
       activeIndex.value = focusIndex;
     } else {
       if (opts.isEmpty && !allowEmpty) {
+        showAllOptions.value = false;
         setOpen(false);
         return;
       }
@@ -155,9 +165,11 @@ web.DocumentFragment Combobox<T>({
   void closeNow([String reason = "close"]) {
     onClose?.call(reason);
     setOpen(false);
+    showAllOptions.value = false;
   }
 
   void resetInputToSelection() {
+    if (noResetInputOnBlur && value() == null) return;
     syncInputFromSelection();
   }
 
@@ -185,9 +197,9 @@ web.DocumentFragment Combobox<T>({
     () {
       if (!open()) return null;
       final idx = activeIndex.value;
-      final opts = filteredOptions();
+      final opts = displayedOptions();
       if (idx < 0 || idx >= opts.length) return null;
-      return optionIdFor(opts, resolvedListboxId, idx);
+      return ids.idForIndex(opts, idx);
     },
   );
 
@@ -195,12 +207,13 @@ web.DocumentFragment Combobox<T>({
     if (e.target is! web.HTMLInputElement) return;
     final target = e.target as web.HTMLInputElement;
     inputValue.value = target.value;
+    showAllOptions.value = false;
     // Keep DOM value in sync (inputs can drift even if "controlled").
     target.value = inputValue.value;
     if (isComposing) return;
 
     // If empty, keep it open only if configured.
-    final opts = filteredOptions();
+    final opts = displayedOptions();
     if (open()) {
       ensureActiveIndexWithin(opts);
       if (opts.isEmpty && !allowEmpty) {
@@ -210,15 +223,15 @@ web.DocumentFragment Combobox<T>({
       }
     } else {
       if (triggerMode == "manual") return;
-      if (opts.isNotEmpty || allowEmpty) openNow();
+      if (opts.isNotEmpty || allowEmpty) openNow(showAll: false);
     }
   });
 
   on(input, "focusin", (_) {
     if (triggerMode != "focus") return;
     if (open()) return;
-    final opts = filteredOptions();
-    if (opts.isNotEmpty || allowEmpty) openNow();
+    final opts = displayedOptions();
+    if (opts.isNotEmpty || allowEmpty) openNow(showAll: false);
   });
 
   on(input, "focusout", (e) {
@@ -241,8 +254,9 @@ web.DocumentFragment Combobox<T>({
   on(input, "compositionend", (_) {
     isComposing = false;
     inputValue.value = input.value;
+    showAllOptions.value = false;
     if (triggerMode == "manual") return;
-    final opts = filteredOptions();
+    final opts = displayedOptions();
     if (opts.isEmpty && !allowEmpty) {
       if (open()) {
         closeNow("empty");
@@ -250,18 +264,22 @@ web.DocumentFragment Combobox<T>({
       }
       return;
     }
-    if (!open() && (opts.isNotEmpty || allowEmpty)) openNow();
+    if (!open() && (opts.isNotEmpty || allowEmpty)) openNow(showAll: false);
   });
 
   on(input, "keydown", (e) {
     if (e is! web.KeyboardEvent) return;
     if (isComposing) return;
 
-    final opts = filteredOptions();
+    final opts = displayedOptions();
     if (e.key == "ArrowDown") {
       if (!open()) {
+        final all = options().toList(growable: false);
         e.preventDefault();
-        openNow(firstEnabledIndex(opts));
+        openNow(
+          focusIndex: e.altKey ? null : firstEnabledIndex(all),
+          showAll: true,
+        );
         return;
       }
       e.preventDefault();
@@ -270,8 +288,15 @@ web.DocumentFragment Combobox<T>({
     }
     if (e.key == "ArrowUp") {
       if (!open()) {
+        final all = options().toList(growable: false);
         e.preventDefault();
-        openNow(lastEnabledIndex(opts));
+        openNow(focusIndex: lastEnabledIndex(all), showAll: true);
+        return;
+      }
+      if (e.altKey) {
+        e.preventDefault();
+        closeNow("escape");
+        resetInputToSelection();
         return;
       }
       e.preventDefault();
@@ -308,8 +333,8 @@ web.DocumentFragment Combobox<T>({
   on(input, "click", (_) {
     if (open()) return;
     if (triggerMode == "manual") return;
-    final opts = filteredOptions();
-    if (opts.isNotEmpty || allowEmpty) openNow();
+    final opts = displayedOptions();
+    if (opts.isNotEmpty || allowEmpty) openNow(showAll: false);
   });
 
   return Presence(
@@ -320,7 +345,7 @@ web.DocumentFragment Combobox<T>({
       children: () {
         final listbox = createListbox<T, ComboboxOption<T>>(
           id: resolvedListboxId,
-          options: filteredOptions,
+          options: displayedOptions,
           selected: value,
           equals: eq,
           activeIndex: activeIndex,
@@ -329,6 +354,7 @@ web.DocumentFragment Combobox<T>({
           enableKeyboardNavigation: false,
           showEmptyState: showEmptyState,
           emptyText: emptyText,
+          idRegistry: ids,
           onSelect: (opt, idx) {
             setValue(opt.value);
             inputValue.value = opt.label;
@@ -357,24 +383,24 @@ web.DocumentFragment Combobox<T>({
         );
 
         // Close and reset input when interacting outside.
-        dismissableLayer(
-          listbox.element,
-          excludedElements: <web.Element? Function()>[
-            () => anchor,
-          ],
-          onDismiss: (reason) {
-            closeNow(reason);
-            resetInputToSelection();
-          },
-        );
-        createRenderEffect(() {
-          final opts = filteredOptions();
-          if (opts.isEmpty && !allowEmpty) {
-            closeNow("empty");
-            resetInputToSelection();
-            return;
-          }
-          ensureActiveIndexWithin(opts);
+          dismissableLayer(
+            listbox.element,
+            excludedElements: <web.Element? Function()>[
+              () => anchor,
+            ],
+            onDismiss: (reason) {
+              closeNow(reason);
+              resetInputToSelection();
+            },
+          );
+          createRenderEffect(() {
+            final opts = displayedOptions();
+            if (opts.isEmpty && !allowEmpty) {
+              closeNow("empty");
+              resetInputToSelection();
+              return;
+            }
+            ensureActiveIndexWithin(opts);
         });
 
         return listbox.element;

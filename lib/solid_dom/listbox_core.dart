@@ -10,6 +10,18 @@ abstract interface class ListboxItem<T> {
   String? get id;
 }
 
+final class ListboxSection<T, O extends ListboxItem<T>> {
+  const ListboxSection({
+    required this.label,
+    required this.options,
+    this.id,
+  });
+
+  final String label;
+  final List<O> options;
+  final String? id;
+}
+
 bool defaultListboxEquals<T>(T a, T b) => a == b;
 
 int findSelectedIndex<T, O extends ListboxItem<T>>(
@@ -54,6 +66,57 @@ int nextEnabledIndex<O extends ListboxItem<Object?>>(
   return start;
 }
 
+int nextEnabledIndexNoWrap<O extends ListboxItem<Object?>>(
+  List<O> options,
+  int start,
+  int delta,
+) {
+  if (options.isEmpty) return -1;
+  if (start < 0) start = 0;
+  if (start >= options.length) start = options.length - 1;
+
+  var idx = start;
+  while (true) {
+    idx += delta;
+    if (idx < 0 || idx >= options.length) return start;
+    if (!options[idx].disabled) return idx;
+  }
+}
+
+final class ListboxIdRegistry<T, O extends ListboxItem<T>> {
+  ListboxIdRegistry({
+    required this.listboxId,
+    this.getOptionKey,
+  });
+
+  final String listboxId;
+  final Object? Function(O option)? getOptionKey;
+
+  final Map<Object, int> _stableIndexByKey = <Object, int>{};
+  int _nextIndex = 0;
+
+  Object _keyFor(O option) {
+    final key = getOptionKey?.call(option) ?? option.value;
+    // Avoid collisions on null.
+    return key ?? option;
+  }
+
+  String idForOption(O option) {
+    final directId = option.id;
+    if (directId != null) return directId;
+
+    final key = _keyFor(option);
+    final stable = _stableIndexByKey.putIfAbsent(key, () => _nextIndex++);
+    return "$listboxId-opt-$stable";
+  }
+
+  String idForIndex(List<O> options, int index) {
+    if (index < 0 || index >= options.length) return "$listboxId-opt--1";
+    return idForOption(options[index]);
+  }
+}
+
+@Deprecated("Prefer ListboxIdRegistry.idForIndex for stable ids.")
 String optionIdFor<O extends ListboxItem<Object?>>(
   List<O> options,
   String listboxId,
@@ -103,4 +166,3 @@ final class ListboxTypeahead {
     return null;
   }
 }
-

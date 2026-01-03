@@ -19,6 +19,8 @@ final class TodosComponent extends Component {
   TodosComponent();
 
   static const _storageKey = 'todos_v1';
+  static const _inputId = 'todos-input';
+  static const _inputSelector = '#$_inputId';
 
   web.HTMLInputElement? _input;
 
@@ -55,7 +57,7 @@ final class TodosComponent extends Component {
   }
 
   web.HTMLInputElement _buildInput() => dom.inputText(
-        id: 'todos-input',
+        id: _inputId,
         className: 'input',
         placeholder: 'New todo…',
       );
@@ -97,11 +99,7 @@ final class TodosComponent extends Component {
   }
 
   void _cacheRefs() {
-    try {
-      _input = root.querySelector('#todos-input') as web.HTMLInputElement?;
-    } catch (_) {
-      _input = null;
-    }
+    _input = query<web.HTMLInputElement>(_inputSelector);
   }
 
   void _onClick(web.MouseEvent event) {
@@ -128,13 +126,9 @@ final class TodosComponent extends Component {
     final id = events.actionIdFromElement(actionEl);
     if (id == null) return;
 
-    try {
-      final checkbox = actionEl as web.HTMLInputElement;
-      final checked = checkbox.checked == true;
-      _store.dispatch(TodosToggle(id: id, done: checked));
-    } catch (_) {
-      return;
-    }
+    if (actionEl is! web.HTMLInputElement) return;
+    final checked = actionEl.checked == true;
+    _store.dispatch(TodosToggle(id: id, done: checked));
   }
 
   void _onKeyDown(web.KeyboardEvent event) {
@@ -142,7 +136,7 @@ final class TodosComponent extends Component {
     final targetEl = events.eventTargetElement(event);
     if (targetEl == null) return;
 
-    if (targetEl.getAttribute('id') == 'todos-input') {
+    if (targetEl.getAttribute('id') == _inputId) {
       _addFromInput();
     }
   }

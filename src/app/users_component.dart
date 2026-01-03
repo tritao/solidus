@@ -65,7 +65,6 @@ final class UsersComponent extends Component {
       _store.dispatch(UsersSetEndpoint(config.usersAll));
     }
     listen(root.onClick, _onClick);
-    super.onMount();
   }
 
   @override

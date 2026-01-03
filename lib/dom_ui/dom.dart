@@ -46,6 +46,10 @@ web.HTMLDivElement buttonRow({
 }) =>
     row(children: children);
 
+web.HTMLDivElement spacer() => div(className: 'spacer');
+
+web.HTMLDivElement mountPoint(String id) => div(id: id);
+
 web.HTMLParagraphElement p(
   String text, {
   String? className,

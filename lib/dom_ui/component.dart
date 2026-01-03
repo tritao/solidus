@@ -107,6 +107,23 @@ abstract class Component {
 
   bool get isMounted => _mounted;
 
+  T? query<T extends web.Element>(String selector) {
+    final el = root.querySelector(selector);
+    if (el == null) return null;
+    if (el is T) return el;
+    return null;
+  }
+
+  T queryOrThrow<T extends web.Element>(String selector) {
+    final el = query<T>(selector);
+    if (el == null) {
+      throw StateError(
+        'Expected element "$selector" (${T.toString()}) in ${runtimeType}.root',
+      );
+    }
+    return el;
+  }
+
   bool get debugEnabled => router.getQueryFlag('debug');
 
   void debugLog(String message) {

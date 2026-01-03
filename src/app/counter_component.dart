@@ -1,7 +1,7 @@
 import 'package:web/web.dart' as web;
 
-import 'package:dart_web_test/dom_ui/component.dart';
 import 'package:dart_web_test/dom_ui/action_dispatch.dart';
+import 'package:dart_web_test/dom_ui/component.dart';
 import 'package:dart_web_test/dom_ui/dom.dart' as dom;
 
 abstract final class CounterDomActions {
@@ -13,7 +13,7 @@ abstract final class CounterDomActions {
 final class CounterComponent extends Component {
   CounterComponent();
 
-  int counter = 0;
+  int _count = 0;
 
   @override
   web.Element render() {
@@ -21,7 +21,7 @@ final class CounterComponent extends Component {
       title: 'Counter',
       subtitle: 'Exercises state updates and re-rendering.',
       children: [
-        dom.p('$counter', className: 'big'),
+        dom.p('$_count', className: 'big'),
         dom.row(children: [
           dom.actionButton('−1', action: CounterDomActions.dec),
           dom.actionButton('+1', action: CounterDomActions.inc),
@@ -38,9 +38,9 @@ final class CounterComponent extends Component {
 
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
-      CounterDomActions.dec: (_) => setState(() => counter--),
-      CounterDomActions.inc: (_) => setState(() => counter++),
-      CounterDomActions.reset: (_) => setState(() => counter = 0),
+      CounterDomActions.dec: (_) => setState(() => _count--),
+      CounterDomActions.inc: (_) => setState(() => _count++),
+      CounterDomActions.reset: (_) => setState(() => _count = 0),
     });
   }
 }

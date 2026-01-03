@@ -41,8 +41,8 @@ final class AppComponent extends Component {
       ),
     );
 
-    mountChild(counter, root.querySelector('#counter-root')!);
-    mountChild(todos, root.querySelector('#todos-root')!);
+    mountChild(counter, queryOrThrow<web.Element>('#counter-root'));
+    mountChild(todos, queryOrThrow<web.Element>('#todos-root'));
     _applyRoute();
     listen(root.onClick, _onClick);
     listen(web.window.onPopState, (_) => _applyRoute());
@@ -60,7 +60,7 @@ final class AppComponent extends Component {
       if (users != null) users.setEndpoint(endpoint);
     }
 
-    final usersMount = root.querySelector('#users-root')!;
+    final usersMount = queryOrThrow<web.Element>('#users-root');
     if (!showUsers) {
       _showUsers = false;
       final users = _users;
@@ -126,11 +126,11 @@ final class AppComponent extends Component {
           ),
         ],
       ),
-      dom.div(id: 'counter-root'),
-      dom.div(className: 'spacer'),
-      dom.div(id: 'todos-root'),
-      dom.div(className: 'spacer'),
-      dom.div(id: 'users-root'),
+      dom.mountPoint('counter-root'),
+      dom.spacer(),
+      dom.mountPoint('todos-root'),
+      dom.spacer(),
+      dom.mountPoint('users-root'),
     ]);
   }
 }

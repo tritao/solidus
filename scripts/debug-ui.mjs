@@ -1747,8 +1747,8 @@ async function inspectUrl(
             details: { reason: "missing combobox input/after" },
           });
         } else {
-          step = "type 'da'";
-          await input.fill("da", { timeout: timeoutMs });
+          step = "type 't'";
+          await input.fill("t", { timeout: timeoutMs });
           step = "wait listbox open";
           await page.waitForFunction(
             () => document.querySelector("#combobox-listbox") != null,
@@ -1771,10 +1771,22 @@ async function inspectUrl(
               null,
           }));
 
-          step = "ArrowDown to active";
+          step = "ArrowDown once";
           await page.keyboard.press("ArrowDown");
           await page.waitForTimeout(40);
-          const afterDown = await page.evaluate(() => ({
+          const afterDown1 = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#combobox-input")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#combobox-listbox [data-active=true]")?.id ??
+              null,
+          }));
+
+          step = "ArrowDown twice";
+          await page.keyboard.press("ArrowDown");
+          await page.waitForTimeout(40);
+          const afterDown2 = await page.evaluate(() => ({
             activeDescendant: document
               .querySelector("#combobox-input")
               ?.getAttribute("aria-activedescendant") ?? null,
@@ -1891,7 +1903,12 @@ async function inspectUrl(
             afterType.optionsCount >= 1 &&
             typeof afterType.activeDescendant === "string" &&
             afterType.activeDescendant === afterType.activeElId &&
-            afterDown.activeDescendant === afterDown.activeElId &&
+            typeof afterDown1.activeDescendant === "string" &&
+            afterDown1.activeDescendant === afterDown1.activeElId &&
+            afterDown1.activeDescendant !== afterType.activeDescendant &&
+            typeof afterDown2.activeDescendant === "string" &&
+            afterDown2.activeDescendant === afterDown2.activeElId &&
+            afterDown2.activeDescendant !== afterDown1.activeDescendant &&
             (afterSelect.status ?? "").includes("Last: select") &&
             (afterSelect.inputValue ?? "").length > 0 &&
             afterSelect.activeId === "combobox-input" &&
@@ -1914,7 +1931,8 @@ async function inspectUrl(
             ok,
             details: {
               afterType,
-              afterDown,
+              afterDown1,
+              afterDown2,
               afterSelect,
               afterEscapeClosed,
               afterEmptyQuery,

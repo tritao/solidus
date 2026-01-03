@@ -244,6 +244,19 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   final typeahead = ListboxTypeahead();
 
+  if (shouldUseVirtualFocus) {
+    // When the focus target is external (e.g. combobox input), callers often
+    // drive activeIndex directly. Mirror Kobalte's derived updates by syncing
+    // option state whenever activeIndex changes.
+    createEffect(() {
+      final _ = activeIndexSig.value;
+      scheduleMicrotask(() {
+        syncTabIndex();
+        scrollActiveIntoView();
+      });
+    });
+  }
+
   int computePageSize() {
     try {
       final fromProp = pageSize?.call();

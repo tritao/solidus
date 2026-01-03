@@ -58,7 +58,7 @@ final class TodosComponent extends Component {
             action: _TodosActions.clearDone,
           ),
         ]),
-        dom.ul(className: 'list', children: listChildren),
+        dom.list(children: listChildren),
       ],
     );
   }
@@ -170,10 +170,7 @@ final class TodosComponent extends Component {
   }
 
   web.HTMLLIElement _todoItem(Todo todo) {
-    final item = dom.li(
-      className: 'item',
-      attrs: {'data-key': 'todos-${todo.id}'},
-    );
+    final item = dom.item(attrs: {'data-key': 'todos-${todo.id}'});
 
     final checkbox = dom.actionCheckbox(
       checked: todo.done,

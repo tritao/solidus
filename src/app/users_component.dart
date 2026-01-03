@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
+import './user.dart';
 import '../ui/component.dart';
 import '../ui/action_dispatch.dart';
 import '../ui/dom.dart' as dom;
@@ -32,7 +33,7 @@ final class UsersComponent extends Component {
 
   bool _isLoading = false;
   String? _error;
-  List<Map<String, Object?>> _users = const [];
+  List<User> _users = const [];
 
   bool get canClear => !_isLoading && _users.isNotEmpty;
 
@@ -64,8 +65,8 @@ final class UsersComponent extends Component {
       return null;
     });
 
-    final status = dom.p('', className: _error != null ? 'muted error' : 'muted')
-      ..textContent = statusText;
+    final status =
+        _error != null ? dom.danger(statusText) : dom.muted(statusText);
 
     final row = dom.row(children: [
       dom.actionButton(
@@ -81,18 +82,15 @@ final class UsersComponent extends Component {
       ),
     ]);
 
-    final list = dom.ul(className: 'list');
-    for (final user in _users) {
-      final name = (user['name'] as String?) ?? '(no name)';
-      final email = (user['email'] as String?) ?? '';
-
-      final li = dom.li(className: 'item');
-      li.append(dom.span(name, className: 'user'));
-      if (email.isNotEmpty) {
-        li.append(dom.span(' • $email', className: 'muted'));
-      }
-      list.append(li);
-    }
+    final list = dom.list(
+      children: _users.map((user) {
+        final email = user.email;
+        return dom.item(children: [
+          dom.textStrong(user.name),
+          if (email.isNotEmpty) dom.textMuted(' • $email'),
+        ]);
+      }).toList(growable: false),
+    );
 
     return dom.section(
       title: _title,
@@ -100,7 +98,7 @@ final class UsersComponent extends Component {
         row,
         status,
         if (_users.isNotEmpty) list,
-        dom.p(endpointLabel, className: 'muted'),
+        dom.muted(endpointLabel),
       ],
     );
   }
@@ -148,6 +146,7 @@ final class UsersComponent extends Component {
       final users = decoded
           .whereType<Map>()
           .map((e) => e.map((k, v) => MapEntry(k.toString(), v)))
+          .map(User.fromJson)
           .toList(growable: false);
 
       setState(() => _users = users);

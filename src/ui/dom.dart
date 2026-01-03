@@ -45,6 +45,10 @@ web.HTMLParagraphElement p(
 }) =>
     _apply(web.HTMLParagraphElement(), className: className, text: text);
 
+web.HTMLParagraphElement muted(String text) => p(text, className: 'muted');
+
+web.HTMLParagraphElement danger(String text) => p(text, className: 'muted error');
+
 web.HTMLHeadingElement h1(
   String text, {
   String? className,
@@ -63,11 +67,20 @@ web.HTMLSpanElement span(
 }) =>
     _apply(web.HTMLSpanElement(), className: className, text: text);
 
+web.HTMLSpanElement textMuted(String text) => span(text, className: 'muted');
+
+web.HTMLSpanElement textStrong(String text) => span(text, className: 'user');
+
 web.HTMLUListElement ul({
   String? className,
   List<web.Element>? children,
 }) =>
     _apply(web.HTMLUListElement(), className: className, children: children);
+
+web.HTMLUListElement list({
+  List<web.Element>? children,
+}) =>
+    ul(className: 'list', children: children);
 
 web.HTMLLIElement li({
   String? className,
@@ -77,6 +90,12 @@ web.HTMLLIElement li({
 }) =>
     _apply(web.HTMLLIElement(),
         className: className, text: text, attrs: attrs, children: children);
+
+web.HTMLLIElement item({
+  Map<String, String>? attrs,
+  List<web.Element>? children,
+}) =>
+    li(className: 'item', attrs: attrs, children: children);
 
 web.HTMLInputElement inputText({
   String? id,

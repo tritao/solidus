@@ -17,7 +17,13 @@ export default defineConfig(({ mode }) => {
     process.env.DART ??
     (fs.existsSync(provisionedDart) ? provisionedDart : "dart");
 
+  // GitHub Pages serves the app at /<repo>/, so the build must use that base.
+  const githubRepo = process.env.GITHUB_REPOSITORY?.split("/")[1];
+  const base =
+    process.env.GITHUB_ACTIONS && githubRepo ? `/${githubRepo}/` : "/";
+
   return {
+    base,
     plugins: [
       Dart({
         dart,

@@ -1,13 +1,15 @@
-# Dart + Vite (vite-plugin-dart) Hello World
+# Dart + Vite + Dart SDK (vite-plugin-dart)
+
+Minimal Vite project that imports `.dart` directly via `vite-plugin-dart`, with a small UI written in Dart (plain DOM) to validate compilation + runtime behavior.
 
 ## Prerequisites
 
-- Node.js `^20.19.0 || >=22.12.0` (required by the latest Vite)
-- Dart SDK (`dart` on your PATH)
+- Node.js `^20.19.0 || >=22.12.0` (required by latest Vite)
+- Linux x64 (for the included Dart provisioning script), or install Dart yourself
 
 ## Provision Dart (Linux x64)
 
-If you don't have `dart` installed, you can provision Dart SDK 3.10.7 locally:
+If you don't have `dart` installed, provision Dart SDK 3.10.7 locally into `.dart-sdk/`:
 
 ```bash
 npm run provision:dart
@@ -21,26 +23,28 @@ npm install
 
 ## Run
 
-First time (or after changing `pubspec.yaml`):
-
-```bash
-dart pub get
-```
-
 ```bash
 npm run dev
 ```
 
-Open the URL Vite prints and you should see: **Hello from Dart (compiled by Vite)!**
+Open the URL Vite prints and you should see the demo UI rendered from `src/main.dart`.
 
 ## Troubleshooting
 
-- If you have Flutter but not standalone Dart, set `DART` to Flutter's Dart binary, e.g. `DART="$(flutter sdk-path)/bin/dart" npm run dev`.
+- `npm run dev` says `dart: not found`: run `npm run provision:dart` (Linux x64) or install Dart; you can also set `DART=/path/to/dart`.
+- Vite warns about Node version: upgrade Node to `^20.19.0 || >=22.12.0`.
 
 ## Demo UI
 
-The demo app is plain `dart:html` (no framework) and includes:
+The demo app is plain DOM (no framework) using `package:web` and includes:
 
-- Counter tab (state + re-render)
-- Todos tab (CRUD + `localStorage`)
-- Fetch tab (async network call + loading/error states)
+- Counter (state + re-render)
+- Todos (CRUD + `localStorage`)
+- Fetch (async network call + loading/error states)
+
+## Files
+
+- `vite.config.mjs`: configures `vite-plugin-dart` and discovers the Dart binary
+- `src/main.js`: Vite entry that imports `src/main.dart`
+- `src/main.dart`: demo app
+- `scripts/provision-dart.sh`: downloads/unzips the Dart SDK into `.dart-sdk/`

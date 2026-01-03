@@ -10,8 +10,6 @@ void main() {
   app.init();
 }
 
-enum _Tab { counter, todos, fetch }
-
 class _Todo {
   _Todo({
     required this.id,
@@ -40,7 +38,6 @@ class _App {
 
   final web.Element mount;
 
-  _Tab tab = _Tab.counter;
   int counter = 0;
 
   int _nextTodoId = 1;
@@ -77,36 +74,14 @@ class _App {
         ..textContent =
             "Counter + Todos (localStorage) + Fetch (async) to validate the integration.");
 
-    container..append(header)..append(_buildTabs())..append(_buildView());
+    container
+      ..append(header)
+      ..append(_buildCounterView())
+      ..append(web.HTMLDivElement()..style.height = "12px")
+      ..append(_buildTodosView())
+      ..append(web.HTMLDivElement()..style.height = "12px")
+      ..append(_buildFetchView());
     return container;
-  }
-
-  web.Element _buildTabs() {
-    final tabs = web.HTMLDivElement()..className = "tabs";
-    tabs.append(_tabButton(_Tab.counter, "Counter"));
-    tabs.append(_tabButton(_Tab.todos, "Todos"));
-    tabs.append(_tabButton(_Tab.fetch, "Fetch"));
-    return tabs;
-  }
-
-  web.HTMLButtonElement _tabButton(_Tab value, String label) {
-    final button = web.HTMLButtonElement()
-      ..type = "button"
-      ..textContent = label
-      ..className = tab == value ? "tab active" : "tab";
-    button.onClick.listen((_) => _setState(() => tab = value));
-    return button;
-  }
-
-  web.Element _buildView() {
-    switch (tab) {
-      case _Tab.counter:
-        return _buildCounterView();
-      case _Tab.todos:
-        return _buildTodosView();
-      case _Tab.fetch:
-        return _buildFetchView();
-    }
   }
 
   web.Element _buildCard({

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:dart_web_test/solid.dart";
 import "package:test/test.dart";
 
@@ -213,6 +215,105 @@ void main() {
       s.value = 2;
       await pump();
       expect(seen, [10, 20]);
+
+      dispose();
+    });
+
+    test("resource: starts loading, resolves value, notifies dependents",
+        () async {
+      final states = <String>[];
+      late Resource<int> r;
+      late Dispose dispose;
+
+      final completer = Completer<int>();
+      createRoot<void>((d) {
+        dispose = d;
+        r = createResource(() => completer.future);
+        createEffect(() {
+          states.add("loading=${r.loading} value=${r.value}");
+        });
+      });
+
+      expect(states, ["loading=true value=null"]);
+
+      completer.complete(123);
+      await pump();
+      flushSync();
+      expect(states.last, "loading=false value=123");
+
+      dispose();
+    });
+
+    test("resource: cancellation ignores stale results", () async {
+      late Signal<int> id;
+      late Resource<String> r;
+      late Dispose dispose;
+
+      final c1 = Completer<String>();
+      final c2 = Completer<String>();
+
+      createRoot<void>((d) {
+        dispose = d;
+        id = createSignal<int>(1);
+        r = createResourceWithSource<int, String>(
+          () => id.value,
+          (v) => v == 1 ? c1.future : c2.future,
+        );
+      });
+
+      expect(r.loading, true);
+
+      id.value = 2;
+      await pump();
+      flushSync();
+
+      c2.complete("two");
+      await pump();
+      flushSync();
+      expect(r.value, "two");
+      expect(r.loading, false);
+
+      c1.complete("one");
+      await pump();
+      flushSync();
+      expect(r.value, "two");
+      expect(r.loading, false);
+
+      dispose();
+    });
+
+    test("resource: dispose prevents late resolution", () async {
+      late Resource<int> r;
+      late Dispose dispose;
+      final completer = Completer<int>();
+
+      createRoot<void>((d) {
+        dispose = d;
+        r = createResource(() => completer.future);
+      });
+
+      dispose();
+      completer.complete(9);
+      await pump();
+      flushSync();
+      expect(r.value, isNull);
+    });
+
+    test("resource: error is captured and loading stops", () async {
+      late Resource<int> r;
+      late Dispose dispose;
+      final completer = Completer<int>();
+
+      createRoot<void>((d) {
+        dispose = d;
+        r = createResource(() => completer.future);
+      });
+
+      completer.completeError(StateError("boom"));
+      await pump();
+      flushSync();
+      expect(r.loading, false);
+      expect(r.error, isA<StateError>());
 
       dispose();
     });

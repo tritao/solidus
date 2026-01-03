@@ -408,5 +408,100 @@ void main() {
 
       dispose();
     });
+
+    test("child root: dispose stops updates without affecting parent",
+        () async {
+      late Signal<int> s;
+      late Dispose disposeParent;
+      late Dispose disposeChild;
+
+      final parentRuns = <int>[];
+      final childRuns = <int>[];
+
+      createRoot<void>((d) {
+        disposeParent = d;
+        s = createSignal<int>(0);
+
+        createEffect(() => parentRuns.add(s.value));
+
+        createChildRoot<void>((cd) {
+          disposeChild = cd;
+          createEffect(() => childRuns.add(s.value));
+        });
+      });
+
+      expect(parentRuns, [0]);
+      expect(childRuns, [0]);
+
+      s.value = 1;
+      await pump();
+      flushSync();
+      expect(parentRuns, [0, 1]);
+      expect(childRuns, [0, 1]);
+
+      disposeChild();
+      s.value = 2;
+      await pump();
+      flushSync();
+      expect(parentRuns, [0, 1, 2]);
+      expect(childRuns, [0, 1]);
+
+      disposeParent();
+    });
+
+    test("child root: disposing parent disposes children", () async {
+      late Signal<int> s;
+      late Dispose disposeParent;
+      late Dispose disposeChild;
+
+      final childRuns = <int>[];
+      final childCleanups = <String>[];
+
+      createRoot<void>((d) {
+        disposeParent = d;
+        s = createSignal<int>(0);
+        createChildRoot<void>((cd) {
+          disposeChild = cd;
+          createEffect(() {
+            onCleanup(() => childCleanups.add("cleanup"));
+            childRuns.add(s.value);
+          });
+        });
+      });
+
+      expect(childRuns, [0]);
+
+      disposeParent();
+
+      // Child should already be disposed by the parent.
+      disposeChild();
+      s.value = 1;
+      await pump();
+      flushSync();
+      expect(childRuns, [0]);
+      expect(childCleanups, ["cleanup"]);
+    });
+
+    test("child root: cleanup runs on child dispose", () async {
+      late Dispose disposeParent;
+      late Dispose disposeChild;
+      final log = <String>[];
+
+      createRoot<void>((d) {
+        disposeParent = d;
+        createChildRoot<void>((cd) {
+          disposeChild = cd;
+          createEffect(() {
+            onCleanup(() => log.add("cleanup"));
+            log.add("run");
+          });
+        });
+      });
+
+      expect(log, ["run"]);
+      disposeChild();
+      expect(log, ["run", "cleanup"]);
+      disposeParent();
+    });
   });
 }

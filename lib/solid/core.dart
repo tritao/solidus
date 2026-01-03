@@ -75,6 +75,28 @@ T createRoot<T>(T Function(Dispose dispose) fn) {
   }
 }
 
+/// Creates a disposable child scope under the current owner.
+///
+/// Use this to model component/subtree lifetimes. Disposing the returned handle
+/// disposes everything created within [fn], without affecting the parent owner.
+T createChildRoot<T>(T Function(Dispose dispose) fn) {
+  final parent = _currentOwner;
+  if (parent == null) {
+    throw StateError("createChildRoot() called with no active owner");
+  }
+  final previous = _currentOwner;
+  final owner = Owner(parent);
+  parent._own(owner);
+  _currentOwner = owner;
+
+  final Dispose dispose = owner.dispose;
+  try {
+    return fn(dispose);
+  } finally {
+    _currentOwner = previous;
+  }
+}
+
 void onCleanup(Cleanup cleanup) {
   final computation = _currentComputation;
   if (computation != null) {

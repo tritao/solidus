@@ -130,6 +130,7 @@ final class AppComponent extends Component {
             dom.linkButton('Popover', href: '?solid=popover'),
             dom.linkButton('Tooltip', href: '?solid=tooltip'),
             dom.linkButton('Select', href: '?solid=select'),
+            dom.linkButton('Combobox', href: '?solid=combobox'),
             dom.linkButton('Toast', href: '?solid=toast'),
             dom.linkButton('Roving', href: '?solid=roving'),
             dom.linkButton('Overlay', href: '?solid=overlay'),

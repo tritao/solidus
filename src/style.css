@@ -68,6 +68,20 @@ a.btn {
   outline-offset: 2px;
 }
 
+.input {
+  min-width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.input:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
 .container {
   max-width: 920px;
   margin: 48px auto;

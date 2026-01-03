@@ -1619,6 +1619,129 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-combobox") {
+      let step = "init";
+      try {
+        const input = page.locator("#combobox-input");
+        const after = page.locator("#combobox-after");
+        if (!(await input.count()) || !(await after.count())) {
+          interactionResults.push({
+            name: "solid-combobox",
+            ok: false,
+            details: { reason: "missing combobox input/after" },
+          });
+        } else {
+          step = "type 'da'";
+          await input.fill("da", { timeout: timeoutMs });
+          step = "wait listbox open";
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+
+          const afterType = await page.evaluate(() => ({
+            expanded: document
+              .querySelector("#combobox-input")
+              ?.getAttribute("aria-expanded") ?? null,
+            activeDescendant: document
+              .querySelector("#combobox-input")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            optionsCount: document.querySelectorAll(
+              "#combobox-listbox [role=option]",
+            ).length,
+            activeElId:
+              document.querySelector("#combobox-listbox [data-active=true]")?.id ??
+              null,
+          }));
+
+          step = "ArrowDown to active";
+          await page.keyboard.press("ArrowDown");
+          await page.waitForTimeout(40);
+          const afterDown = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#combobox-input")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#combobox-listbox [data-active=true]")?.id ??
+              null,
+          }));
+
+          step = "Enter to select";
+          await page.keyboard.press("Enter");
+          step = "wait closed after select";
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          const afterSelect = await page.evaluate(() => ({
+            status: document.querySelector("#combobox-status")?.textContent ?? null,
+            inputValue: document.querySelector("#combobox-input")?.value ?? null,
+            activeId: document.activeElement?.id ?? null,
+          }));
+
+          // Escape while closed clears input.
+          step = "Escape clears when closed";
+          await page.keyboard.press("Escape");
+          await page.waitForTimeout(30);
+          const afterEscapeClosed = await page.evaluate(() => ({
+            inputValue: document.querySelector("#combobox-input")?.value ?? null,
+          }));
+
+          // Tab while open closes and allows navigation to next element.
+          step = "open and tab";
+          await input.fill("t", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") != null,
+            { timeout: timeoutMs },
+          );
+          await page.keyboard.press("Tab");
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.activeElement?.id === "combobox-after",
+            { timeout: timeoutMs },
+          );
+          const afterTab = await page.evaluate(() => ({
+            status: document.querySelector("#combobox-status")?.textContent ?? null,
+            activeId: document.activeElement?.id ?? null,
+          }));
+
+          const ok =
+            afterType.expanded === "true" &&
+            afterType.optionsCount >= 1 &&
+            typeof afterType.activeDescendant === "string" &&
+            afterType.activeDescendant === afterType.activeElId &&
+            afterDown.activeDescendant === afterDown.activeElId &&
+            (afterSelect.status ?? "").includes("Last: select") &&
+            (afterSelect.inputValue ?? "").length > 0 &&
+            afterSelect.activeId === "combobox-input" &&
+            afterEscapeClosed.inputValue === "" &&
+            (afterTab.status ?? "").includes("Last: tab") &&
+            afterTab.activeId === "combobox-after";
+
+          interactionResults.push({
+            name: "solid-combobox",
+            ok,
+            details: {
+              afterType,
+              afterDown,
+              afterSelect,
+              afterEscapeClosed,
+              afterTab,
+            },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-combobox",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-menu") {
       try {
         const trigger = page.locator("#menu-trigger");

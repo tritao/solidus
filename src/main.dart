@@ -13,6 +13,7 @@ import './solid_toast_demo.dart';
 import './solid_menu_demo.dart';
 import './solid_tooltip_demo.dart';
 import './solid_select_demo.dart';
+import './solid_combobox_demo.dart';
 
 void main() {
   final mount = web.document.querySelector('#app');
@@ -49,6 +50,10 @@ void main() {
   }
   if (search.contains('solid=select')) {
     mountSolidSelectDemo(mount);
+    return;
+  }
+  if (search.contains('solid=combobox')) {
+    mountSolidComboboxDemo(mount);
     return;
   }
   if (search.contains('solid=1')) {

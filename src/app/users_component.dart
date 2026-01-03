@@ -9,7 +9,7 @@ import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
 import 'package:dart_web_test/vite_ui/dom.dart' as dom;
 
-abstract final class _UsersActions {
+abstract final class _UsersDomActions {
   static const load = 'users-load';
   static const clear = 'users-clear';
 }
@@ -55,6 +55,10 @@ final class UsersComponent extends Component {
 
   @override
   web.Element render() {
+    final status = _buildStatus();
+    final controls = _buildControls();
+    final list = _buildList();
+
     final requestToken = useRef<int>('requestToken', 0);
     final lastEndpoint = useRef<String?>('lastEndpoint', null);
 
@@ -68,34 +72,44 @@ final class UsersComponent extends Component {
       return null;
     });
 
-    final status = dom.statusText(
-      text: statusText,
-      isError: _store.state.error != null,
+    return dom.section(
+      title: _title,
+      children: [
+        controls,
+        status,
+        if (_store.state.users.isNotEmpty) list,
+        dom.muted(endpointLabel),
+      ],
     );
+  }
 
-    final row = dom.row(children: [
-      dom.actionButton(
-        _store.state.isLoading ? 'Loading…' : 'Load users',
-        disabled: _store.state.isLoading,
-        action: _UsersActions.load,
-      ),
-      dom.actionButton(
-        'Clear',
-        kind: 'secondary',
-        disabled: !canClear,
-        action: _UsersActions.clear,
-      ),
-    ]);
+  web.Element _buildStatus() => dom.statusText(
+        text: statusText,
+        isError: _store.state.error != null,
+      );
 
+  web.Element _buildControls() => dom.row(children: [
+        dom.actionButton(
+          _store.state.isLoading ? 'Loading…' : 'Load users',
+          disabled: _store.state.isLoading,
+          action: _UsersDomActions.load,
+        ),
+        dom.actionButton(
+          'Clear',
+          kind: 'secondary',
+          disabled: !canClear,
+          action: _UsersDomActions.clear,
+        ),
+      ]);
+
+  web.Element _buildList() {
     final users = _store.state.users;
-
     final userRows = useMemo<List<(String, String)>>(
       'userRows',
       [users],
       () => users.map((u) => (u.name, u.email)).toList(growable: false),
     );
-
-    final list = dom.list(
+    return dom.list(
       children: userRows.map((row) {
         final (name, email) = row;
         return dom.item(children: [
@@ -103,16 +117,6 @@ final class UsersComponent extends Component {
           if (email.isNotEmpty) dom.textMuted(' • $email'),
         ]);
       }).toList(growable: false),
-    );
-
-    return dom.section(
-      title: _title,
-      children: [
-        row,
-        status,
-        if (users.isNotEmpty) list,
-        dom.muted(endpointLabel),
-      ],
     );
   }
 
@@ -128,8 +132,8 @@ final class UsersComponent extends Component {
 
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
-      _UsersActions.load: (_) => _loadUsers(),
-      _UsersActions.clear: (_) => _store.dispatch(const UsersClear()),
+      _UsersDomActions.load: (_) => _loadUsers(),
+      _UsersDomActions.clear: (_) => _store.dispatch(const UsersClear()),
     });
   }
 

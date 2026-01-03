@@ -1,57 +1,17 @@
 import 'package:web/web.dart' as web;
 
 import './todo.dart';
+import './todos_state.dart';
 import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
 import 'package:dart_web_test/vite_ui/dom.dart' as dom;
 import 'package:dart_web_test/vite_ui/events.dart' as events;
 
-abstract final class _TodosActions {
+abstract final class _TodosDomActions {
   static const add = 'todos-add';
   static const clearDone = 'todos-clear-done';
   static const toggle = 'todos-toggle';
   static const remove = 'todos-remove';
-}
-
-final class _TodosState {
-  const _TodosState({
-    required this.nextId,
-    required this.todos,
-  });
-
-  final int nextId;
-  final List<Todo> todos;
-
-  static const empty = _TodosState(nextId: 1, todos: []);
-}
-
-sealed class _TodosAction {
-  const _TodosAction();
-}
-
-final class _TodosLoad extends _TodosAction {
-  const _TodosLoad(this.todos);
-  final List<Todo> todos;
-}
-
-final class _TodosAdd extends _TodosAction {
-  const _TodosAdd(this.text);
-  final String text;
-}
-
-final class _TodosToggle extends _TodosAction {
-  const _TodosToggle({required this.id, required this.done});
-  final int id;
-  final bool done;
-}
-
-final class _TodosRemove extends _TodosAction {
-  const _TodosRemove(this.id);
-  final int id;
-}
-
-final class _TodosClearDone extends _TodosAction {
-  const _TodosClearDone();
 }
 
 final class TodosComponent extends Component {
@@ -61,11 +21,11 @@ final class TodosComponent extends Component {
 
   web.HTMLInputElement? _input;
 
-  ReducerHandle<_TodosState, _TodosAction> get _store =>
-      useReducer<_TodosState, _TodosAction>(
+  ReducerHandle<TodosState, TodosAction> get _store =>
+      useReducer<TodosState, TodosAction>(
         'todos',
-        _TodosState.empty,
-        _reduce,
+        TodosState.empty,
+        todosReducer,
       );
 
   List<Todo> get _todos => _store.state.todos;
@@ -81,41 +41,42 @@ final class TodosComponent extends Component {
 
   @override
   web.Element render() {
-    final input = dom.inputText(
-      id: 'todos-input',
-      className: 'input',
-      placeholder: 'New todo…',
-    );
-
-    final todoRows = useMemo<List<(int, String, bool)>>(
-      'todoRows',
-      [_todos],
-      () => _todos.map((t) => (t.id, t.text, t.done)).toList(growable: false),
-    );
-
-    final listChildren = isEmpty
-        ? <web.Element>[dom.mutedLi('No todos yet.')]
-        : todoRows.map((row) {
-            final (id, text, done) = row;
-            return _todoItem(Todo(id: id, text: text, done: done));
-          }).toList(growable: false);
-
+    final input = _buildInput();
+    final listChildren = _buildListChildren();
     return dom.section(
       title: 'Todos',
       subtitle: summaryText,
       children: [
-        dom.row(children: [
-          input,
-          dom.actionButton('Add', action: _TodosActions.add),
-          dom.actionButton(
-            'Clear done',
-            kind: 'secondary',
-            disabled: !canClearDone,
-            action: _TodosActions.clearDone,
-          ),
-        ]),
+        _buildControls(input),
         dom.list(children: listChildren),
       ],
+    );
+  }
+
+  web.HTMLInputElement _buildInput() => dom.inputText(
+        id: 'todos-input',
+        className: 'input',
+        placeholder: 'New todo…',
+      );
+
+  web.Element _buildControls(web.Element input) => dom.row(children: [
+        input,
+        dom.actionButton('Add', action: _TodosDomActions.add),
+        dom.actionButton(
+          'Clear done',
+          kind: 'secondary',
+          disabled: !canClearDone,
+          action: _TodosDomActions.clearDone,
+        ),
+      ]);
+
+  List<web.Element> _buildListChildren() {
+    if (isEmpty) return <web.Element>[dom.mutedLi('No todos yet.')];
+
+    return useMemo<List<web.Element>>(
+      'todoListItems',
+      [_todos],
+      () => _todos.map(_todoItem).toList(growable: false),
     );
   }
 
@@ -145,13 +106,13 @@ final class TodosComponent extends Component {
 
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
-      _TodosActions.add: (_) => _addFromInput(),
-      _TodosActions.clearDone: (_) => _store.dispatch(const _TodosClearDone()),
-      _TodosActions.remove: (el) {
+      _TodosDomActions.add: (_) => _addFromInput(),
+      _TodosDomActions.clearDone: (_) => _store.dispatch(const TodosClearDone()),
+      _TodosDomActions.remove: (el) {
         if (el == null) return;
         final id = events.actionIdFromElement(el);
         if (id == null) return;
-        _store.dispatch(_TodosRemove(id));
+        _store.dispatch(TodosRemove(id));
       },
     });
   }
@@ -160,7 +121,8 @@ final class TodosComponent extends Component {
     final targetEl = events.eventTargetElement(event);
     if (targetEl == null) return;
 
-    final actionEl = targetEl.closest('[data-action="${_TodosActions.toggle}"]');
+    final actionEl =
+        targetEl.closest('[data-action="${_TodosDomActions.toggle}"]');
     if (actionEl == null) return;
 
     final id = events.actionIdFromElement(actionEl);
@@ -169,7 +131,7 @@ final class TodosComponent extends Component {
     try {
       final checkbox = actionEl as web.HTMLInputElement;
       final checked = checkbox.checked == true;
-      _store.dispatch(_TodosToggle(id: id, done: checked));
+      _store.dispatch(TodosToggle(id: id, done: checked));
     } catch (_) {
       return;
     }
@@ -192,7 +154,7 @@ final class TodosComponent extends Component {
     final text = input.value.trim();
     if (text.isEmpty) return;
 
-    _store.dispatch(_TodosAdd(text));
+    _store.dispatch(TodosAdd(text));
 
     input.value = '';
   }
@@ -200,7 +162,7 @@ final class TodosComponent extends Component {
   void _loadTodos() {
     final loaded = loadTodosFromLocalStorage(key: _storageKey);
     if (loaded.isEmpty) return;
-    _store.dispatch(_TodosLoad(loaded));
+    _store.dispatch(TodosLoad(loaded));
   }
 
   void _saveTodos() {
@@ -213,7 +175,7 @@ final class TodosComponent extends Component {
     final checkbox = dom.actionCheckbox(
       checked: todo.done,
       className: 'checkbox',
-      action: _TodosActions.toggle,
+      action: _TodosDomActions.toggle,
       dataId: todo.id,
     );
 
@@ -223,7 +185,7 @@ final class TodosComponent extends Component {
     final remove = dom.actionButton(
       'Delete',
       kind: 'danger',
-      action: _TodosActions.remove,
+      action: _TodosDomActions.remove,
       dataId: todo.id,
     );
 
@@ -231,36 +193,4 @@ final class TodosComponent extends Component {
     return item;
   }
 
-  static _TodosState _reduce(_TodosState state, _TodosAction action) {
-    switch (action) {
-      case _TodosLoad(:final todos):
-        final maxId = todos.isEmpty
-            ? 0
-            : todos.map((t) => t.id).reduce((a, b) => a > b ? a : b);
-        return _TodosState(nextId: maxId + 1, todos: todos);
-
-      case _TodosAdd(:final text):
-        final todo = Todo(id: state.nextId, text: text);
-        return _TodosState(
-          nextId: state.nextId + 1,
-          todos: [todo, ...state.todos],
-        );
-
-      case _TodosToggle(:final id, :final done):
-        final next = state.todos
-            .map((t) => t.id == id ? t.copyWith(done: done) : t)
-            .toList(growable: false);
-        return _TodosState(nextId: state.nextId, todos: next);
-
-      case _TodosRemove(:final id):
-        final next =
-            state.todos.where((t) => t.id != id).toList(growable: false);
-        return _TodosState(nextId: state.nextId, todos: next);
-
-      case _TodosClearDone():
-        final next =
-            state.todos.where((t) => !t.done).toList(growable: false);
-        return _TodosState(nextId: state.nextId, todos: next);
-    }
-  }
 }

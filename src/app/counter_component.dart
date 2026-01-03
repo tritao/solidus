@@ -4,7 +4,7 @@ import 'package:dart_web_test/vite_ui/component.dart';
 import 'package:dart_web_test/vite_ui/action_dispatch.dart';
 import 'package:dart_web_test/vite_ui/dom.dart' as dom;
 
-abstract final class _CounterActions {
+abstract final class _CounterDomActions {
   static const dec = 'counter-dec';
   static const inc = 'counter-inc';
   static const reset = 'counter-reset';
@@ -23,10 +23,10 @@ final class CounterComponent extends Component {
       children: [
         dom.p('$counter', className: 'big'),
         dom.row(children: [
-          dom.actionButton('−1', action: _CounterActions.dec),
-          dom.actionButton('+1', action: _CounterActions.inc),
+          dom.actionButton('−1', action: _CounterDomActions.dec),
+          dom.actionButton('+1', action: _CounterDomActions.inc),
           dom.actionButton('Reset',
-              kind: 'secondary', action: _CounterActions.reset),
+              kind: 'secondary', action: _CounterDomActions.reset),
         ]),
       ],
     );
@@ -39,9 +39,9 @@ final class CounterComponent extends Component {
 
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
-      _CounterActions.dec: (_) => setState(() => counter--),
-      _CounterActions.inc: (_) => setState(() => counter++),
-      _CounterActions.reset: (_) => setState(() => counter = 0),
+      _CounterDomActions.dec: (_) => setState(() => counter--),
+      _CounterDomActions.inc: (_) => setState(() => counter++),
+      _CounterDomActions.reset: (_) => setState(() => counter = 0),
     });
   }
 }

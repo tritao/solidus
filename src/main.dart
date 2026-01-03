@@ -8,6 +8,16 @@ import 'package:dart_web_test/vite_ui/action_dispatch.dart';
 import 'package:dart_web_test/vite_ui/dom.dart' as dom;
 import 'package:dart_web_test/vite_ui/router.dart' as router;
 
+final class AppConfig {
+  const AppConfig({
+    required this.usersAll,
+    required this.usersLimited,
+  });
+
+  final String usersAll;
+  final String usersLimited;
+}
+
 abstract final class _AppActions {
   static const toggleUsersEndpoint = 'app-toggle-users-endpoint';
   static const toggleUsersVisible = 'app-toggle-users-visible';
@@ -41,6 +51,13 @@ final class AppComponent extends Component {
 
   @override
   void onMount() {
+    provide<AppConfig>(
+      'config',
+      const AppConfig(
+        usersAll: UsersComponent.usersAll,
+        usersLimited: UsersComponent.usersLimited,
+      ),
+    );
     mountChild(counter, root.querySelector('#counter-root')!);
     mountChild(todos, root.querySelector('#todos-root')!);
     _applyRoute();
@@ -50,9 +67,10 @@ final class AppComponent extends Component {
 
   void _applyRoute() {
     final usersParam = router.getQueryParam('users');
+    final config = useContext<AppConfig>('config');
     final endpoint = usersParam == 'limited'
-        ? UsersComponent.usersLimited
-        : UsersComponent.usersAll;
+        ? config.usersLimited
+        : config.usersAll;
     final showUsers = router.getQueryFlag('showUsers', defaultValue: true);
 
     if (endpoint != _usersEndpoint) {
@@ -92,8 +110,8 @@ final class AppComponent extends Component {
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
       _AppActions.toggleUsersEndpoint: (_) {
-        final next =
-            _usersEndpoint == UsersComponent.usersAll ? 'limited' : 'all';
+        final config = useContext<AppConfig>('config');
+        final next = _usersEndpoint == config.usersAll ? 'limited' : 'all';
         router.setQueryParam('users', next);
         _applyRoute();
       },

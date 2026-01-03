@@ -50,45 +50,45 @@ final class UsersState {
         error: null,
         users: [],
       );
+
+  UsersState copyWith({
+    String? endpoint,
+    bool? isLoading,
+    String? error,
+    List<User>? users,
+  }) =>
+      UsersState(
+        endpoint: endpoint ?? this.endpoint,
+        isLoading: isLoading ?? this.isLoading,
+        error: error,
+        users: users ?? this.users,
+      );
 }
 
 UsersState usersReducer(UsersState state, UsersAction action) {
   switch (action) {
     case UsersSetEndpoint(:final endpoint):
-      return UsersState(
+      return state.copyWith(
         endpoint: endpoint,
         isLoading: false,
         error: null,
         users: const [],
       );
     case UsersStartLoad():
-      return UsersState(
-        endpoint: state.endpoint,
-        isLoading: true,
-        error: null,
-        users: state.users,
-      );
+      return state.copyWith(isLoading: true, error: null);
     case UsersLoaded(:final users):
-      return UsersState(
-        endpoint: state.endpoint,
-        isLoading: false,
-        error: null,
-        users: users,
-      );
+      return state.copyWith(isLoading: false, error: null, users: users);
     case UsersFailed(:final message):
-      return UsersState(
-        endpoint: state.endpoint,
+      return state.copyWith(
         isLoading: false,
         error: message,
         users: const [],
       );
     case UsersClear():
-      return UsersState(
-        endpoint: state.endpoint,
+      return state.copyWith(
         isLoading: false,
         error: null,
         users: const [],
       );
   }
 }
-

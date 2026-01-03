@@ -217,10 +217,26 @@ async function inspectUrl(
               )
             : false;
 
+          const bindings = await page.evaluate(() => {
+            const box = document.querySelector("#solid-box");
+            const disabled = document.querySelector("#solid-disabled");
+            const opacity =
+              // @ts-ignore
+              box?.style?.getPropertyValue?.("opacity") ?? null;
+            return {
+              dataCount: box?.getAttribute("data-count") ?? null,
+              hasActive: box?.classList?.contains("active") ?? null,
+              opacity,
+              disabled: disabled ? disabled.disabled : null,
+            };
+          });
+
           // Toggle Show and observe cleanup reflected in #solid-status.
           const status = page.locator("#solid-status");
           const toggle = page.locator("#solid-toggle");
           const initialStatus = (await status.first().textContent())?.trim() ?? "";
+          const clicks = page.locator("#solid-doc-clicks");
+          const clicksBefore = (await clicks.first().textContent())?.trim() ?? "";
           await toggle.first().click({ timeout: timeoutMs });
           await page.waitForFunction(
             () => (document.querySelector("#solid-extra") != null),
@@ -230,6 +246,18 @@ async function inspectUrl(
             () => (document.querySelector("#solid-status")?.textContent ?? "").includes("yes"),
             { timeout: timeoutMs },
           );
+
+          // Document click handler should be active while extra is mounted.
+          await page.click("body");
+          await page.waitForFunction(
+            ({ before }) => {
+              const t = document.querySelector("#solid-doc-clicks")?.textContent ?? "";
+              return t.trim() !== before;
+            },
+            { before: clicksBefore },
+            { timeout: timeoutMs },
+          );
+          const clicksDuring = (await clicks.first().textContent())?.trim() ?? "";
 
           await toggle.first().click({ timeout: timeoutMs });
           await page.waitForFunction(
@@ -242,15 +270,92 @@ async function inspectUrl(
           );
           const finalStatus = (await status.first().textContent())?.trim() ?? "";
 
+          // After unmount, document click handler should be gone.
+          const clicksAfterUnmountBefore = (await clicks.first().textContent())?.trim() ?? "";
+          await page.click("body");
+          await page.waitForTimeout(250);
+          const clicksAfterUnmountAfter = (await clicks.first().textContent())?.trim() ?? "";
+
+          // Keyed For: reverse list should preserve node identity for item 1.
+          const item1 = page.locator("#solid-item-1");
+          const item1Handle = await item1.first().elementHandle();
+          const orderBefore = await page.evaluate(() => {
+            const list = document.querySelector("#solid-list");
+            const ids = [...(list?.querySelectorAll("[id^=solid-item-]") ?? [])].map(
+              (e) => e.id,
+            );
+            return ids;
+          });
+          await page.locator("#solid-reorder").click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            ({ before }) => {
+              const list = document.querySelector("#solid-list");
+              const ids = [...(list?.querySelectorAll("[id^=solid-item-]") ?? [])].map(
+                (e) => e.id,
+              );
+              return ids.join(",") !== before.join(",");
+            },
+            { before: orderBefore },
+            { timeout: timeoutMs },
+          );
+          const orderAfter = await page.evaluate(() => {
+            const list = document.querySelector("#solid-list");
+            const ids = [...(list?.querySelectorAll("[id^=solid-item-]") ?? [])].map(
+              (e) => e.id,
+            );
+            return ids;
+          });
+          const item1Same = item1Handle
+            ? await item1Handle.evaluate(
+                (el) => el === document.querySelector("#solid-item-1"),
+              )
+            : false;
+
+          // Portal: mount to body and clean up.
+          await page.locator("#solid-portal-toggle").click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#solid-portal") != null,
+            { timeout: timeoutMs },
+          );
+          const portalInfo = await page.evaluate(() => {
+            const portal = document.querySelector("#solid-portal");
+            const root = document.querySelector("#solid-root");
+            return {
+              exists: !!portal,
+              inRoot: root ? root.contains(portal) : null,
+              inBody: document.body ? document.body.contains(portal) : null,
+            };
+          });
+          await page.locator("#solid-portal-toggle").click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#solid-portal") == null,
+            { timeout: timeoutMs },
+          );
+
           interactionResults.push({
             name: "solid-dom",
-            ok: true,
+            ok:
+              sameNode &&
+              portalInfo?.exists === true &&
+              portalInfo?.inBody === true &&
+              portalInfo?.inRoot === false &&
+              item1Same === true &&
+              clicksAfterUnmountBefore === clicksAfterUnmountAfter,
             details: {
               before,
               after,
               sameNode,
+              bindings,
               initialStatus,
+              clicksBefore,
+              clicksDuring,
+              clicksAfterUnmountBefore,
+              clicksAfterUnmountAfter,
               finalStatus,
+              orderBefore,
+              orderAfter,
+              item1Same,
+              portalInfo,
             },
           });
         }

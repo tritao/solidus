@@ -104,6 +104,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
       );
 
   final optionEls = <web.HTMLElement>[];
+  var lastSyncedActive = -2;
 
   String? activeId() {
     final idx = activeIndexSig.value;
@@ -150,21 +151,46 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     final idx = activeIndexSig.value;
     if (idx < 0 || idx >= optionEls.length) return;
     try {
-      optionEls[idx].focus();
+      optionEls[idx].focus(web.FocusOptions(preventScroll: true));
     } catch (_) {}
   }
 
-  void syncTabIndex() {
+  void syncTabIndex({bool force = false}) {
     if (optionEls.isEmpty) return;
-    final active = activeIndexSig.value.clamp(0, optionEls.length - 1);
-    for (var i = 0; i < optionEls.length; i++) {
-      optionEls[i].tabIndex = shouldUseVirtualFocus ? -1 : (i == active ? 0 : -1);
-      if (i == active) {
-        optionEls[i].setAttribute("data-active", "true");
+    final nextActive = activeIndexSig.value;
+
+    void setItemActive(int index, bool isActive) {
+      if (index < 0 || index >= optionEls.length) return;
+      final el = optionEls[index];
+      el.tabIndex = shouldUseVirtualFocus ? -1 : (isActive ? 0 : -1);
+      if (isActive) {
+        el.setAttribute("data-active", "true");
       } else {
-        optionEls[i].removeAttribute("data-active");
+        el.removeAttribute("data-active");
       }
     }
+
+    if (!force && lastSyncedActive == nextActive) return;
+
+    // Fast path: update only previous and current active.
+    if (!force &&
+        lastSyncedActive >= -1 &&
+        lastSyncedActive < optionEls.length &&
+        nextActive >= -1 &&
+        nextActive < optionEls.length) {
+      if (lastSyncedActive != -1) setItemActive(lastSyncedActive, false);
+      if (nextActive != -1) setItemActive(nextActive, true);
+      lastSyncedActive = nextActive;
+      return;
+    }
+
+    // Slow path: (re)sync all options.
+    for (var i = 0; i < optionEls.length; i++) {
+      final isActive = i == nextActive;
+      setItemActive(i, isActive);
+    }
+    lastSyncedActive =
+        (nextActive >= -1 && nextActive < optionEls.length) ? nextActive : -1;
   }
 
   void setActiveIndex(int next) {
@@ -352,21 +378,26 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
       });
     }
 
-    on(el, "pointerenter", (_) {
-      if (!shouldFocusOnHover) return;
-      if (option.disabled) return;
-      if (activeIndexSig.value == idx) return;
-      activeIndexSig.value = idx;
-      scheduleMicrotask(() {
-        syncTabIndex();
-        focusActive();
-      });
-    });
-
     on(el, "click", (_) {
       if (option.disabled) return;
       activeIndexSig.value = idx;
       selectActive();
+    });
+
+    on(el, "pointermove", (ev) {
+      if (!shouldFocusOnHover) return;
+      if (option.disabled) return;
+      if (ev is! web.PointerEvent) return;
+      if (ev.pointerType != "mouse") return;
+
+      final activeEl = web.document.activeElement;
+      final shouldRefocus = !identical(activeEl, el);
+      final shouldUpdateActive = activeIndexSig.value != idx;
+      if (!shouldRefocus && !shouldUpdateActive) return;
+
+      if (shouldUpdateActive) activeIndexSig.value = idx;
+      syncTabIndex();
+      if (shouldRefocus) focusActive();
     });
 
     return el;
@@ -450,7 +481,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     }
 
     scheduleMicrotask(() {
-      syncTabIndex();
+      syncTabIndex(force: true);
       scrollActiveIntoView();
       if (shouldRestoreFocus) focusActive();
     });

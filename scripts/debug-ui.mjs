@@ -1426,6 +1426,15 @@ async function inspectUrl(
           await page.waitForTimeout(30);
           const afterDown3 = await page.evaluate(() => document.activeElement?.id ?? null);
 
+          // Hover should move focus quickly (Kobalte/native-like).
+          step = "hover option 4";
+          await page.locator("#select-listbox-opt-4").hover({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.activeElement?.id === "select-listbox-opt-4",
+            { timeout: timeoutMs },
+          );
+          const afterHover = await page.evaluate(() => document.activeElement?.id ?? null);
+
           step = "select enter";
           await page.keyboard.press("Enter");
           step = "wait listbox closed after select";
@@ -1516,6 +1525,7 @@ async function inspectUrl(
             afterDown1 === "select-listbox-opt-1" &&
             afterDown2 === "select-listbox-opt-2" &&
             afterDown3 === "select-listbox-opt-4" &&
+            afterHover === "select-listbox-opt-4" &&
             (afterSelect.status ?? "").includes("Last: select") &&
             (afterSelect.triggerText ?? "").includes("Dart") &&
             afterSelect.activeId === "select-trigger" &&
@@ -1534,6 +1544,7 @@ async function inspectUrl(
               afterDown1,
               afterDown2,
               afterDown3,
+              afterHover,
               afterSelect,
               afterEscape,
               afterTab,

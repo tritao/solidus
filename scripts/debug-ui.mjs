@@ -152,6 +152,7 @@ async function main() {
   const started = [];
   const root = process.cwd();
   const viteBin = path.join(root, "node_modules", ".bin", "vite");
+  await fs.promises.mkdir(path.join(root, ".cache"), { recursive: true });
 
   const terminateChild = async (child) => {
     if (child.exitCode != null) return;
@@ -270,9 +271,7 @@ async function main() {
     const report = await inspectUrl(url, { timeoutMs: args.timeoutMs });
 
     const reportPath = ".cache/debug-ui-report.json";
-    await import("node:fs/promises").then((fs) =>
-      fs.writeFile(reportPath, JSON.stringify(report, null, 2)),
-    );
+    await fs.promises.writeFile(reportPath, JSON.stringify(report, null, 2));
 
     const failures = [];
     if (report.pageErrors.length) failures.push("pageErrors");

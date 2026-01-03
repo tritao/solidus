@@ -32,3 +32,22 @@ jobs:
           DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
         run: npm run build
 
+      - name: Install Playwright browsers (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+
+      - name: UI smoke test (Playwright)
+        if: runner.os == 'Linux'
+        env:
+          DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
+        run: npm run debug:ui:preview -- --timeout-ms 240000
+
+      - name: Upload UI debug artifacts (on failure)
+        if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-debug-artifacts
+          if-no-files-found: ignore
+          path: |
+            .cache/debug-ui.png
+            .cache/debug-ui-report.json

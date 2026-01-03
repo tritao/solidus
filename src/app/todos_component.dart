@@ -41,7 +41,7 @@ final class TodosComponent extends Component {
     );
 
     final listChildren = isEmpty
-        ? <web.Element>[dom.li(className: 'muted', text: 'No todos yet.')]
+        ? <web.Element>[dom.mutedLi('No todos yet.')]
         : _todos.map(_todoItem).toList(growable: false);
 
     return dom.section(

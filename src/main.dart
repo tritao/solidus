@@ -2,11 +2,11 @@ import 'package:web/web.dart' as web;
 
 import './app/counter_component.dart';
 import './app/todos_component.dart';
+import './app/endpoints.dart';
 import './app/users_component.dart';
 import './ui/component.dart';
 import './ui/action_dispatch.dart';
 import './ui/dom.dart' as dom;
-import './ui/events.dart' as events;
 
 abstract final class _AppActions {
   static const toggleUsersEndpoint = 'app-toggle-users-endpoint';
@@ -45,9 +45,11 @@ final class AppComponent extends Component {
   void _onClick(web.MouseEvent event) {
     dispatchAction(event, {
       _AppActions.toggleUsersEndpoint: (_) {
-        const full = 'https://jsonplaceholder.typicode.com/users';
-        const limited = 'https://jsonplaceholder.typicode.com/users?_limit=5';
-        users.setEndpoint(users.endpoint == full ? limited : full);
+        users.setEndpoint(
+          users.endpoint == Endpoints.usersAll
+              ? Endpoints.usersLimited
+              : Endpoints.usersAll,
+        );
       }
     });
   }

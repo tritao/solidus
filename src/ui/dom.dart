@@ -49,6 +49,8 @@ web.HTMLParagraphElement muted(String text) => p(text, className: 'muted');
 
 web.HTMLParagraphElement danger(String text) => p(text, className: 'muted error');
 
+web.HTMLLIElement mutedLi(String text) => li(className: 'muted', text: text);
+
 web.HTMLHeadingElement h1(
   String text, {
   String? className,

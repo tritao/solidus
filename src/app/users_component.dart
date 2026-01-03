@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web/web.dart' as web;
 
+import './endpoints.dart';
 import './user.dart';
 import '../ui/component.dart';
 import '../ui/action_dispatch.dart';
 import '../ui/dom.dart' as dom;
-import '../ui/events.dart' as events;
 
 abstract final class _UsersActions {
   static const load = 'users-load';
@@ -17,7 +17,7 @@ abstract final class _UsersActions {
 final class UsersComponent extends Component {
   UsersComponent({
     String title = 'Fetch (async)',
-    String endpoint = 'https://jsonplaceholder.typicode.com/users',
+    String endpoint = Endpoints.usersAll,
   })  : _title = title,
         _endpoint = endpoint;
 

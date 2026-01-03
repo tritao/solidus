@@ -60,6 +60,18 @@ jobs:
           DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
         run: npm run debug:solid-overlay:ci
 
+      - name: Solid Dialog semantics smoke (Playwright)
+        if: runner.os == 'Linux'
+        env:
+          DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
+        run: npm run debug:solid-dialog:ci
+
+      - name: Solid Roving semantics smoke (Playwright)
+        if: runner.os == 'Linux'
+        env:
+          DART: ${{ github.workspace }}/.dart-sdk/dart-sdk/bin/dart
+        run: npm run debug:solid-roving:ci
+
       - name: Upload UI debug artifacts (on failure)
         if: failure() && runner.os == 'Linux'
         uses: actions/upload-artifact@v4

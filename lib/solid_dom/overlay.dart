@@ -121,6 +121,7 @@ FocusTrapHandle focusTrap(
   web.HTMLElement? initialFocus,
 }) {
   final previousActive = web.document.activeElement;
+  var disposed = false;
 
   void focusInitial() {
     try {
@@ -141,8 +142,16 @@ FocusTrapHandle focusTrap(
     } catch (_) {}
   }
 
-  // Delay initial focus until after the subtree is inserted into the DOM.
-  scheduleMicrotask(focusInitial);
+  void focusWhenConnected() {
+    if (disposed) return;
+    if (!container.isConnected) {
+      scheduleMicrotask(focusWhenConnected);
+      return;
+    }
+    focusInitial();
+  }
+
+  scheduleMicrotask(focusWhenConnected);
 
   void onKeydown(web.Event e) {
     if (e is! web.KeyboardEvent) return;
@@ -165,6 +174,7 @@ FocusTrapHandle focusTrap(
   container.addEventListener("keydown", jsHandler);
 
   void restore() {
+    disposed = true;
     container.removeEventListener("keydown", jsHandler);
     if (previousActive is web.HTMLElement) {
       try {

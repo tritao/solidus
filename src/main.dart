@@ -6,6 +6,10 @@ import './app/todos_component.dart';
 import './app/users_component.dart';
 import './solid_dom_demo.dart';
 import './solid_overlay_demo.dart';
+import './solid_dialog_demo.dart';
+import './solid_popover_demo.dart';
+import './solid_roving_demo.dart';
+import './solid_toast_demo.dart';
 
 void main() {
   final mount = web.document.querySelector('#app');
@@ -14,6 +18,22 @@ void main() {
   final search = web.window.location.search;
   if (search.contains('solid=overlay')) {
     mountSolidOverlayDemo(mount);
+    return;
+  }
+  if (search.contains('solid=dialog')) {
+    mountSolidDialogDemo(mount);
+    return;
+  }
+  if (search.contains('solid=popover')) {
+    mountSolidPopoverDemo(mount);
+    return;
+  }
+  if (search.contains('solid=roving')) {
+    mountSolidRovingDemo(mount);
+    return;
+  }
+  if (search.contains('solid=toast')) {
+    mountSolidToastDemo(mount);
     return;
   }
   if (search.contains('solid=1')) {

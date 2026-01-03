@@ -206,7 +206,7 @@ web.Comment Portal({
   Dispose? disposeSubtree;
   createChildRoot<void>((dispose) {
     disposeSubtree = dispose;
-    final nodes = _normalizeToNodes(children());
+    final nodes = _normalizeToNodes(untrack(children));
     for (final node in nodes) {
       container.appendChild(node);
     }
@@ -267,6 +267,7 @@ web.DocumentFragment Show({
 
   Dispose? disposeSubtree;
   final current = <web.Node>[];
+  var mountedKind = "";
 
   void clear() {
     for (final node in current) {
@@ -275,13 +276,15 @@ web.DocumentFragment Show({
     current.clear();
     disposeSubtree?.call();
     disposeSubtree = null;
+    mountedKind = "";
   }
 
-  void mount(SolidView builder) {
+  void mount(SolidView builder, String kind) {
     clear();
+    mountedKind = kind;
     createChildRoot<void>((dispose) {
       disposeSubtree = dispose;
-      final nodes = _normalizeToNodes(builder());
+      final nodes = _normalizeToNodes(untrack(builder));
       current.addAll(nodes);
       for (final node in nodes) {
         end.parentNode?.insertBefore(node, end);
@@ -291,14 +294,14 @@ web.DocumentFragment Show({
 
   createRenderEffect(() {
     if (when()) {
-      if (disposeSubtree == null) mount(children);
+      if (mountedKind != "children") mount(children, "children");
       return;
     }
     if (fallback != null) {
-      if (disposeSubtree == null) mount(fallback);
+      if (mountedKind != "fallback") mount(fallback, "fallback");
       return;
     }
-    clear();
+    if (mountedKind.isNotEmpty) clear();
   });
 
   onCleanup(() {
@@ -358,7 +361,7 @@ web.DocumentFragment For<T, K>({
       late _ForItem<T, K> created;
       createChildRoot<void>((dispose) {
         final sig = createSignal<T>(v);
-        final built = children(() => sig.value);
+        final built = untrack(() => children(() => sig.value));
         final nodes = _normalizeToNodes(built);
         created = _ForItem<T, K>(k, sig, nodes, dispose);
       });

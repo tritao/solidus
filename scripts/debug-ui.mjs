@@ -572,6 +572,261 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-dialog") {
+      try {
+        const trigger = page.locator("#dialog-trigger");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-dialog",
+            ok: false,
+            details: { reason: "missing #dialog-trigger" },
+          });
+        } else {
+          const triggerHandle = await trigger.first().elementHandle();
+
+          const bodyOverflowBefore = await page.evaluate(
+            () => document.body?.style?.overflow ?? null,
+          );
+
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.activeElement?.id === "dialog-close",
+            { timeout: timeoutMs },
+          );
+
+          const afterOpen = await page.evaluate(() => {
+            const dialog = document.querySelector("#dialog-panel");
+            const app = document.querySelector("#app");
+            return {
+              role: dialog?.getAttribute("role") ?? null,
+              ariaModal: dialog?.getAttribute("aria-modal") ?? null,
+              appAriaHidden: app?.getAttribute("aria-hidden") ?? null,
+              appInert: app?.hasAttribute("inert") ?? null,
+              bodyOverflow: document.body?.style?.overflow ?? null,
+              activeId: document.activeElement?.id ?? null,
+            };
+          });
+
+          await page.keyboard.press("Tab");
+          await page.waitForTimeout(100);
+          const activeAfterTab = await page.evaluate(
+            () => document.activeElement?.id ?? null,
+          );
+
+          // Open nested dialog.
+          await page.click("#dialog-nested-trigger", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-nested-panel") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.activeElement?.id === "dialog-nested-close",
+            { timeout: timeoutMs },
+          );
+
+          const overflowWithNested = await page.evaluate(
+            () => document.body?.style?.overflow ?? null,
+          );
+
+          // Escape closes nested only.
+          await page.keyboard.press("Escape");
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-nested-panel") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") != null,
+            { timeout: timeoutMs },
+          );
+
+          const overflowAfterNestedClose = await page.evaluate(
+            () => document.body?.style?.overflow ?? null,
+          );
+
+          // Escape closes parent.
+          await page.keyboard.press("Escape");
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const afterClose = await page.evaluate(() => {
+            const app = document.querySelector("#app");
+            return {
+              appAriaHidden: app?.getAttribute("aria-hidden") ?? null,
+              appInert: app?.hasAttribute("inert") ?? null,
+              bodyOverflow: document.body?.style?.overflow ?? null,
+              activeId: document.activeElement?.id ?? null,
+            };
+          });
+
+          const focusRestored = triggerHandle
+            ? await triggerHandle.evaluate(
+                (el) => el === document.activeElement,
+              )
+            : false;
+
+          // Outside click closes.
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") != null,
+            { timeout: timeoutMs },
+          );
+          await page.click("body", { position: { x: 5, y: 5 } });
+          await page.waitForFunction(
+            () => document.querySelector("#dialog-panel") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const statusText =
+            (await page.locator("#dialog-status").textContent())?.trim() ?? "";
+
+          const ok =
+            afterOpen.role === "dialog" &&
+            afterOpen.ariaModal === "true" &&
+            afterOpen.appAriaHidden === "true" &&
+            afterOpen.appInert === true &&
+            afterOpen.bodyOverflow === "hidden" &&
+            afterOpen.activeId === "dialog-close" &&
+            activeAfterTab != null &&
+            activeAfterTab.startsWith("dialog-") &&
+            overflowWithNested === "hidden" &&
+            overflowAfterNestedClose === "hidden" &&
+            afterClose.bodyOverflow === bodyOverflowBefore &&
+            afterClose.appAriaHidden == null &&
+            afterClose.appInert === false &&
+            focusRestored === true &&
+            statusText.includes("outside");
+
+          interactionResults.push({
+            name: "solid-dialog",
+            ok,
+            details: {
+              bodyOverflowBefore,
+              afterOpen,
+              activeAfterTab,
+              overflowWithNested,
+              overflowAfterNestedClose,
+              afterClose,
+              focusRestored,
+              statusText,
+            },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-dialog",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
+    } else if (scenario === "solid-roving") {
+      try {
+        const toggle = page.locator("#roving-toggle");
+        if (!(await toggle.count())) {
+          interactionResults.push({
+            name: "solid-roving",
+            ok: false,
+            details: { reason: "missing #roving-toggle" },
+          });
+        } else {
+          await page.waitForFunction(
+            () => document.querySelector("#roving-group") != null,
+            { timeout: timeoutMs },
+          );
+
+          const before = await page.evaluate(() => {
+            const a = document.querySelector("#roving-a");
+            const b = document.querySelector("#roving-b");
+            const c = document.querySelector("#roving-c");
+            return {
+              activeId: document.activeElement?.id ?? null,
+              tabA: a?.getAttribute("tabindex") ?? null,
+              tabB: b?.getAttribute("tabindex") ?? null,
+              tabC: c?.getAttribute("tabindex") ?? null,
+              cleanup: document.querySelector("#roving-status")?.textContent ?? null,
+            };
+          });
+
+          await page.click("#roving-a", { timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.activeElement?.id === "roving-a",
+            { timeout: timeoutMs },
+          );
+
+          await page.keyboard.press("ArrowRight");
+          await page.waitForFunction(
+            () => document.activeElement?.id === "roving-b",
+            { timeout: timeoutMs },
+          );
+          const afterRight = await page.evaluate(() => {
+            const a = document.querySelector("#roving-a");
+            const b = document.querySelector("#roving-b");
+            const c = document.querySelector("#roving-c");
+            return {
+              activeId: document.activeElement?.id ?? null,
+              tabA: a?.getAttribute("tabindex") ?? null,
+              tabB: b?.getAttribute("tabindex") ?? null,
+              tabC: c?.getAttribute("tabindex") ?? null,
+            };
+          });
+
+          await page.keyboard.press("ArrowLeft");
+          await page.waitForFunction(
+            () => document.activeElement?.id === "roving-a",
+            { timeout: timeoutMs },
+          );
+
+          await toggle.click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#roving-group") == null,
+            { timeout: timeoutMs },
+          );
+          const afterUnmount = await page.evaluate(() => ({
+            empty: document.querySelector("#roving-empty") != null,
+            cleanup: document.querySelector("#roving-status")?.textContent ?? null,
+          }));
+
+          await toggle.click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#roving-group") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () => document.activeElement?.id?.startsWith("roving-") ?? false,
+            { timeout: timeoutMs },
+          );
+
+          const ok =
+            before.activeId === "roving-a" &&
+            before.tabA === "0" &&
+            before.tabB === "-1" &&
+            before.tabC === "-1" &&
+            afterRight.activeId === "roving-b" &&
+            afterRight.tabA === "-1" &&
+            afterRight.tabB === "0" &&
+            afterRight.tabC === "-1" &&
+            afterUnmount.empty === true &&
+            /Cleanup:\s+1/.test(afterUnmount.cleanup ?? "");
+
+          interactionResults.push({
+            name: "solid-roving",
+            ok,
+            details: { before, afterRight, afterUnmount },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-roving",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
     } else {
       // Default scenario: existing app.
       try {

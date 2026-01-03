@@ -39,7 +39,7 @@ web.DocumentFragment Presence({
     clearNow();
     createChildRoot<void>((dispose) {
       disposeSubtree = dispose;
-      final built = children();
+      final built = untrack(children);
       final nodes = _normalizeToNodes(built);
       current.addAll(nodes);
       for (final node in nodes) {

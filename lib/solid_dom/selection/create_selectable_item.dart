@@ -47,22 +47,22 @@ final class SelectableItemResult {
     attr(el, "data-key", dataKey);
 
     on(el, "pointerdown", (e) {
-      if (e is web.PointerEvent) onPointerDown(e);
+      onPointerDown(e as web.PointerEvent);
     });
     on(el, "pointerup", (e) {
-      if (e is web.PointerEvent) onPointerUp(e);
+      onPointerUp(e as web.PointerEvent);
     });
     on(el, "click", (e) {
-      if (e is web.MouseEvent) onClick(e);
+      onClick(e as web.MouseEvent);
     });
     on(el, "keydown", (e) {
-      if (e is web.KeyboardEvent) onKeyDown(e);
+      onKeyDown(e as web.KeyboardEvent);
     });
     on(el, "mousedown", (e) {
-      if (e is web.MouseEvent) onMouseDown(e);
+      onMouseDown(e as web.MouseEvent);
     });
     on(el, "focus", (e) {
-      if (e is web.FocusEvent) onFocus(e);
+      onFocus(e as web.FocusEvent);
     });
   }
 }
@@ -77,6 +77,7 @@ SelectableItemResult createSelectableItem({
   bool Function()? virtualized,
   bool Function()? disabled,
   void Function()? focus,
+  void Function()? onAction,
 }) {
   final shouldUseVirtualFocusAccessor = shouldUseVirtualFocus ?? () => false;
   final shouldSelectOnPressUpAccessor = shouldSelectOnPressUp ?? () => false;
@@ -93,7 +94,7 @@ SelectableItemResult createSelectableItem({
 
     final k = key();
     if (m.selectionMode() == SelectionMode.single) {
-      if (m.isSelected(k) && !m.disallowEmptySelection()) {
+      if (m.selectionBehavior() == SelectionBehavior.toggle) {
         m.toggleSelection(k);
       } else {
         m.replaceSelection(k);
@@ -113,14 +114,7 @@ SelectableItemResult createSelectableItem({
       return;
     }
 
-    var isTouch = false;
-    if (e is web.PointerEvent) {
-      try {
-        isTouch = e.pointerType == "touch";
-      } catch (_) {
-        isTouch = false;
-      }
-    }
+    final isTouch = e is web.PointerEvent ? e.pointerType == "touch" : false;
     final toggleKey = isCtrlKeyPressed(e) || isTouch;
 
     if (m.selectionBehavior() == SelectionBehavior.toggle || toggleKey) {
@@ -146,6 +140,7 @@ SelectableItemResult createSelectableItem({
         e.button == 0 &&
         !shouldSelectOnPressUpAccessor()) {
       onSelect(e);
+      onAction?.call();
     }
   }
 
@@ -156,6 +151,7 @@ SelectableItemResult createSelectableItem({
         shouldSelectOnPressUpAccessor() &&
         allowsDifferentPressOriginAccessor()) {
       onSelect(e);
+      onAction?.call();
     }
   }
 
@@ -167,18 +163,21 @@ SelectableItemResult createSelectableItem({
             !allowsDifferentPressOriginAccessor()) ||
         !isMouse) {
       onSelect(e);
+      onAction?.call();
     }
   }
 
   void onKeyDown(web.KeyboardEvent e) {
     if (!allowsSelection()) return;
     if (e.key != "Enter" && e.key != " ") return;
+    e.preventDefault();
 
     if (isNonContiguousSelectionModifier(e)) {
       manager().toggleSelection(key());
     } else {
       onSelect(e);
     }
+    onAction?.call();
   }
 
   void onMouseDown(web.MouseEvent e) {

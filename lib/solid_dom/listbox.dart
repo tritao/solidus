@@ -296,18 +296,6 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     selection.clearSelection(force: true);
   });
 
-  createEffect(() {
-    final selectedKeys = selection.selectedKeys();
-    if (selectedKeys.isEmpty) return;
-    final k = selectedKeys.first;
-    final opt = optionByKey[k];
-    final idx = indexByKey[k];
-    if (opt == null || idx == null) return;
-    final v = selected();
-    if (v != null && eq(opt.value, v)) return;
-    onSelect(opt, idx);
-  });
-
   // Keep aria-activedescendant available in virtual focus mode.
   if (shouldUseVirtualFocus) {
     attr(listbox, "aria-activedescendant", () => selection.focusedKey());
@@ -457,6 +445,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
               shouldSelectOnPressUp: () => shouldSelectOnPressUp,
               shouldUseVirtualFocus: () => shouldUseVirtualFocus,
               allowsDifferentPressOrigin: () => allowsDifferentPressOrigin,
+              onAction: () => onSelect(opt, idx),
             );
             selectableItem.attach(el);
 
@@ -508,6 +497,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
             shouldSelectOnPressUp: () => shouldSelectOnPressUp,
             shouldUseVirtualFocus: () => shouldUseVirtualFocus,
             allowsDifferentPressOrigin: () => allowsDifferentPressOrigin,
+            onAction: () => onSelect(opt, idx),
           );
           selectableItem.attach(el);
 
@@ -570,6 +560,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     bool allowSpaceSelect = true,
   }) {
     if (!enableKeyboardNavigation) return;
+    if (e.defaultPrevented) return;
 
     if (e.key == "Tab") {
       onTabOut?.call();

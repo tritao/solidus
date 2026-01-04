@@ -127,7 +127,12 @@ void on(
 ) {
   final jsHandler = ((web.Event e) => handler(e)).toJS;
   target.addEventListener(type, jsHandler);
-  onCleanup(() => target.removeEventListener(type, jsHandler));
+  // Always attach the cleanup to the current owner (not the currently running
+  // computation), so listeners created while building effects aren't
+  // inadvertently removed on effect re-runs.
+  untrack(() {
+    onCleanup(() => target.removeEventListener(type, jsHandler));
+  });
 }
 
 /// Inserts dynamic content into [parent] between comment anchors.

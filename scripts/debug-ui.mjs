@@ -1601,6 +1601,35 @@ async function inspectUrl(
 
           if (!aborted) {
 
+          // Re-open and click the currently selected option (mouse should still close).
+          step = "open for click selected";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait listbox open for click selected";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox") != null,
+            { timeout: timeoutMs },
+          );
+          step = "click selected option";
+          await page.locator("#select-listbox [aria-selected=true]").first().click({
+            timeout: timeoutMs,
+          });
+          step = "wait listbox closed after click selected";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          const afterClickSelected = await page.evaluate(() => ({
+            status: document.querySelector("#select-status")?.textContent ?? null,
+            triggerText: document.querySelector("#select-trigger")?.textContent ?? null,
+            activeId: document.activeElement?.id ?? null,
+            expanded:
+              document.querySelector("#select-trigger")?.getAttribute("aria-expanded") ??
+              null,
+            listboxExists: document.querySelector("#select-listbox") != null,
+          }));
+          if (afterClickSelected.listboxExists) aborted = true;
+
           // Escape closes.
           step = "open for escape";
           await trigger.first().click({ timeout: timeoutMs });
@@ -1689,6 +1718,7 @@ async function inspectUrl(
             (afterSelect2.status ?? "").includes("Last: select") &&
             (afterSelect2.triggerText ?? "").includes("React") &&
             afterSelect2.activeId === "select-trigger" &&
+            afterClickSelected.activeId === "select-trigger" &&
             (afterEscape.status ?? "").includes("Last: escape") &&
             afterEscape.activeId === "select-trigger" &&
             (afterTab.status ?? "").includes("Last: tab") &&
@@ -1707,6 +1737,7 @@ async function inspectUrl(
               afterHover,
               afterSelect,
               afterSelect2,
+              afterClickSelected,
               afterEscape,
               afterTab,
               afterOutside,
@@ -1752,6 +1783,35 @@ async function inspectUrl(
               scrollTop: el ? el.scrollTop : null,
             };
           });
+
+          // Mouse selection should update the status text.
+          step = "click Flutter";
+          await page
+            .locator("#listbox-sections [role=option]")
+            .filter({ hasText: "Flutter" })
+            .first()
+            .click({ timeout: timeoutMs });
+          await page.waitForTimeout(60);
+          const afterFlutter = await page.evaluate(() => ({
+            status: document.querySelector("#listbox-status")?.textContent ?? null,
+            selectedId:
+              document.querySelector("#listbox-sections [aria-selected=true]")?.id ??
+              null,
+          }));
+
+          step = "click Solid";
+          await page
+            .locator("#listbox-sections [role=option]")
+            .filter({ hasText: "Solid" })
+            .first()
+            .click({ timeout: timeoutMs });
+          await page.waitForTimeout(60);
+          const afterSolid = await page.evaluate(() => ({
+            status: document.querySelector("#listbox-status")?.textContent ?? null,
+            selectedId:
+              document.querySelector("#listbox-sections [aria-selected=true]")?.id ??
+              null,
+          }));
 
           step = "PageDown moves active and scrolls container";
           await page.keyboard.press("PageDown");
@@ -1802,6 +1862,8 @@ async function inspectUrl(
             typeof afterEnd === "string" &&
             typeof afterHome === "string" &&
             afterEnd !== afterHome &&
+            (afterFlutter.status ?? "").includes("Flutter") &&
+            (afterSolid.status ?? "").includes("Solid") &&
             afterVirtual.activeId === "listbox-virtual-input" &&
             typeof afterVirtual.activeDescendant === "string" &&
             afterVirtual.activeDescendant === afterVirtual.activeOptionId;
@@ -1812,6 +1874,8 @@ async function inspectUrl(
             details: {
               groupCount,
               before,
+              afterFlutter,
+              afterSolid,
               afterPageDown,
               afterEnd,
               afterHome,

@@ -29,14 +29,16 @@ void mountSolidSelectDemo(web.Element mount) {
       ..type = "button"
       ..className = "btn primary";
     trigger.appendChild(text(() => selected.value ?? "Choose a framework"));
-    root.appendChild(trigger);
-
     final after = web.HTMLButtonElement()
       ..id = "select-after"
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "After";
-    root.appendChild(after);
+
+    final row = web.HTMLDivElement()..className = "row";
+    row.appendChild(trigger);
+    row.appendChild(after);
+    root.appendChild(row);
 
     final opts = <SelectOption<String>>[
       const SelectOption(value: "Solid", label: "Solid"),

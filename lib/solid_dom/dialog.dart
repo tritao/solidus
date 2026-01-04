@@ -56,6 +56,21 @@ web.DocumentFragment Dialog({
         if (modal || backdrop) {
           wrapper.style.position = "fixed";
           wrapper.style.inset = "0";
+          wrapper.style.display = "flex";
+          wrapper.style.alignItems = "center";
+          wrapper.style.justifyContent = "center";
+          wrapper.style.padding = "24px";
+          wrapper.style.boxSizing = "border-box";
+
+          // Reasonable defaults so dialogs don't stretch full-viewport by default.
+          if (dialog.style.width.isEmpty) dialog.style.width = "100%";
+          if (dialog.style.maxWidth.isEmpty) {
+            dialog.style.maxWidth = "min(640px, calc(100vw - 48px))";
+          }
+          if (dialog.style.maxHeight.isEmpty) {
+            dialog.style.maxHeight = "calc(100vh - 48px)";
+          }
+          if (dialog.style.overflow.isEmpty) dialog.style.overflow = "auto";
         }
 
         web.HTMLElement? backdropEl;

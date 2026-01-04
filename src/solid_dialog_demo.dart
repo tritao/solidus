@@ -111,7 +111,8 @@ void mountSolidDialogDemo(web.Element mount) {
             lastDismiss.value = "close";
             close();
           });
-          dialog.appendChild(closeBtn);
+          final actions = web.HTMLDivElement()..className = "row";
+          actions.appendChild(closeBtn);
 
           final nestedTrigger = web.HTMLButtonElement()
             ..id = "dialog-nested-trigger"
@@ -119,7 +120,8 @@ void mountSolidDialogDemo(web.Element mount) {
             ..className = "btn secondary"
             ..textContent = "Open nested";
           on(nestedTrigger, "click", (_) => nestedOpen.value = true);
-          dialog.appendChild(nestedTrigger);
+          actions.appendChild(nestedTrigger);
+          dialog.appendChild(actions);
 
           dialog.appendChild(
             Dialog(
@@ -144,7 +146,9 @@ void mountSolidDialogDemo(web.Element mount) {
                   lastDismiss.value = "nested:close";
                   nestedClose();
                 });
-                nested.appendChild(nestedCloseBtn);
+                final nestedActions = web.HTMLDivElement()..className = "row";
+                nestedActions.appendChild(nestedCloseBtn);
+                nested.appendChild(nestedActions);
                 return nested;
               },
             ),
@@ -185,7 +189,9 @@ void mountSolidDialogDemo(web.Element mount) {
             lastDismiss.value = "nobackdrop:close";
             close();
           });
-          dialog.appendChild(closeBtn);
+          final actions = web.HTMLDivElement()..className = "row";
+          actions.appendChild(closeBtn);
+          dialog.appendChild(actions);
           return dialog;
         },
       ),
@@ -231,7 +237,8 @@ void mountSolidDialogDemo(web.Element mount) {
             ..type = "button"
             ..className = "btn secondary"
             ..textContent = "Secondary (should receive focus)";
-          dialog.appendChild(hooksSecondary!);
+          final actions = web.HTMLDivElement()..className = "row";
+          actions.appendChild(hooksSecondary!);
 
           final closeBtn = web.HTMLButtonElement()
             ..id = "dialog-hooks-close"
@@ -242,7 +249,8 @@ void mountSolidDialogDemo(web.Element mount) {
             lastDismiss.value = "hooks:close";
             close();
           });
-          dialog.appendChild(closeBtn);
+          actions.appendChild(closeBtn);
+          dialog.appendChild(actions);
 
           return dialog;
         },

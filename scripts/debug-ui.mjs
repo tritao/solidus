@@ -669,7 +669,11 @@ async function inspectUrl(
           );
 
           // Clicking outside nested (on its backdrop) should close nested only.
-          await page.click("#dialog-nested-backdrop", { timeout: timeoutMs });
+          // Click away from the centered panel so the panel doesn't intercept.
+          await page.click("#dialog-nested-backdrop", {
+            timeout: timeoutMs,
+            position: { x: 5, y: 5 },
+          });
           step = "wait nested closed by backdrop";
           await page.waitForFunction(
             () => document.querySelector("#dialog-nested-panel") == null,
@@ -785,7 +789,11 @@ async function inspectUrl(
             () => document.querySelector("#dialog-panel") != null,
             { timeout: timeoutMs },
           );
-          await page.click("#dialog-backdrop", { timeout: timeoutMs });
+          // Click away from the centered panel so the panel doesn't intercept.
+          await page.click("#dialog-backdrop", {
+            timeout: timeoutMs,
+            position: { x: 5, y: 5 },
+          });
           step = "wait dialog closed by backdrop click";
           await page.waitForFunction(
             () => document.querySelector("#dialog-panel") == null,
@@ -1706,7 +1714,12 @@ async function inspectUrl(
           });
 
           // Auto-dismiss should remove the remaining toast shortly after TTL+exit.
-          await page.waitForTimeout(400);
+          await page.waitForFunction(
+            () =>
+              document.querySelectorAll('#toast-viewport [id^="toast-"]').length ===
+              0,
+            { timeout: timeoutMs },
+          );
           const afterAuto = await page.evaluate(() => {
             const viewport = document.querySelector("#toast-viewport");
             const ids = Array.from(viewport?.querySelectorAll('[id^=\"toast-\"]') ?? []).map(

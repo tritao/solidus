@@ -41,14 +41,16 @@ void mountSolidTooltipDemo(web.Element mount) {
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Hover me";
-    root.appendChild(trigger);
-
     final focusTrigger = web.HTMLButtonElement()
       ..id = "tooltip-focus-trigger"
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Focus me";
-    root.appendChild(focusTrigger);
+
+    final row = web.HTMLDivElement()..className = "row";
+    row.appendChild(trigger);
+    row.appendChild(focusTrigger);
+    root.appendChild(row);
 
     root.appendChild(
       Tooltip(

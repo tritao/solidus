@@ -103,15 +103,33 @@ web.DocumentFragment DropdownMenu({
               activeIndex.value.clamp(0, items.isEmpty ? 0 : items.length - 1);
           if (items.isNotEmpty) {
             try {
-              items[idx].focus();
+              items[idx].focus(web.FocusOptions(preventScroll: true));
               return;
             } catch (_) {}
           }
           if (fallbackToMenu) {
             try {
-              menu.focus();
+              menu.focus(web.FocusOptions(preventScroll: true));
             } catch (_) {}
           }
+        }
+
+        bool isItemDisabled(web.HTMLElement el) {
+          if (el is web.HTMLButtonElement) return el.disabled;
+          return el.getAttribute("aria-disabled") == "true";
+        }
+
+        for (var i = 0; i < items.length; i++) {
+          final index = i;
+          final el = items[i];
+          on(el, "pointermove", (ev) {
+            if (ev is! web.PointerEvent) return;
+            if (ev.pointerType != "mouse") return;
+            if (isItemDisabled(el)) return;
+            if (activeIndex.value == index && web.document.activeElement == el) return;
+            activeIndex.value = index;
+            focusActive(fallbackToMenu: false);
+          });
         }
 
         // Focus a reasonable item on mount.

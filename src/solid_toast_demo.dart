@@ -13,7 +13,7 @@ void mountSolidToastDemo(web.Element mount) {
 
     root.appendChild(solidDemoNav(active: "toast"));
 
-    final toaster = createToaster(exitMs: 80, defaultDurationMs: 200);
+    final toaster = createToaster(exitMs: 120, defaultDurationMs: 1500);
     final count = createSignal(0);
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Toast Demo");

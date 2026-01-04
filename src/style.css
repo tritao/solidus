@@ -267,6 +267,16 @@ a.btn {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.menuItem[data-active="true"] {
+  background: rgba(124, 92, 255, 0.06);
+  border-color: rgba(124, 92, 255, 0.45);
+}
+
+.menuItem.destructive[data-active="true"] {
+  background: rgba(255, 77, 77, 0.06);
+  border-color: rgba(255, 77, 77, 0.4);
+}
+
 .menuItem[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
@@ -285,4 +295,22 @@ a.btn {
 .menuItem.destructive:focus {
   border-color: rgba(255, 77, 77, 0.55);
   box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.15);
+}
+
+#toast-viewport {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+  z-index: 9999;
+  pointer-events: none;
+}
+
+#toast-viewport .card {
+  pointer-events: auto;
+  padding: 12px 14px;
+  width: 100%;
 }

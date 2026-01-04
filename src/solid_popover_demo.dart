@@ -30,9 +30,17 @@ void mountSolidPopoverDemo(web.Element mount) {
           "Press Escape while open to dismiss (reason shows below).",
           "Scroll the page: the popover should reposition with the anchor.",
           "Try the bottom trigger to exercise flip/fit-in-viewport behavior.",
+          "Popover is non-modal: Tab can move focus to any focusable element on the page.",
         ],
       ),
     );
+
+    final jump = web.HTMLButtonElement()
+      ..id = "popover-jump-bottom"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Jump to bottom trigger";
+    root.appendChild(jump);
 
     final trigger = web.HTMLButtonElement()
       ..id = "popover-trigger"
@@ -52,6 +60,12 @@ void mountSolidPopoverDemo(web.Element mount) {
       ..style.marginTop = "1600px";
     bottomWrap.appendChild(bottomTrigger);
     root.appendChild(bottomWrap);
+
+    on(jump, "click", (_) {
+      try {
+        bottomTrigger.scrollIntoView();
+      } catch (_) {}
+    });
 
     final status = web.HTMLParagraphElement()
       ..id = "popover-status"

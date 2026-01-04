@@ -233,6 +233,7 @@ a.btn {
 
 .menuItem {
   width: 100%;
+  box-sizing: border-box;
   text-align: left;
   padding: 10px 12px;
   border-radius: 12px;

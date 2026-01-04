@@ -92,6 +92,7 @@ final class ToastController {
       children: () {
         final viewport = web.HTMLDivElement()
           ..id = viewportId
+          ..setAttribute("data-solid-top-layer", "1")
           ..setAttribute("role", "region")
           ..setAttribute("aria-label", "Notifications")
           ..setAttribute("aria-live", "polite");

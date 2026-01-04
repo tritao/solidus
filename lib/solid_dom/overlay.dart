@@ -235,6 +235,9 @@ final class DismissableLayerHandle {
 }
 
 final List<_LayerEntry> _layerStack = <_LayerEntry>[];
+final Map<web.HTMLElement, ({String prevPointerEvents, String? prevPointerLayerAttr})>
+    _topLayerPointerPatches =
+    <web.HTMLElement, ({String prevPointerEvents, String? prevPointerLayerAttr})>{};
 
 final class _LayerEntry {
   _LayerEntry(
@@ -267,6 +270,23 @@ _LayerEntry? _topPointerBlockingLayer() {
 }
 
 void _restorePointerPatches() {
+  if (_topLayerPointerPatches.isNotEmpty) {
+    for (final entry in _topLayerPointerPatches.entries) {
+      final el = entry.key;
+      final prev = entry.value.prevPointerEvents;
+      final prevLayerAttr = entry.value.prevPointerLayerAttr;
+      try {
+        el.style.pointerEvents = prev;
+      } catch (_) {}
+      if (prevLayerAttr == null) {
+        el.removeAttribute("data-solid-pointer-layer");
+      } else {
+        el.setAttribute("data-solid-pointer-layer", prevLayerAttr);
+      }
+    }
+    _topLayerPointerPatches.clear();
+  }
+
   for (final entry in _layerStack) {
     if (!entry._pointerPatched) continue;
     entry._pointerPatched = false;
@@ -341,6 +361,23 @@ void _syncPointerBlocking() {
     el.style.pointerEvents = "auto";
     el.setAttribute("data-solid-pointer-layer", "1");
   }
+
+  // Ensure "top layer" elements remain interactive even when the body is
+  // pointer-blocked by a modal layer (e.g. toast viewport).
+  try {
+    final topNodes = body.querySelectorAll("[data-solid-top-layer]");
+    for (var i = 0; i < topNodes.length; i++) {
+      final n = topNodes.item(i);
+      if (n is! web.HTMLElement) continue;
+      if (_topLayerPointerPatches.containsKey(n)) continue;
+      _topLayerPointerPatches[n] = (
+        prevPointerEvents: n.style.pointerEvents,
+        prevPointerLayerAttr: n.getAttribute("data-solid-pointer-layer"),
+      );
+      n.style.pointerEvents = "auto";
+      n.setAttribute("data-solid-pointer-layer", "1");
+    }
+  } catch (_) {}
 }
 
 DismissableLayerHandle dismissableLayer(

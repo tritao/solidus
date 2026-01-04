@@ -255,6 +255,8 @@ a.btn {
   width: 100%;
   box-sizing: border-box;
   text-align: left;
+  user-select: none;
+  -webkit-user-select: none;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid transparent;

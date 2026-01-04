@@ -8,7 +8,6 @@ import "./listbox_core.dart";
 import "./listbox.dart";
 import "./overlay.dart";
 import "./presence.dart";
-import "./selection/selection_manager.dart";
 import "./solid_dom.dart";
 
 final class ComboboxOption<T> implements ListboxItem<T> {
@@ -76,14 +75,14 @@ web.DocumentFragment Combobox<T>({
   final resolvedListboxId =
       listboxId ?? _nextComboboxId("solid-combobox-listbox");
   final ids = ListboxIdRegistry<T, ComboboxOption<T>>(listboxId: resolvedListboxId);
-  final selection = SelectionManager();
 
   // Input state mirrors Kobalte: user types -> filter -> open/close.
   final inputValue = createSignal<String>("");
-  final activeIndex = createSignal<int>(-1);
   final showAllOptions = createSignal(false);
   web.HTMLElement? listboxRef;
-  ListboxHandle<T, ComboboxOption<T>>? listboxHandle;
+  final listboxHandleSig =
+      createSignal<ListboxHandle<T, ComboboxOption<T>>?>(null);
+  final pendingInitialIndex = createSignal<int?>(null);
   var isComposing = false;
   final allowEmpty = allowsEmptyCollection || keepOpenOnEmpty;
   final showEmptyState = keepOpenOnEmpty;
@@ -115,22 +114,6 @@ web.DocumentFragment Combobox<T>({
     if (!open()) syncInputFromSelection();
   });
 
-  // Keep selection manager in sync with controlled value (single selection).
-  createEffect(() {
-    final v = value();
-    if (v == null) {
-      selection.clearSelection();
-      return;
-    }
-    for (final opt in options()) {
-      if (eq(opt.value, v)) {
-        selection.replaceSelection(ids.idForOption(opt));
-        return;
-      }
-    }
-    selection.clearSelection();
-  });
-
   List<ComboboxOption<T>> filteredOptions() {
     final all = options().toList(growable: false);
     final q = inputValue.value;
@@ -146,38 +129,19 @@ web.DocumentFragment Combobox<T>({
     return filteredOptions();
   }
 
-  void ensureActiveIndexWithin(List<ComboboxOption<T>> opts) {
-    if (opts.isEmpty) {
-      activeIndex.value = -1;
-      return;
-    }
-    var idx = activeIndex.value;
-    if (idx < 0) {
-      final selIdx = findSelectedIndex<T, ComboboxOption<T>>(
-        opts,
-        value(),
-        equals: eq,
-      );
-      idx = selIdx == -1 ? firstEnabledIndex(opts) : selIdx;
-    }
-    if (idx >= opts.length) idx = opts.length - 1;
-    if (idx >= 0 && opts[idx].disabled) idx = nextEnabledIndex(opts, idx, 1);
-    activeIndex.value = idx;
-  }
-
   void openNow({int? focusIndex, bool showAll = false}) {
     showAllOptions.value = showAll;
     setOpen(true);
-    final opts = displayedOptions();
     if (focusIndex != null) {
-      activeIndex.value = focusIndex;
+      pendingInitialIndex.value = focusIndex;
     } else {
+      pendingInitialIndex.value = null;
+      final opts = displayedOptions();
       if (opts.isEmpty && !allowEmpty) {
         showAllOptions.value = false;
         setOpen(false);
         return;
       }
-      ensureActiveIndexWithin(opts);
     }
   }
 
@@ -190,16 +154,6 @@ web.DocumentFragment Combobox<T>({
   void resetInputToSelection() {
     if (noResetInputOnBlur && value() == null) return;
     syncInputFromSelection();
-  }
-
-  void selectActive({required List<ComboboxOption<T>> opts}) {
-    final idx = activeIndex.value;
-    if (idx < 0 || idx >= opts.length) return;
-    final opt = opts[idx];
-    if (opt.disabled) return;
-    setValue(opt.value);
-    inputValue.value = opt.label;
-    if (closeOnSelection) closeNow("select");
   }
 
   input
@@ -215,10 +169,8 @@ web.DocumentFragment Combobox<T>({
     "aria-activedescendant",
     () {
       if (!open()) return null;
-      final idx = activeIndex.value;
-      final opts = displayedOptions();
-      if (idx < 0 || idx >= opts.length) return null;
-      return ids.idForIndex(opts, idx);
+      final handle = listboxHandleSig.value;
+      return handle?.selectionManager.focusedKey();
     },
   );
 
@@ -234,7 +186,6 @@ web.DocumentFragment Combobox<T>({
     // If empty, keep it open only if configured.
     final opts = displayedOptions();
     if (open()) {
-      ensureActiveIndexWithin(opts);
       if (opts.isEmpty && !allowEmpty) {
         closeNow("empty");
         resetInputToSelection();
@@ -290,7 +241,6 @@ web.DocumentFragment Combobox<T>({
     if (e is! web.KeyboardEvent) return;
     if (isComposing) return;
 
-    final opts = displayedOptions();
     if (e.key == "ArrowDown") {
       if (!open()) {
         final all = options().toList(growable: false);
@@ -302,7 +252,11 @@ web.DocumentFragment Combobox<T>({
         return;
       }
       e.preventDefault();
-      listboxHandle?.handleKeyDown(e, allowTypeAhead: false, allowSpaceSelect: false);
+      listboxHandleSig.value?.handleKeyDown(
+        e,
+        allowTypeAhead: false,
+        allowSpaceSelect: false,
+      );
       return;
     }
     if (e.key == "ArrowUp") {
@@ -319,7 +273,11 @@ web.DocumentFragment Combobox<T>({
         return;
       }
       e.preventDefault();
-      listboxHandle?.handleKeyDown(e, allowTypeAhead: false, allowSpaceSelect: false);
+      listboxHandleSig.value?.handleKeyDown(
+        e,
+        allowTypeAhead: false,
+        allowSpaceSelect: false,
+      );
       return;
     }
     if (e.key == "Home" ||
@@ -328,18 +286,25 @@ web.DocumentFragment Combobox<T>({
         e.key == "PageUp") {
       if (!open()) return;
       e.preventDefault();
-      listboxHandle?.handleKeyDown(e, allowTypeAhead: false, allowSpaceSelect: false);
+      listboxHandleSig.value?.handleKeyDown(
+        e,
+        allowTypeAhead: false,
+        allowSpaceSelect: false,
+      );
       return;
     }
     if (e.key == "ArrowLeft" || e.key == "ArrowRight") {
-      activeIndex.value = -1;
-      selection.setFocusedKey(null);
+      listboxHandleSig.value?.selectionManager.setFocusedKey(null);
       return;
     }
     if (e.key == "Enter") {
       if (!open()) return;
       e.preventDefault();
-      selectActive(opts: opts);
+      listboxHandleSig.value?.handleKeyDown(
+        e,
+        allowTypeAhead: false,
+        allowSpaceSelect: false,
+      );
       return;
     }
     if (e.key == "Escape") {
@@ -381,7 +346,6 @@ web.DocumentFragment Combobox<T>({
           options: displayedOptions,
           selected: value,
           equals: eq,
-          activeIndex: activeIndex,
           shouldUseVirtualFocus: true,
           shouldFocusOnHover: true,
           enableKeyboardNavigation: true,
@@ -389,6 +353,14 @@ web.DocumentFragment Combobox<T>({
           showEmptyState: showEmptyState,
           emptyText: emptyText,
           idRegistry: ids,
+          initialActiveIndex: () {
+            final idx = pendingInitialIndex.value;
+            if (idx != null) {
+              pendingInitialIndex.value = null;
+              return idx;
+            }
+            return -1;
+          },
           onSelect: (opt, idx) {
             setValue(opt.value);
             inputValue.value = opt.label;
@@ -402,10 +374,12 @@ web.DocumentFragment Combobox<T>({
         listbox.element.style.padding = "6px";
         listbox.element.style.minWidth = "240px";
         listboxRef = listbox.element;
-        listboxHandle = listbox;
+        listboxHandleSig.value = listbox;
         onCleanup(() {
           if (identical(listboxRef, listbox.element)) listboxRef = null;
-          if (identical(listboxHandle, listbox)) listboxHandle = null;
+          if (identical(listboxHandleSig.value, listbox)) {
+            listboxHandleSig.value = null;
+          }
         });
 
         floatToAnchor(
@@ -436,7 +410,6 @@ web.DocumentFragment Combobox<T>({
               resetInputToSelection();
               return;
             }
-            ensureActiveIndexWithin(opts);
         });
 
         return listbox.element;

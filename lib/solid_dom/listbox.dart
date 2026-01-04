@@ -1,10 +1,15 @@
 import "dart:async";
+
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "./listbox_core.dart";
+import "./selection/create_selectable_collection.dart";
+import "./selection/create_selectable_item.dart";
 import "./selection/list_keyboard_delegate.dart";
-import "./selection/type_select.dart";
+import "./selection/selection_manager.dart";
+import "./selection/types.dart";
+import "./selection/utils.dart";
 import "./solid_dom.dart";
 
 typedef ListboxOptionBuilder<T, O extends ListboxItem<T>> = web.HTMLElement
@@ -17,6 +22,7 @@ typedef ListboxOptionBuilder<T, O extends ListboxItem<T>> = web.HTMLElement
 final class ListboxHandle<T, O extends ListboxItem<T>> {
   ListboxHandle._(
     this.element, {
+    required this.selectionManager,
     required this.activeIndex,
     required this.activeId,
     required this.activeKey,
@@ -29,31 +35,39 @@ final class ListboxHandle<T, O extends ListboxItem<T>> {
   });
 
   final web.HTMLElement element;
+  final SelectionManager selectionManager;
+
+  /// Back-compat: derived from `activeKey`.
   final Signal<int> activeIndex;
+
   final String? Function() activeId;
   final String? Function() activeKey;
   final void Function(String? key) setActiveKey;
-
-  /// Sets active index and updates option tabIndex/scrolling; focuses option if
-  /// not in virtual focus mode.
   final void Function(int next) setActiveIndex;
-
-  /// Selects the active option (if any).
   final void Function() selectActive;
-
-  /// Move active by delta (uses enabled navigation + wrapping rules).
   final void Function(int delta) moveActive;
-
-  /// Focuses the active option if not in virtual focus mode.
   final void Function() focusActive;
 
-  /// Handles keyboard navigation when the listbox itself isn't focused
-  /// (e.g., virtual focus listboxes driven by an input).
+  /// Keyboard handler for external focus targets (e.g. Combobox input).
   final void Function(
     web.KeyboardEvent e, {
     bool allowTypeAhead,
     bool allowSpaceSelect,
   }) handleKeyDown;
+}
+
+final class _Entry<T, O extends ListboxItem<T>> {
+  _Entry({
+    required this.key,
+    required this.option,
+    required this.index,
+    required this.sectionLabelId,
+  });
+
+  final String key;
+  final O option;
+  final int index;
+  final String? sectionLabelId;
 }
 
 ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
@@ -70,6 +84,10 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   bool shouldFocusWrap = true,
   bool disallowTypeAhead = false,
   bool enableKeyboardNavigation = true,
+  bool selectOnFocus = false,
+  bool shouldSelectOnPressUp = false,
+  bool allowsDifferentPressOrigin = false,
+  bool disallowEmptySelection = false,
   void Function()? onTabOut,
   void Function()? onEscape,
   String emptyText = "No results.",
@@ -85,395 +103,323 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   if (options == null && sections == null) {
     throw StateError("createListbox: provide options or sections");
   }
+
   final listbox = web.HTMLDivElement()
     ..id = id
     ..setAttribute("role", "listbox")
-    ..tabIndex = shouldUseVirtualFocus ? -1 : -1
+    ..tabIndex = -1
     ..className = "card listbox";
 
-  final ids =
-      idRegistry ?? ListboxIdRegistry<T, O>(listboxId: id, getOptionKey: getOptionKey);
+  final ids = idRegistry ??
+      ListboxIdRegistry<T, O>(listboxId: id, getOptionKey: getOptionKey);
 
-  List<O> currentOptions() {
-    if (sections != null) {
-      final out = <O>[];
-      for (final section in sections()) {
-        out.addAll(section.options);
-      }
-      return out;
-    }
-    return options!();
-  }
+  final hasExternalActiveIndex = activeIndex != null;
+  final activeIndexSig = activeIndex ?? createSignal<int>(-1);
 
-  final activeIndexSig = activeIndex ??
-      createSignal<int>(
-        initialActiveIndex?.call() ??
-            (() {
-              final opts = currentOptions();
-              final sel = selected();
-              final idx = findSelectedIndex<T, O>(opts, sel, equals: eq);
-              return idx == -1 ? firstEnabledIndex(opts) : idx;
-            })(),
-      );
-
-  final optionEls = <web.HTMLElement>[];
   final optionElByKey = <String, web.HTMLElement>{};
+  final optionByKey = <String, O>{};
   final indexByKey = <String, int>{};
-  final optionsByKey = <String, O>{};
-  var currentKeys = <String>[];
-  var lastSyncedActive = -2;
+  var keys = <String>[];
 
-  String? activeId() {
-    final idx = activeIndexSig.value;
-    final opts = currentOptions();
-    if (idx < 0 || idx >= opts.length) return null;
-    return ids.idForIndex(opts, idx);
+  int keysVersion = 0;
+  final keysVersionSig = createSignal<int>(0);
+
+  final selection = SelectionManager(
+    selectionMode: SelectionMode.single,
+    selectionBehavior: SelectionBehavior.replace,
+    disallowEmptySelection: disallowEmptySelection,
+    orderedKeys: () => keys,
+    isDisabled: (k) => optionByKey[k]?.disabled ?? false,
+    canSelectItem: (k) => !(optionByKey[k]?.disabled ?? false),
+  );
+
+  final delegate = ListKeyboardDelegate(
+    keys: () => keys,
+    isDisabled: (k) => optionByKey[k]?.disabled ?? false,
+    textValueForKey: (k) => optionByKey[k]?.textValue ?? "",
+    getContainer: () => scrollContainer?.call() ?? listbox,
+    getItemElement: (k) => optionElByKey[k],
+    pageSize: pageSize,
+  );
+
+  String? activeKey() => selection.focusedKey();
+  String? activeId() => selection.focusedKey();
+
+  int _indexForKey(String? key) => key == null ? -1 : (indexByKey[key] ?? -1);
+
+  bool _syncingIndexFromKey = false;
+  bool _syncingKeyFromIndex = false;
+
+  void syncActiveIndexFromKey() {
+    if (_syncingKeyFromIndex) return;
+    final next = _indexForKey(activeKey());
+    if (activeIndexSig.value != next) activeIndexSig.value = next;
   }
 
-  String? activeKey() => activeId();
+  void syncKeyFromActiveIndex() {
+    if (_syncingIndexFromKey) return;
+    final idx = activeIndexSig.value;
+    if (idx < 0 || idx >= keys.length) return;
+    final k = keys[idx];
+    if (activeKey() == k) return;
+    _syncingKeyFromIndex = true;
+    selection.setFocusedKey(k);
+    _syncingKeyFromIndex = false;
+  }
 
-  void scrollElementIntoView(web.HTMLElement container, web.HTMLElement el) {
+  // Keep activeIndex and focusedKey in sync.
+  if (hasExternalActiveIndex) {
+    createEffect(() {
+      final _ = activeIndexSig.value;
+      syncKeyFromActiveIndex();
+    });
+  }
+  createEffect(() {
+    final _ = selection.focusedKey();
+    _syncingIndexFromKey = true;
+    syncActiveIndexFromKey();
+    _syncingIndexFromKey = false;
+  });
+
+  void ensureFocusedKeyValid() {
+    final current = selection.focusedKey();
+    if (current != null && indexByKey.containsKey(current)) return;
+
+    // Prefer selected key, then initial active index, then first enabled.
+    final selectedValue = selected();
+    String? preferred;
+    if (selectedValue != null) {
+      for (final opt in optionByKey.values) {
+        if (eq(opt.value, selectedValue)) {
+          preferred = ids.idForOption(opt);
+          break;
+        }
+      }
+    }
+    preferred ??= () {
+      final idx = initialActiveIndex?.call() ?? -1;
+      if (idx >= 0 && idx < keys.length) return keys[idx];
+      return null;
+    }();
+    preferred ??= delegate.getFirstKey();
+    if (preferred != null) selection.setFocusedKey(preferred);
+  }
+
+  void focusActive() {
+    if (shouldUseVirtualFocus) return;
+    final k = selection.focusedKey();
+    if (k == null) return;
+    final el = optionElByKey[k];
+    if (el == null) return;
     try {
-      final cRect = container.getBoundingClientRect();
+      el.focus(web.FocusOptions(preventScroll: true));
+    } catch (_) {}
+  }
+
+  void setActiveKey(String? key) {
+    if (key == null) return;
+    if (!indexByKey.containsKey(key)) return;
+    selection.setFocusedKey(key);
+    if (hasExternalActiveIndex) {
+      final idx = indexByKey[key] ?? -1;
+      _syncingIndexFromKey = true;
+      if (activeIndexSig.value != idx) activeIndexSig.value = idx;
+      _syncingIndexFromKey = false;
+    }
+    if (!shouldUseVirtualFocus) scheduleMicrotask(focusActive);
+  }
+
+  void setActiveIndex(int next) {
+    if (keys.isEmpty) {
+      activeIndexSig.value = -1;
+      selection.setFocusedKey(null);
+      return;
+    }
+    var idx = next;
+    if (idx < 0) idx = 0;
+    if (idx >= keys.length) idx = keys.length - 1;
+    final k = keys[idx];
+    setActiveKey(k);
+  }
+
+  void moveActive(int delta) {
+    if (keys.isEmpty) return;
+
+    final currentKey = selection.focusedKey();
+    final currentIndex = currentKey == null ? -1 : (indexByKey[currentKey] ?? -1);
+
+    String? nextEnabledFromIndex(int start, int direction) {
+      if (keys.isEmpty) return null;
+      var idx = start;
+      for (var i = 0; i < keys.length; i++) {
+        idx += direction;
+        if (shouldFocusWrap) {
+          idx = (idx + keys.length) % keys.length;
+        } else {
+          if (idx < 0 || idx >= keys.length) return null;
+        }
+        final k = keys[idx];
+        if (!(optionByKey[k]?.disabled ?? false)) return k;
+      }
+      return null;
+    }
+
+    final direction = delta >= 0 ? 1 : -1;
+    final start = currentIndex == -1 ? (direction > 0 ? -1 : keys.length) : currentIndex;
+    final next = nextEnabledFromIndex(start, direction);
+    if (next != null) setActiveKey(next);
+  }
+
+  void selectActive() {
+    final k = selection.focusedKey();
+    if (k == null) return;
+    if (!selection.canSelectItem(k)) return;
+    selection.replaceSelection(k);
+  }
+
+  bool _syncingExternalSelection = false;
+  createEffect(() {
+    final _ = keysVersionSig.value;
+    final v = selected();
+    _syncingExternalSelection = true;
+    scheduleMicrotask(() {
+      _syncingExternalSelection = false;
+    });
+    if (v == null) {
+      selection.clearSelection(force: true);
+      return;
+    }
+    for (final opt in optionByKey.values) {
+      if (eq(opt.value, v)) {
+        selection.setSelectedKeys([ids.idForOption(opt)], force: true);
+        return;
+      }
+    }
+    selection.clearSelection(force: true);
+  });
+
+  createEffect(() {
+    final selectedKeys = selection.selectedKeys();
+    if (_syncingExternalSelection) return;
+    if (selectedKeys.isEmpty) return;
+    final k = selectedKeys.first;
+    final opt = optionByKey[k];
+    final idx = indexByKey[k];
+    if (opt == null || idx == null) return;
+    onSelect(opt, idx);
+  });
+
+  // Keep aria-activedescendant available in virtual focus mode.
+  if (shouldUseVirtualFocus) {
+    attr(listbox, "aria-activedescendant", () => selection.focusedKey());
+  }
+
+  // Scroll active item into view when focusedKey changes (non-virtualized).
+  createEffect(() {
+    final scrollEl = scrollContainer?.call() ?? listbox;
+    final focusedKey = selection.focusedKey();
+    if (focusedKey == null) return;
+    final el = optionElByKey[focusedKey];
+    if (el == null) return;
+    if (scrollToIndex != null) {
+      final idx = indexByKey[focusedKey];
+      if (idx != null) scrollToIndex(idx);
+      return;
+    }
+    try {
+      final cRect = scrollEl.getBoundingClientRect();
       final eRect = el.getBoundingClientRect();
-      final viewTop = container.scrollTop;
+      final viewTop = scrollEl.scrollTop;
       final viewBottom = viewTop + cRect.height;
       final elTop = (eRect.top - cRect.top) + viewTop;
       final elBottom = elTop + eRect.height;
-
       if (elTop < viewTop) {
-        container.scrollTop = elTop;
+        scrollEl.scrollTop = elTop;
       } else if (elBottom > viewBottom) {
-        container.scrollTop = elBottom - cRect.height;
+        scrollEl.scrollTop = elBottom - cRect.height;
       }
     } catch (_) {
       try {
         el.scrollIntoView();
       } catch (_) {}
     }
+  });
+
+  // Build/rebuild DOM when the options/sections structure changes.
+  final disposers = <Dispose>[];
+  void disposeItems() {
+    for (final d in disposers) {
+      try {
+        d();
+      } catch (_) {}
+    }
+    disposers.clear();
   }
 
-  void scrollActiveIntoView() {
-    final idx = activeIndexSig.value;
-    if (idx < 0 || idx >= optionEls.length) return;
-    if (scrollToIndex != null) {
-      scrollToIndex(idx);
-      return;
-    }
-    final el = optionEls[idx];
-    final container = scrollContainer?.call() ?? listbox;
-    scrollElementIntoView(container, el);
-  }
-
-  void focusActive() {
-    if (shouldUseVirtualFocus) return;
-    final idx = activeIndexSig.value;
-    if (idx < 0 || idx >= optionEls.length) return;
-    try {
-      optionEls[idx].focus(web.FocusOptions(preventScroll: true));
-    } catch (_) {}
-  }
-
-  void syncTabIndex({bool force = false}) {
-    if (optionEls.isEmpty) return;
-    final nextActive = activeIndexSig.value;
-
-    void setItemActive(int index, bool isActive) {
-      if (index < 0 || index >= optionEls.length) return;
-      final el = optionEls[index];
-      el.tabIndex = shouldUseVirtualFocus ? -1 : (isActive ? 0 : -1);
-      if (isActive) {
-        el.setAttribute("data-active", "true");
-      } else {
-        el.removeAttribute("data-active");
-      }
-    }
-
-    if (!force && lastSyncedActive == nextActive) return;
-
-    // Fast path: update only previous and current active.
-    if (!force &&
-        lastSyncedActive >= -1 &&
-        lastSyncedActive < optionEls.length &&
-        nextActive >= -1 &&
-        nextActive < optionEls.length) {
-      if (lastSyncedActive != -1) setItemActive(lastSyncedActive, false);
-      if (nextActive != -1) setItemActive(nextActive, true);
-      lastSyncedActive = nextActive;
-      return;
-    }
-
-    // Slow path: (re)sync all options.
-    for (var i = 0; i < optionEls.length; i++) {
-      final isActive = i == nextActive;
-      setItemActive(i, isActive);
-    }
-    lastSyncedActive =
-        (nextActive >= -1 && nextActive < optionEls.length) ? nextActive : -1;
-  }
-
-  void setActiveIndex(int next) {
-    final opts = currentOptions();
-    if (opts.isEmpty) {
-      activeIndexSig.value = -1;
-      return;
-    }
-    var idx = next;
-    if (idx < 0) idx = 0;
-    if (idx >= opts.length) idx = opts.length - 1;
-    if (opts[idx].disabled) {
-      idx = shouldFocusWrap
-          ? nextEnabledIndex(opts, idx, 1)
-          : nextEnabledIndexNoWrap(opts, idx, 1);
-    }
-    activeIndexSig.value = idx;
-    scheduleMicrotask(() {
-      syncTabIndex();
-      scrollActiveIntoView();
-      focusActive();
-    });
-  }
-
-  void moveActive(int delta) {
-    final opts = currentOptions();
-    if (opts.isEmpty) return;
-    final current = activeIndexSig.value;
-    int next;
-    if (!shouldFocusWrap) {
-      next = (current + delta).clamp(0, opts.length - 1);
-      if (opts[next].disabled) {
-        next = delta > 0
-            ? nextEnabledIndexNoWrap(opts, next, 1)
-            : nextEnabledIndexNoWrap(opts, next, -1);
-      }
-    } else {
-      next = nextEnabledIndex(opts, current < 0 ? 0 : current, delta);
-    }
-    setActiveIndex(next);
-  }
-
-  void selectActive() {
-    final idx = activeIndexSig.value;
-    final opts = currentOptions();
-    if (idx < 0 || idx >= opts.length) return;
-    final opt = opts[idx];
-    if (opt.disabled) return;
-    onSelect(opt, idx);
-  }
-
-  final typeSelect = TypeSelect();
-
-  ListKeyboardDelegate delegate() => ListKeyboardDelegate(
-        keys: () => currentKeys,
-        isDisabled: (key) => optionsByKey[key]?.disabled ?? false,
-        textValueForKey: (key) => optionsByKey[key]?.textValue ?? "",
-        getContainer: () => scrollContainer?.call() ?? listbox,
-        getItemElement: (key) => optionElByKey[key],
-        pageSize: pageSize,
-      );
-
-  void setActiveKey(String? key) {
-    if (key == null) return;
-    final idx = indexByKey[key];
-    if (idx == null) return;
-    setActiveIndex(idx);
-  }
-
-  if (shouldUseVirtualFocus) {
-    // When the focus target is external (e.g. combobox input), callers often
-    // drive activeIndex directly. Mirror Kobalte's derived updates by syncing
-    // option state whenever activeIndex changes.
-    createEffect(() {
-      final _ = activeIndexSig.value;
-      scheduleMicrotask(() {
-        syncTabIndex();
-        scrollActiveIntoView();
-      });
-    });
-  }
-
-  void handleKeyDown(
-    web.KeyboardEvent e, {
-    bool allowTypeAhead = true,
-    bool allowSpaceSelect = true,
-  }) {
-    if (!enableKeyboardNavigation) return;
-    if (e.key == "Tab") {
-      onTabOut?.call();
-      return;
-    }
-    if (e.key == "Escape") {
-      e.preventDefault();
-      onEscape?.call();
-      return;
-    }
-
-    if (currentKeys.isEmpty) return;
-
-    final del = delegate();
-    final focusedKey = activeId();
-    final baseKey = focusedKey ?? del.getFirstKey();
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        final below = baseKey == null ? del.getFirstKey() : del.getKeyBelow(baseKey);
-        if (below == null && shouldFocusWrap) {
-          setActiveKey(del.getFirstKey());
-        } else {
-          setActiveKey(below);
-        }
-        return;
-      case "ArrowUp":
-        e.preventDefault();
-        final above = baseKey == null ? del.getLastKey() : del.getKeyAbove(baseKey);
-        if (above == null && shouldFocusWrap) {
-          setActiveKey(del.getLastKey());
-        } else {
-          setActiveKey(above);
-        }
-        return;
-      case "Home":
-        e.preventDefault();
-        setActiveKey(del.getFirstKey());
-        return;
-      case "End":
-        e.preventDefault();
-        setActiveKey(del.getLastKey());
-        return;
-      case "PageDown":
-        e.preventDefault();
-        if (baseKey != null) setActiveKey(del.getKeyPageBelow(baseKey));
-        return;
-      case "PageUp":
-        e.preventDefault();
-        if (baseKey != null) setActiveKey(del.getKeyPageAbove(baseKey));
-        return;
-      case "Enter":
-        e.preventDefault();
-        selectActive();
-        return;
-      case " ":
-        if (!allowSpaceSelect) return;
-        e.preventDefault();
-        selectActive();
-        return;
-    }
-
-    if (allowTypeAhead && !disallowTypeAhead) {
-      final match = typeSelect.handleKey(
-        e,
-        currentKeys,
-        startKey: focusedKey,
-        isDisabled: (k) => optionsByKey[k]?.disabled ?? false,
-        textValueForKey: (k) => optionsByKey[k]?.textValue ?? "",
-      );
-      if (match != null) {
-        e.preventDefault();
-        setActiveKey(match);
-      }
-    }
-  }
-
-  void onKeydown(web.Event e) {
-    if (e is! web.KeyboardEvent) return;
-    handleKeyDown(e);
-  }
-
-  on(listbox, "keydown", onKeydown);
-  onCleanup(typeSelect.dispose);
-
-  web.HTMLElement buildOption(O option, int idx, bool selected, bool active) {
-    final el = optionBuilder != null
-        ? optionBuilder(option, selected: selected, active: active)
-        : (web.HTMLDivElement()
-          ..className = "menuItem"
-          ..textContent = option.label);
-
-    el.setAttribute("role", "option");
-    el.id = ids.idForOption(option);
-    el.setAttribute("data-key", el.id);
-    el.setAttribute("aria-selected", selected ? "true" : "false");
-    if (option.disabled) el.setAttribute("aria-disabled", "true");
-    if (active) el.setAttribute("data-active", "true");
-    el.tabIndex = shouldUseVirtualFocus ? -1 : (active ? 0 : -1);
-
-    if (shouldUseVirtualFocus) {
-      on(el, "pointerdown", (ev) {
-        // Keep focus on the virtual focus target (e.g., input).
-        ev.preventDefault();
-      });
-    }
-
-    on(el, "click", (_) {
-      if (option.disabled) return;
-      activeIndexSig.value = idx;
-      selectActive();
-    });
-
-    on(el, "pointermove", (ev) {
-      if (!shouldFocusOnHover) return;
-      if (option.disabled) return;
-      if (ev is! web.PointerEvent) return;
-      if (ev.pointerType != "mouse") return;
-
-      final activeEl = web.document.activeElement;
-      final shouldRefocus = !identical(activeEl, el);
-      final shouldUpdateActive = activeIndexSig.value != idx;
-      if (!shouldRefocus && !shouldUpdateActive) return;
-
-      if (shouldUpdateActive) activeIndexSig.value = idx;
-      syncTabIndex();
-      if (shouldRefocus) focusActive();
-    });
-
-    return el;
-  }
-
-  createRenderEffect(() {
-    final shouldRestoreFocus = !shouldUseVirtualFocus &&
-        (() {
-          try {
-            final activeEl = web.document.activeElement;
-            if (activeEl is web.Node) return listbox.contains(activeEl);
-          } catch (_) {}
-          return false;
-        })();
-
-    listbox.textContent = "";
-    optionEls.clear();
-    optionElByKey.clear();
-    indexByKey.clear();
-    optionsByKey.clear();
-    currentKeys = <String>[];
-    final opts = currentOptions();
-    final sel = selected();
-
-    if (opts.isEmpty) {
-      activeIndexSig.value = -1;
-      if (showEmptyState) {
-        final empty = web.HTMLDivElement()
-          ..setAttribute("data-empty", "1")
-          ..textContent = emptyText;
-        empty.style.padding = "10px 12px";
-        empty.style.opacity = "0.8";
-        listbox.appendChild(empty);
-      }
-      return;
-    }
-
-    // Clamp active index to range and make sure it's enabled.
-    var active = untrack(() => activeIndexSig.value);
-    if (active < 0) active = firstEnabledIndex(opts);
-    if (active >= opts.length) active = opts.length - 1;
-    if (active >= 0 && opts[active].disabled) active = nextEnabledIndex(opts, active, 1);
-    activeIndexSig.value = active;
-
+  List<_Entry<T, O>> computeEntries() {
+    final out = <_Entry<T, O>>[];
     if (sections != null) {
       var flatIdx = 0;
       var sectionIdx = 0;
       for (final section in sections()) {
-        final labelId =
-            section.id != null ? "$id-section-${section.id}-label" : "$id-section-$sectionIdx-label";
+        final labelId = section.id != null
+            ? "$id-section-${section.id}-label"
+            : "$id-section-$sectionIdx-label";
+        for (final opt in section.options) {
+          out.add(
+            _Entry(
+              key: ids.idForOption(opt),
+              option: opt,
+              index: flatIdx,
+              sectionLabelId: labelId,
+            ),
+          );
+          flatIdx++;
+        }
+        sectionIdx++;
+      }
+      return out;
+    }
+
+    final opts = options!();
+    for (var i = 0; i < opts.length; i++) {
+      final opt = opts[i];
+      out.add(_Entry(key: ids.idForOption(opt), option: opt, index: i, sectionLabelId: null));
+    }
+    return out;
+  }
+
+  var didBuildOnce = false;
+
+  createEffect(() {
+    final entries = computeEntries();
+    final nextKeys = entries.map((e) => e.key).toList(growable: false);
+    final same = nextKeys.length == keys.length &&
+        (() {
+          for (var i = 0; i < nextKeys.length; i++) {
+            if (nextKeys[i] != keys[i]) return false;
+          }
+          return true;
+        })();
+
+    if (same && didBuildOnce) return;
+    didBuildOnce = true;
+
+    disposeItems();
+
+    listbox.textContent = "";
+    optionElByKey.clear();
+    optionByKey.clear();
+    indexByKey.clear();
+    keys = nextKeys.toList(growable: true);
+
+    // Rebuild groups/sections if needed.
+    if (sections != null) {
+      var sectionIdx = 0;
+      for (final section in sections()) {
+        final labelId = section.id != null
+            ? "$id-section-${section.id}-label"
+            : "$id-section-$sectionIdx-label";
         final group = web.HTMLDivElement()
           ..setAttribute("role", "group")
           ..setAttribute("aria-labelledby", labelId);
@@ -488,45 +434,276 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
         group.appendChild(label);
 
         for (final opt in section.options) {
-          final isSelected = sel != null && eq(opt.value, sel);
-          final isActive = flatIdx == active;
-          final el = buildOption(opt, flatIdx, isSelected, isActive);
-          optionEls.add(el);
-          optionElByKey[el.id] = el;
-          indexByKey[el.id] = flatIdx;
-          optionsByKey[el.id] = opt;
-          currentKeys.add(el.id);
+          final key = ids.idForOption(opt);
+          final idx = indexByKey.length;
+          final el = optionBuilder != null
+              ? optionBuilder(opt, selected: false, active: false)
+              : (web.HTMLDivElement()
+                ..className = "menuItem"
+                ..textContent = opt.label);
+          el.setAttribute("role", "option");
+          el.id = key;
+          if (opt.disabled) el.setAttribute("aria-disabled", "true");
+          optionElByKey[key] = el;
+          optionByKey[key] = opt;
+          indexByKey[key] = idx;
+
+          createChildRoot<void>((dispose) {
+            disposers.add(dispose);
+            final selectableItem = createSelectableItem(
+              selectionManager: () => selection,
+              key: () => key,
+              ref: () => el,
+              disabled: () => opt.disabled,
+              shouldSelectOnPressUp: () => shouldSelectOnPressUp,
+              shouldUseVirtualFocus: () => shouldUseVirtualFocus,
+              allowsDifferentPressOrigin: () => allowsDifferentPressOrigin,
+            );
+            selectableItem.attach(el);
+
+            createRenderEffect(() {
+              el.setAttribute(
+                "aria-selected",
+                selection.isSelected(key) ? "true" : "false",
+              );
+              if (selection.focusedKey() == key) {
+                el.setAttribute("data-active", "true");
+              } else {
+                el.removeAttribute("data-active");
+              }
+            });
+          });
+
           group.appendChild(el);
-          flatIdx++;
         }
 
         listbox.appendChild(group);
         sectionIdx++;
       }
     } else {
-      for (var i = 0; i < opts.length; i++) {
-        final opt = opts[i];
-        final isSelected = sel != null && eq(opt.value, sel);
-        final isActive = i == active;
-        final el = buildOption(opt, i, isSelected, isActive);
-        optionEls.add(el);
-        optionElByKey[el.id] = el;
-        indexByKey[el.id] = i;
-        optionsByKey[el.id] = opt;
-        currentKeys.add(el.id);
+      for (final entry in entries) {
+        final opt = entry.option;
+        final key = entry.key;
+        final idx = entry.index;
+        final el = optionBuilder != null
+            ? optionBuilder(opt, selected: false, active: false)
+            : (web.HTMLDivElement()
+              ..className = "menuItem"
+              ..textContent = opt.label);
+
+        el.setAttribute("role", "option");
+        el.id = key;
+        if (opt.disabled) el.setAttribute("aria-disabled", "true");
+
+        optionElByKey[key] = el;
+        optionByKey[key] = opt;
+        indexByKey[key] = idx;
+
+        createChildRoot<void>((dispose) {
+          disposers.add(dispose);
+          final selectableItem = createSelectableItem(
+            selectionManager: () => selection,
+            key: () => key,
+            ref: () => el,
+            disabled: () => opt.disabled,
+            shouldSelectOnPressUp: () => shouldSelectOnPressUp,
+            shouldUseVirtualFocus: () => shouldUseVirtualFocus,
+            allowsDifferentPressOrigin: () => allowsDifferentPressOrigin,
+          );
+          selectableItem.attach(el);
+
+          createRenderEffect(() {
+            el.setAttribute(
+              "aria-selected",
+              selection.isSelected(key) ? "true" : "false",
+            );
+            if (selection.focusedKey() == key) {
+              el.setAttribute("data-active", "true");
+            } else {
+              el.removeAttribute("data-active");
+            }
+          });
+        });
+
         listbox.appendChild(el);
       }
     }
 
-    scheduleMicrotask(() {
-      syncTabIndex(force: true);
-      scrollActiveIntoView();
-      if (shouldRestoreFocus) focusActive();
-    });
+    keysVersion++;
+    keysVersionSig.value = keysVersion;
+
+    if (keys.isEmpty) {
+      activeIndexSig.value = -1;
+      selection.setFocusedKey(null);
+      selection.clearSelection(force: true);
+      if (showEmptyState) {
+        final empty = web.HTMLDivElement()
+          ..setAttribute("data-empty", "1")
+          ..textContent = emptyText;
+        empty.style.padding = "10px 12px";
+        empty.style.opacity = "0.8";
+        listbox.appendChild(empty);
+      }
+      return;
+    }
+
+    ensureFocusedKeyValid();
+    syncActiveIndexFromKey();
   });
+
+  // Keyboard handling (listbox focused).
+  final selectableCollection = createSelectableCollection(
+    selectionManager: () => selection,
+    keyboardDelegate: () => delegate,
+    ref: () => listbox,
+    scrollRef: () => scrollContainer?.call() ?? listbox,
+    shouldFocusWrap: () => shouldFocusWrap,
+    selectOnFocus: () => selectOnFocus,
+    disallowTypeAhead: () => disallowTypeAhead,
+    shouldUseVirtualFocus: () => shouldUseVirtualFocus,
+    allowsTabNavigation: () => true,
+    orientation: () => Orientation.vertical,
+  );
+
+  void handleKeyDown(
+    web.KeyboardEvent e, {
+    bool allowTypeAhead = true,
+    bool allowSpaceSelect = true,
+  }) {
+    if (!enableKeyboardNavigation) return;
+
+    if (e.key == "Tab") {
+      onTabOut?.call();
+      return;
+    }
+    if (e.key == "Escape") {
+      e.preventDefault();
+      onEscape?.call();
+      return;
+    }
+
+    if (e.key == "Enter" || e.key == " ") {
+      if (e.key == " " && !allowSpaceSelect) return;
+      e.preventDefault();
+      selectActive();
+      return;
+    }
+
+    if (!allowTypeAhead) {
+      // Temporarily disable typeahead for this event by short-circuiting it.
+      if (e.key.length == 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // let it through (e.g. typing in an input) — no op.
+        return;
+      }
+    }
+  }
+
+  void onKeydown(web.Event e) {
+    if (e is! web.KeyboardEvent) return;
+    handleKeyDown(e);
+    if (e.defaultPrevented) return;
+
+    void navigateToKey(String? nextKey) {
+      if (nextKey == null) return;
+      selection.setFocusedKey(nextKey);
+      if (e.shiftKey && selection.selectionMode() == SelectionMode.multiple) {
+        selection.extendSelection(nextKey);
+      } else if (selectOnFocus && !isNonContiguousSelectionModifier(e)) {
+        selection.replaceSelection(nextKey);
+      }
+      if (!shouldUseVirtualFocus) scheduleMicrotask(focusActive);
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        moveActive(1);
+        return;
+      case "ArrowUp":
+        e.preventDefault();
+        moveActive(-1);
+        return;
+      case "Home":
+        e.preventDefault();
+        navigateToKey(delegate.getFirstKey());
+        return;
+      case "End":
+        e.preventDefault();
+        navigateToKey(delegate.getLastKey());
+        return;
+      case "PageDown":
+        e.preventDefault();
+        final base = selection.focusedKey() ?? delegate.getFirstKey();
+        if (base != null) navigateToKey(delegate.getKeyPageBelow(base));
+        return;
+      case "PageUp":
+        e.preventDefault();
+        final base = selection.focusedKey() ?? delegate.getLastKey();
+        if (base != null) navigateToKey(delegate.getKeyPageAbove(base));
+        return;
+    }
+
+    selectableCollection.onKeyDown(e);
+  }
+
+  if (enableKeyboardNavigation) {
+    on(listbox, "keydown", onKeydown);
+  }
+
+  void maybeFocusFromHoverTarget(web.Event e) {
+    if (!shouldFocusOnHover) return;
+    final t = e.target;
+    if (t is! web.Element) return;
+    final optionEl = t.closest('[role="option"]');
+    if (optionEl == null) return;
+    if (!listbox.contains(optionEl)) return;
+    final key = optionEl.getAttribute("data-key") ?? optionEl.id;
+    if (key.isEmpty) return;
+    final opt = optionByKey[key];
+    if (opt == null || opt.disabled) return;
+    if (selection.focusedKey() == key) return;
+    selection.setFocusedKey(key);
+    if (!shouldUseVirtualFocus && optionEl is web.HTMLElement) {
+      try {
+        optionEl.focus(web.FocusOptions(preventScroll: true));
+      } catch (_) {}
+    }
+  }
+
+  on(listbox, "pointermove", (e) {
+    if (e is! web.PointerEvent) return;
+    if (e.pointerType != "mouse") return;
+    if (e.buttons != 0) return;
+    maybeFocusFromHoverTarget(e);
+  });
+  on(listbox, "mousemove", maybeFocusFromHoverTarget);
+
+  on(listbox, "mousedown", (e) {
+    if (e is web.MouseEvent) selectableCollection.onMouseDown(e);
+  });
+  on(listbox, "focusin", (e) {
+    if (e is web.FocusEvent) selectableCollection.onFocusIn(e);
+  });
+  on(listbox, "focusout", (e) {
+    if (e is web.FocusEvent) selectableCollection.onFocusOut(e);
+  });
+
+  onCleanup(disposeItems);
+
+  Timer? typeaheadTimer;
+  var typeaheadBuffer = "";
+
+  void clearTypeahead() {
+    typeaheadBuffer = "";
+    typeaheadTimer?.cancel();
+    typeaheadTimer = null;
+  }
+
+  onCleanup(clearTypeahead);
 
   return ListboxHandle._(
     listbox,
+    selectionManager: selection,
     activeIndex: activeIndexSig,
     activeId: activeId,
     activeKey: activeKey,
@@ -535,6 +712,74 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     selectActive: selectActive,
     moveActive: moveActive,
     focusActive: focusActive,
-    handleKeyDown: handleKeyDown,
+    handleKeyDown: (e, {allowTypeAhead = true, allowSpaceSelect = true}) {
+      // External focus targets: only handle keys we care about.
+      if (e.key == "Tab") {
+        onTabOut?.call();
+        return;
+      }
+      if (e.key == "Escape") {
+        e.preventDefault();
+        onEscape?.call();
+        return;
+      }
+
+      // Navigation keys.
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          moveActive(1);
+          return;
+        case "ArrowUp":
+          e.preventDefault();
+          moveActive(-1);
+          return;
+        case "Home":
+          e.preventDefault();
+          setActiveIndex(0);
+          return;
+        case "End":
+          e.preventDefault();
+          setActiveIndex(999999);
+          return;
+        case "PageDown":
+          e.preventDefault();
+          final base = selection.focusedKey();
+          if (base != null) setActiveKey(delegate.getKeyPageBelow(base));
+          return;
+        case "PageUp":
+          e.preventDefault();
+          final base = selection.focusedKey();
+          if (base != null) setActiveKey(delegate.getKeyPageAbove(base));
+          return;
+        case "Enter":
+          e.preventDefault();
+          selectActive();
+          return;
+        case " ":
+          if (!allowSpaceSelect) return;
+          e.preventDefault();
+          selectActive();
+          return;
+      }
+
+      if (!allowTypeAhead || disallowTypeAhead) return;
+      final character = e.key;
+      if (character.length != 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+      // Use delegate search to implement typeahead without relying on DOM focus.
+      typeaheadBuffer += character.toLowerCase();
+      typeaheadTimer?.cancel();
+      typeaheadTimer = Timer(const Duration(milliseconds: 500), () {
+        clearTypeahead();
+      });
+
+      final from = selection.focusedKey();
+      final match = delegate.getKeyForSearch(typeaheadBuffer, from) ??
+          delegate.getKeyForSearch(typeaheadBuffer);
+      if (match != null) {
+        e.preventDefault();
+        setActiveKey(match);
+      }
+    },
   );
 }

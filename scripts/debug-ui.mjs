@@ -1418,30 +1418,66 @@ async function inspectUrl(
               .querySelector("#select-trigger")
               ?.getAttribute("aria-expanded") ?? null,
             activeId: document.activeElement?.id ?? null,
+            activeDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
           }));
 
           // Arrow navigation + skip disabled (Vue).
           step = "keydown down 1";
           await page.keyboard.press("ArrowDown");
           await page.waitForTimeout(30);
-          const afterDown1 = await page.evaluate(() => document.activeElement?.id ?? null);
+          const afterDown1 = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
           step = "keydown down 2";
           await page.keyboard.press("ArrowDown");
           await page.waitForTimeout(30);
-          const afterDown2 = await page.evaluate(() => document.activeElement?.id ?? null);
+          const afterDown2 = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
           step = "keydown down 3";
           await page.keyboard.press("ArrowDown");
           await page.waitForTimeout(30);
-          const afterDown3 = await page.evaluate(() => document.activeElement?.id ?? null);
+          const afterDown3 = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
 
           // Hover should move focus quickly (Kobalte/native-like).
           step = "hover option 4";
           await page.locator("#select-listbox-opt-4").hover({ timeout: timeoutMs });
           await page.waitForFunction(
-            () => document.activeElement?.id === "select-listbox-opt-4",
+            () =>
+              document.querySelector("#select-listbox [data-active=true]")?.id ===
+              "select-listbox-opt-4",
             { timeout: timeoutMs },
           );
-          const afterHover = await page.evaluate(() => document.activeElement?.id ?? null);
+          const afterHover = await page.evaluate(() => ({
+            activeDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            activeElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
 
           step = "select enter";
           await page.keyboard.press("Enter");
@@ -1528,12 +1564,17 @@ async function inspectUrl(
 
           const ok =
             afterOpen.expanded === "true" &&
-            typeof afterOpen.activeId === "string" &&
-            afterOpen.activeId === "select-listbox-opt-0" &&
-            afterDown1 === "select-listbox-opt-1" &&
-            afterDown2 === "select-listbox-opt-2" &&
-            afterDown3 === "select-listbox-opt-4" &&
-            afterHover === "select-listbox-opt-4" &&
+            afterOpen.activeId === "select-listbox" &&
+            afterOpen.activeDescendant === afterOpen.activeElId &&
+            afterOpen.activeElId === "select-listbox-opt-0" &&
+            afterDown1.activeDescendant === afterDown1.activeElId &&
+            afterDown1.activeElId === "select-listbox-opt-1" &&
+            afterDown2.activeDescendant === afterDown2.activeElId &&
+            afterDown2.activeElId === "select-listbox-opt-2" &&
+            afterDown3.activeDescendant === afterDown3.activeElId &&
+            afterDown3.activeElId === "select-listbox-opt-4" &&
+            afterHover.activeDescendant === afterHover.activeElId &&
+            afterHover.activeElId === "select-listbox-opt-4" &&
             (afterSelect.status ?? "").includes("Last: select") &&
             (afterSelect.triggerText ?? "").includes("Dart") &&
             afterSelect.activeId === "select-trigger" &&

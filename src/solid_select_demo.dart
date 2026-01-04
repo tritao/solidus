@@ -24,7 +24,7 @@ void mountSolidSelectDemo(web.Element mount) {
         title: "What to try",
         bullets: const [
           "Open with click/Enter/ArrowDown; navigate with Arrow keys (disabled is skipped).",
-          "Hover moves focus (mouse-only); Press Enter to select the active option.",
+          "Hover moves the active option (mouse-only); focus stays on the listbox (virtual focus).",
           "Escape closes and restores focus; Tab closes and moves focus to \"After\".",
           "Click outside to dismiss (reason shows below).",
         ],

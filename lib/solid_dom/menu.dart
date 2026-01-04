@@ -7,6 +7,12 @@ import "./floating.dart";
 import "./focus_scope.dart";
 import "./overlay.dart";
 import "./presence.dart";
+import "./selection/create_selectable_collection.dart";
+import "./selection/create_selectable_item.dart";
+import "./selection/list_keyboard_delegate.dart";
+import "./selection/selection_manager.dart";
+import "./selection/types.dart";
+import "./selection/utils.dart";
 import "./solid_dom.dart";
 
 final class MenuContent {
@@ -61,6 +67,65 @@ web.DocumentFragment DropdownMenu({
           ..setAttribute("role", "menu")
           ..tabIndex = -1;
 
+        bool isItemDisabled(web.HTMLElement el) {
+          if (el is web.HTMLButtonElement) return el.disabled;
+          return el.getAttribute("aria-disabled") == "true";
+        }
+
+        final keys = <String>[];
+        final elByKey = <String, web.HTMLElement>{};
+        for (var i = 0; i < items.length; i++) {
+          final el = items[i];
+          var key = el.id;
+          if (key.isEmpty) {
+            key = "solid-menu-item-$i";
+            el.id = key;
+          }
+          keys.add(key);
+          elByKey[key] = el;
+        }
+
+        final selection = SelectionManager(
+          selectionMode: SelectionMode.none,
+          selectionBehavior: SelectionBehavior.replace,
+          orderedKeys: () => keys,
+          isDisabled: (k) => isItemDisabled(elByKey[k] ?? menu),
+          canSelectItem: (k) => !isItemDisabled(elByKey[k] ?? menu),
+        );
+
+        final initialIndex = built.initialActiveIndex
+            .clamp(0, keys.isEmpty ? 0 : keys.length - 1);
+        if (keys.isNotEmpty) {
+          for (var i = 0; i < keys.length; i++) {
+            final idx = (initialIndex + i) % keys.length;
+            final k = keys[idx];
+            if (!isItemDisabled(elByKey[k] ?? menu)) {
+              selection.setFocusedKey(k);
+              break;
+            }
+          }
+        }
+
+        final delegate = ListKeyboardDelegate(
+          keys: () => keys,
+          isDisabled: (k) => isItemDisabled(elByKey[k] ?? menu),
+          textValueForKey: (k) => (elByKey[k]?.textContent ?? ""),
+          getContainer: () => menu,
+          getItemElement: (k) => elByKey[k],
+        );
+
+        final selectable = createSelectableCollection(
+          selectionManager: () => selection,
+          keyboardDelegate: () => delegate,
+          ref: () => menu,
+          scrollRef: () => menu,
+          shouldFocusWrap: () => true,
+          disallowTypeAhead: () => false,
+          shouldUseVirtualFocus: () => false,
+          allowsTabNavigation: () => true,
+          orientation: () => Orientation.vertical,
+        );
+
         floatToAnchor(
           anchor: anchor,
           floating: menu,
@@ -81,56 +146,64 @@ web.DocumentFragment DropdownMenu({
           onDismiss: (reason) => close(reason),
         );
 
-        final activeIndex = createSignal<int>(
-          built.initialActiveIndex
-              .clamp(0, items.isEmpty ? 0 : items.length - 1),
-        );
+        for (final entry in elByKey.entries) {
+          final key = entry.key;
+          final el = entry.value;
+          el.setAttribute("data-key", key);
 
-        void syncTabIndex() {
-          final active =
-              activeIndex.value.clamp(0, items.isEmpty ? 0 : items.length - 1);
-          for (var i = 0; i < items.length; i++) {
-            items[i].tabIndex = i == active ? 0 : -1;
-          }
-        }
+          final itemSelectable = createSelectableItem(
+            selectionManager: () => selection,
+            key: () => key,
+            ref: () => el,
+            disabled: () => isItemDisabled(el),
+          );
+          itemSelectable.attach(el);
 
-        createRenderEffect(syncTabIndex);
+          createRenderEffect(() {
+            if (selection.focusedKey() == key) {
+              el.setAttribute("data-active", "true");
+            } else {
+              el.removeAttribute("data-active");
+            }
+          });
 
-        void focusActive({bool fallbackToMenu = true}) {
-          if (!menu.isConnected) return;
-          syncTabIndex();
-          final idx =
-              activeIndex.value.clamp(0, items.isEmpty ? 0 : items.length - 1);
-          if (items.isNotEmpty) {
-            try {
-              items[idx].focus(web.FocusOptions(preventScroll: true));
-              return;
-            } catch (_) {}
-          }
-          if (fallbackToMenu) {
-            try {
-              menu.focus(web.FocusOptions(preventScroll: true));
-            } catch (_) {}
-          }
-        }
-
-        bool isItemDisabled(web.HTMLElement el) {
-          if (el is web.HTMLButtonElement) return el.disabled;
-          return el.getAttribute("aria-disabled") == "true";
-        }
-
-        for (var i = 0; i < items.length; i++) {
-          final index = i;
-          final el = items[i];
           on(el, "pointermove", (ev) {
             if (ev is! web.PointerEvent) return;
             if (ev.pointerType != "mouse") return;
             if (isItemDisabled(el)) return;
-            if (activeIndex.value == index && web.document.activeElement == el) return;
-            activeIndex.value = index;
-            focusActive(fallbackToMenu: false);
+            if (selection.focusedKey() == key && web.document.activeElement == el) return;
+            selection.setFocusedKey(key);
+            focusWithoutScrolling(el);
           });
         }
+
+        void onKeyDown(web.Event e) {
+          if (e is! web.KeyboardEvent) return;
+          if (e.key == "Tab") {
+            close("tab");
+            return;
+          }
+
+          // Mirror Kobalte: Alt+ArrowUp closes.
+          if (e.key == "ArrowUp" && e.altKey) {
+            e.preventDefault();
+            close("escape");
+            return;
+          }
+
+          selectable.onKeyDown(e);
+        }
+
+        on(menu, "keydown", onKeyDown);
+        on(menu, "mousedown", (e) {
+          if (e is web.MouseEvent) selectable.onMouseDown(e);
+        });
+        on(menu, "focusin", (e) {
+          if (e is web.FocusEvent) selectable.onFocusIn(e);
+        });
+        on(menu, "focusout", (e) {
+          if (e is web.FocusEvent) selectable.onFocusOut(e);
+        });
 
         // Focus a reasonable item on mount.
         focusScope(
@@ -141,7 +214,7 @@ web.DocumentFragment DropdownMenu({
             onOpenAutoFocus?.call(e);
             if (e.defaultPrevented) return;
             e.preventDefault();
-            scheduleMicrotask(() => focusActive());
+            scheduleMicrotask(() => focusWithoutScrolling(menu));
           },
           onUnmountAutoFocus: (e) {
             onCloseAutoFocus?.call(e);
@@ -149,77 +222,6 @@ web.DocumentFragment DropdownMenu({
             if (closeReason == "tab") e.preventDefault();
           },
         );
-
-        Timer? typeaheadTimer;
-        var typeahead = "";
-
-        void clearTypeahead() {
-          typeahead = "";
-          typeaheadTimer?.cancel();
-          typeaheadTimer = null;
-        }
-
-        void onKeydown(web.Event e) {
-          if (e is! web.KeyboardEvent) return;
-
-          if (e.key == "Tab") {
-            // Let Tab move focus naturally; just close.
-            close("tab");
-            return;
-          }
-
-          if (items.isEmpty) return;
-          final active = activeIndex.value.clamp(0, items.length - 1);
-
-          int? next;
-          switch (e.key) {
-            case "ArrowDown":
-              next = (active + 1) % items.length;
-              break;
-            case "ArrowUp":
-              next = (active - 1 + items.length) % items.length;
-              break;
-            case "Home":
-              next = 0;
-              break;
-            case "End":
-              next = items.length - 1;
-              break;
-          }
-
-          if (next != null) {
-            e.preventDefault();
-            activeIndex.value = next;
-            focusActive();
-            return;
-          }
-
-          // Basic typeahead (letters/numbers).
-          final key = e.key;
-          if (key.length == 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            typeaheadTimer?.cancel();
-            typeahead += key.toLowerCase();
-            typeaheadTimer =
-                Timer(const Duration(milliseconds: 500), clearTypeahead);
-
-            for (var i = 0; i < items.length; i++) {
-              final idx = (active + i) % items.length;
-              final text = (items[idx].textContent ?? "").trim().toLowerCase();
-              if (text.startsWith(typeahead) && text.isNotEmpty) {
-                e.preventDefault();
-                activeIndex.value = idx;
-                focusActive();
-                return;
-              }
-            }
-          }
-        }
-
-        on(menu, "keydown", onKeydown);
-
-        onCleanup(() {
-          clearTypeahead();
-        });
 
         return menu;
       },

@@ -100,10 +100,10 @@ final class SelectionManager {
 
   bool isSelectionEqual(Set<String> other) => _setEquals(_selectedKeys.value, other);
 
-  void setSelectedKeys(Iterable<String> keys) {
+  void setSelectedKeys(Iterable<String> keys, {bool force = false}) {
     if (selectionMode() == SelectionMode.none) return;
     final next = {...keys};
-    if (disallowEmptySelection() && next.isEmpty) return;
+    if (!force && disallowEmptySelection() && next.isEmpty) return;
     _selectedKeys.value = next;
     final anchor = next.isEmpty
         ? null
@@ -112,9 +112,9 @@ final class SelectionManager {
     _selectionCurrent = anchor;
   }
 
-  void clearSelection() {
+  void clearSelection({bool force = false}) {
     if (selectionMode() == SelectionMode.none) return;
-    if (disallowEmptySelection()) return;
+    if (!force && disallowEmptySelection()) return;
     _selectedKeys.value = <String>{};
     _selectionAnchor = null;
     _selectionCurrent = null;

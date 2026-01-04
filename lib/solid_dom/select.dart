@@ -9,7 +9,6 @@ import "./listbox_core.dart";
 import "./listbox.dart";
 import "./overlay.dart";
 import "./presence.dart";
-import "./selection/selection_manager.dart";
 import "./solid_dom.dart";
 
 final class SelectOption<T> implements ListboxItem<T> {
@@ -67,7 +66,6 @@ web.DocumentFragment Select<T>({
 
   final resolvedListboxId = listboxId ?? _nextSelectId("solid-select-listbox");
   final ids = ListboxIdRegistry<T, SelectOption<T>>(listboxId: resolvedListboxId);
-  final selection = SelectionManager();
   trigger.setAttribute("aria-haspopup", "listbox");
   attr(trigger, "aria-expanded", () => open() ? "true" : "false");
   attr(trigger, "aria-controls", () => open() ? resolvedListboxId : null);
@@ -93,22 +91,6 @@ web.DocumentFragment Select<T>({
     }
   });
 
-  // Keep selection manager in sync with controlled value (single selection).
-  createEffect(() {
-    final v = value();
-    if (v == null) {
-      selection.clearSelection();
-      return;
-    }
-    for (final opt in options()) {
-      if (eq(opt.value, v)) {
-        selection.replaceSelection(ids.idForOption(opt));
-        return;
-      }
-    }
-    selection.clearSelection();
-  });
-
   return Presence(
     when: open,
     exitMs: exitMs,
@@ -128,7 +110,7 @@ web.DocumentFragment Select<T>({
           selected: value,
           equals: eq,
           idRegistry: ids,
-          shouldUseVirtualFocus: false,
+          shouldUseVirtualFocus: true,
           shouldFocusOnHover: true,
           onTabOut: () {
             closeWith("tab");
@@ -139,7 +121,6 @@ web.DocumentFragment Select<T>({
           onEscape: () => closeWith("escape"),
           onSelect: (opt, idx) {
             setValue(opt.value);
-            selection.replaceSelection(ids.idForOption(opt));
             closeWith("select");
           },
           optionBuilder: optionBuilder == null
@@ -148,9 +129,6 @@ web.DocumentFragment Select<T>({
                   optionBuilder(opt, selected, active),
         );
         handle.element.setAttribute("data-solid-select-listbox", "1");
-        createEffect(() {
-          selection.setFocusedKey(handle.activeKey());
-        });
 
         floatToAnchor(
           anchor: trigger,
@@ -184,7 +162,11 @@ web.DocumentFragment Select<T>({
           restoreFocus: true,
           onMountAutoFocus: (e) {
             e.preventDefault();
-            scheduleMicrotask(handle.focusActive);
+            scheduleMicrotask(() {
+              try {
+                handle.element.focus(web.FocusOptions(preventScroll: true));
+              } catch (_) {}
+            });
           },
           onUnmountAutoFocus: (e) {
             if (closeReason == "tab") e.preventDefault();

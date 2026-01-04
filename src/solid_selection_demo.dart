@@ -207,6 +207,7 @@ void mountSolidSelectionDemo(web.Element mount) {
       ref: () => list,
       scrollRef: () => list,
       shouldFocusWrap: () => true,
+      selectOnFocus: () => false,
       disallowSelectAll: () => false,
       disallowTypeAhead: () => false,
       shouldUseVirtualFocus: () => false,

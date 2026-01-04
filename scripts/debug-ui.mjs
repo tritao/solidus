@@ -1402,6 +1402,7 @@ async function inspectUrl(
             details: { reason: "missing #select-trigger" },
           });
         } else {
+          let aborted = false;
           const afterButton = page.locator("#select-after");
 
           step = "open";
@@ -1493,6 +1494,113 @@ async function inspectUrl(
             activeId: document.activeElement?.id ?? null,
           }));
 
+          // Re-open and select again via keyboard (regression: Enter should work every time).
+          step = "open for second select";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait listbox open for second select";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(20);
+          const afterOpen2 = await page.evaluate(() => ({
+            expanded: document
+              .querySelector("#select-trigger")
+              ?.getAttribute("aria-expanded") ?? null,
+            activeId: document.activeElement?.id ?? null,
+            listboxActiveDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            listboxActiveElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
+          step = "keydown down for second select";
+          await page.keyboard.press("ArrowDown");
+          await page.waitForTimeout(20);
+          const afterDown2_1 = await page.evaluate(() => ({
+            activeId: document.activeElement?.id ?? null,
+            listboxActiveDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            listboxActiveElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
+          step = "keydown down 2 for second select";
+          await page.keyboard.press("ArrowDown");
+          await page.waitForTimeout(20);
+          const afterDown2_2 = await page.evaluate(() => ({
+            activeId: document.activeElement?.id ?? null,
+            listboxActiveDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            listboxActiveElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+          }));
+          step = "select enter 2";
+          await page.keyboard.press("Enter");
+          step = "wait listbox closed after select 2";
+          let closed2 = true;
+          try {
+            await page.waitForFunction(
+              () => document.querySelector("#select-listbox") == null,
+              { timeout: 2500 },
+            );
+          } catch {
+            closed2 = false;
+          }
+          await page.waitForTimeout(60);
+          const afterSelect2 = await page.evaluate(() => ({
+            closed: document.querySelector("#select-listbox") == null,
+            expanded: document
+              .querySelector("#select-trigger")
+              ?.getAttribute("aria-expanded") ?? null,
+            status: document.querySelector("#select-status")?.textContent ?? null,
+            triggerText: document.querySelector("#select-trigger")?.textContent ?? null,
+            activeId: document.activeElement?.id ?? null,
+            listboxActiveDescendant: document
+              .querySelector("#select-listbox")
+              ?.getAttribute("aria-activedescendant") ?? null,
+            listboxActiveElId:
+              document.querySelector("#select-listbox [data-active=true]")?.id ??
+              null,
+            listboxSelectedElId:
+              document.querySelector("#select-listbox [aria-selected=true]")?.id ??
+              null,
+          }));
+          if (!closed2) {
+            interactionResults.push({
+              name: "solid-select",
+              ok: false,
+              details: {
+                reason: "select-2-did-not-close",
+                afterOpen,
+                afterDown1,
+                afterDown2,
+                afterDown3,
+                afterHover,
+                afterSelect,
+                afterOpen2,
+                afterDown2_1,
+                afterDown2_2,
+                afterSelect2,
+              },
+            });
+            aborted = true;
+            // Best-effort cleanup so later scenarios aren't affected.
+            try {
+              await page.keyboard.press("Escape");
+              await page.waitForFunction(
+                () => document.querySelector("#select-listbox") == null,
+                { timeout: 1500 },
+              );
+            } catch {}
+          }
+
+          if (!aborted) {
+
           // Escape closes.
           step = "open for escape";
           await trigger.first().click({ timeout: timeoutMs });
@@ -1578,6 +1686,9 @@ async function inspectUrl(
             (afterSelect.status ?? "").includes("Last: select") &&
             (afterSelect.triggerText ?? "").includes("Dart") &&
             afterSelect.activeId === "select-trigger" &&
+            (afterSelect2.status ?? "").includes("Last: select") &&
+            (afterSelect2.triggerText ?? "").includes("React") &&
+            afterSelect2.activeId === "select-trigger" &&
             (afterEscape.status ?? "").includes("Last: escape") &&
             afterEscape.activeId === "select-trigger" &&
             (afterTab.status ?? "").includes("Last: tab") &&
@@ -1595,11 +1706,13 @@ async function inspectUrl(
               afterDown3,
               afterHover,
               afterSelect,
+              afterSelect2,
               afterEscape,
               afterTab,
               afterOutside,
             },
           });
+          }
         }
       } catch (e) {
         interactionResults.push({

@@ -273,18 +273,16 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   void selectActive() {
     final k = selection.focusedKey();
     if (k == null) return;
-    if (!selection.canSelectItem(k)) return;
-    selection.replaceSelection(k);
+    final opt = optionByKey[k];
+    final idx = indexByKey[k];
+    if (opt == null || idx == null) return;
+    if (opt.disabled) return;
+    onSelect(opt, idx);
   }
 
-  bool _syncingExternalSelection = false;
   createEffect(() {
     final _ = keysVersionSig.value;
     final v = selected();
-    _syncingExternalSelection = true;
-    scheduleMicrotask(() {
-      _syncingExternalSelection = false;
-    });
     if (v == null) {
       selection.clearSelection(force: true);
       return;
@@ -300,12 +298,13 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   createEffect(() {
     final selectedKeys = selection.selectedKeys();
-    if (_syncingExternalSelection) return;
     if (selectedKeys.isEmpty) return;
     final k = selectedKeys.first;
     final opt = optionByKey[k];
     final idx = indexByKey[k];
     if (opt == null || idx == null) return;
+    final v = selected();
+    if (v != null && eq(opt.value, v)) return;
     onSelect(opt, idx);
   });
 

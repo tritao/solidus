@@ -172,9 +172,12 @@ FocusScopeHandle focusScope(
     if (container is web.HTMLElement) _focusElement(container);
   }
 
-  scheduleMicrotask(() {
+  void runMountAutoFocusWhenConnected() {
     if (entry.disposed) return;
-    if (!container.isConnected) return;
+    if (!container.isConnected) {
+      scheduleMicrotask(runMountAutoFocusWhenConnected);
+      return;
+    }
 
     final mountEvent = FocusScopeAutoFocusEvent._(
       scope: container,
@@ -187,7 +190,9 @@ FocusScopeHandle focusScope(
     if (active is web.Node && container.contains(active)) return;
     if (!autoFocus) return;
     focusInitial();
-  });
+  }
+
+  scheduleMicrotask(runMountAutoFocusWhenConnected);
 
   void onContainerFocusIn(web.Event e) {
     if (entry.disposed) return;

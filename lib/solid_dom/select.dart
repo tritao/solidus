@@ -70,7 +70,11 @@ web.DocumentFragment Select<T>({
   attr(trigger, "aria-expanded", () => open() ? "true" : "false");
   attr(trigger, "aria-controls", () => open() ? resolvedListboxId : null);
 
+  var closeReason = "close";
+  ListboxHandle<T, SelectOption<T>>? currentHandle;
+
   void close([String reason = "close"]) {
+    closeReason = reason;
     onClose?.call(reason);
     setOpen(false);
   }
@@ -85,6 +89,25 @@ web.DocumentFragment Select<T>({
   });
   on(trigger, "keydown", (e) {
     if (e is! web.KeyboardEvent) return;
+    // When open, keep keyboard interactions working even if focus hasn't moved
+    // to the listbox yet (mirrors Kobalte's "virtual focus owner" behavior).
+    if (open()) {
+      if (e.key == "Tab") {
+        close("tab");
+        return;
+      }
+      if (e.key == "Escape") {
+        e.preventDefault();
+        close("escape");
+        return;
+      }
+      final handle = currentHandle;
+      if (handle != null) {
+        handle.handleKeyDown(e);
+      }
+      return;
+    }
+
     if (e.key == "ArrowDown" || e.key == "ArrowUp" || e.key == "Enter" || e.key == " ") {
       e.preventDefault();
       openNow();
@@ -97,13 +120,6 @@ web.DocumentFragment Select<T>({
     children: () => Portal(
       id: portalId,
       children: () {
-        var closeReason = "close";
-
-        void closeWith([String reason = "close"]) {
-          closeReason = reason;
-          close(reason);
-        }
-
         final handle = createListbox<T, SelectOption<T>>(
           id: resolvedListboxId,
           options: () => options().toList(growable: false),
@@ -113,15 +129,15 @@ web.DocumentFragment Select<T>({
           shouldUseVirtualFocus: true,
           shouldFocusOnHover: true,
           onTabOut: () {
-            closeWith("tab");
+            close("tab");
             try {
               trigger.focus();
             } catch (_) {}
           },
-          onEscape: () => closeWith("escape"),
+          onEscape: () => close("escape"),
           onSelect: (opt, idx) {
             setValue(opt.value);
-            closeWith("select");
+            close("select");
           },
           optionBuilder: optionBuilder == null
               ? null
@@ -129,6 +145,10 @@ web.DocumentFragment Select<T>({
                   optionBuilder(opt, selected, active),
         );
         handle.element.setAttribute("data-solid-select-listbox", "1");
+        currentHandle = handle;
+        onCleanup(() {
+          if (identical(currentHandle, handle)) currentHandle = null;
+        });
 
         floatToAnchor(
           anchor: trigger,
@@ -147,7 +167,7 @@ web.DocumentFragment Select<T>({
           excludedElements: <web.Element? Function()>[
             () => trigger,
           ],
-          onDismiss: (reason) => closeWith(reason),
+          onDismiss: (reason) => close(reason),
         );
         // Use the created listbox element as our positioned element.
         // (createListbox already set id/role/className).
@@ -162,11 +182,9 @@ web.DocumentFragment Select<T>({
           restoreFocus: true,
           onMountAutoFocus: (e) {
             e.preventDefault();
-            scheduleMicrotask(() {
-              try {
-                handle.element.focus(web.FocusOptions(preventScroll: true));
-              } catch (_) {}
-            });
+            try {
+              handle.element.focus(web.FocusOptions(preventScroll: true));
+            } catch (_) {}
           },
           onUnmountAutoFocus: (e) {
             if (closeReason == "tab") e.preventDefault();

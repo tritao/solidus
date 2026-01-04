@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidMenuDemo(web.Element mount) {
@@ -17,6 +18,18 @@ void mountSolidMenuDemo(web.Element mount) {
 
     root.appendChild(
         web.HTMLHeadingElement.h1()..textContent = "Solid Menu Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Open the menu and use ArrowUp/ArrowDown/Home/End to navigate.",
+          "Press Enter to select an item; Escape closes and restores focus.",
+          "Hover moves focus (mouse-only); disabled items should not focus/select.",
+          "Click/tap outside to dismiss (touch is deferred until click).",
+        ],
+      ),
+    );
 
     final trigger = web.HTMLButtonElement()
       ..id = "menu-trigger"

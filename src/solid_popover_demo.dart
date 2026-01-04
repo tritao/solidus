@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidPopoverDemo(web.Element mount) {
@@ -20,6 +21,18 @@ void mountSolidPopoverDemo(web.Element mount) {
     final lastDismiss = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Popover Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Toggle the popover and click outside to dismiss.",
+          "Press Escape while open to dismiss (reason shows below).",
+          "Scroll the page: the popover should reposition with the anchor.",
+          "Try the bottom trigger to exercise flip/fit-in-viewport behavior.",
+        ],
+      ),
+    );
 
     final trigger = web.HTMLButtonElement()
       ..id = "popover-trigger"

@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidComboboxDemo(web.Element mount) {
@@ -18,6 +19,18 @@ void mountSolidComboboxDemo(web.Element mount) {
 
     root.appendChild(
       web.HTMLHeadingElement.h1()..textContent = "Solid Combobox Demo",
+    );
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Type to filter; Arrow keys change the active option while focus stays on the input.",
+          "Enter selects; Escape closes (when open) or clears the input (when closed).",
+          "Alt+ArrowDown opens the full list (\"show all\").",
+          "Try the second example: it stays open and shows an empty state when there are no matches.",
+        ],
+      ),
     );
 
     final status = web.HTMLParagraphElement()

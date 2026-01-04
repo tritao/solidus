@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidSelectDemo(web.Element mount) {
@@ -17,6 +18,18 @@ void mountSolidSelectDemo(web.Element mount) {
     final lastEvent = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Select Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Open with click/Enter/ArrowDown; navigate with Arrow keys (disabled is skipped).",
+          "Hover moves focus (mouse-only); Press Enter to select the active option.",
+          "Escape closes and restores focus; Tab closes and moves focus to \"After\".",
+          "Click outside to dismiss (reason shows below).",
+        ],
+      ),
+    );
 
     final status = web.HTMLParagraphElement()
       ..id = "select-status"

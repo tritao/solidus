@@ -4,6 +4,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidDomDemo(web.Element mount) {
@@ -25,6 +26,18 @@ void mountSolidDomDemo(web.Element mount) {
 
     final title = web.HTMLHeadingElement.h1()..textContent = "Solid DOM Demo";
     root.appendChild(title);
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Click +1 and watch reactive text/attrs/classes/styles update.",
+          "Toggle extra to validate mount/unmount + cleanup behavior.",
+          "Reverse the keyed list and watch nodes move without re-creation.",
+          "Toggle portal to validate rendering into a separate DOM subtree.",
+        ],
+      ),
+    );
 
     final inc = web.HTMLButtonElement()
       ..id = "solid-inc"

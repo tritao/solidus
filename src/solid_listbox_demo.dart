@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidListboxDemo(web.Element mount) {
@@ -13,6 +14,17 @@ void mountSolidListboxDemo(web.Element mount) {
     root.appendChild(solidDemoNav(active: "listbox"));
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Listbox Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Use Arrow keys/Home/End/PageUp/PageDown in the listbox.",
+          "Disabled items are skipped for keyboard focus and hover focus.",
+          "In the virtual focus example, focus stays on the input and aria-activedescendant points at the active option.",
+        ],
+      ),
+    );
 
     final selected = createSignal<String?>(null);
     final lastEvent = createSignal("none");

@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidTooltipDemo(web.Element mount) {
@@ -17,6 +18,17 @@ void mountSolidTooltipDemo(web.Element mount) {
     final lastEvent = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Tooltip Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Hover \"Hover me\": opens after a small delay, closes on leave.",
+          "Tab to \"Focus me\": opens on focus, closes on blur/Escape.",
+          "Move between triggers quickly: only the hovered/focused tooltip should be open.",
+        ],
+      ),
+    );
 
     final status = web.HTMLParagraphElement()
       ..id = "tooltip-status"

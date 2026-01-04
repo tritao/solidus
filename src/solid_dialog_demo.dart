@@ -4,6 +4,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidDialogDemo(web.Element mount) {
@@ -23,6 +24,19 @@ void mountSolidDialogDemo(web.Element mount) {
 
     root.appendChild(
         web.HTMLHeadingElement.h1()..textContent = "Solid Dialog Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Open a dialog, then use Tab/Shift+Tab (focus stays inside).",
+          "Press Escape or click outside to dismiss (reason shows below).",
+          "Try the nested dialog: focus + aria/scroll behavior should stack correctly.",
+          "Try the no-backdrop dialog to validate outside interaction differences.",
+          "Try autofocus hooks dialog: mount/unmount autofocus is controllable.",
+        ],
+      ),
+    );
 
     final trigger = web.HTMLButtonElement()
       ..id = "dialog-trigger"

@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidToastDemo(web.Element mount) {
@@ -16,6 +17,17 @@ void mountSolidToastDemo(web.Element mount) {
     final count = createSignal(0);
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Toast Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Click \"Show toast\" multiple times to stack toasts.",
+          "Toasts auto-dismiss after a short duration (and animate out).",
+          "Dismiss buttons should remove a toast immediately.",
+        ],
+      ),
+    );
 
     final trigger = web.HTMLButtonElement()
       ..id = "toast-trigger"

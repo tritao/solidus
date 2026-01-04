@@ -4,6 +4,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
+import "./solid_demo_help.dart";
 import "./solid_demo_nav.dart";
 
 void mountSolidRovingDemo(web.Element mount) {
@@ -19,6 +20,17 @@ void mountSolidRovingDemo(web.Element mount) {
     final cleanupCount = createSignal(0);
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Roving Demo");
+
+    root.appendChild(
+      solidDemoHelp(
+        title: "What to try",
+        bullets: const [
+          "Tab into the group: only one item is tabbable (roving tabIndex).",
+          "Use Arrow keys to move focus within the group.",
+          "Toggle the group to validate cleanup and re-mount behavior.",
+        ],
+      ),
+    );
 
     final toggle = web.HTMLButtonElement()
       ..id = "roving-toggle"

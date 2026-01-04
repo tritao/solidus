@@ -136,6 +136,26 @@ a.btn {
   font-size: 20px;
 }
 
+.demoHelp {
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+
+.demoHelp h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.demoHelp ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.demoHelp li {
+  margin: 6px 0;
+  color: var(--muted);
+}
+
 .row {
   display: flex;
   gap: 10px;

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
@@ -47,8 +49,8 @@ void mountSolidSelectDemo(web.Element mount) {
       ..id = "select-trigger"
       ..type = "button"
       ..className = "btn primary";
-    trigger.style.minWidth = "220px";
     trigger.style.textAlign = "left";
+    trigger.style.boxSizing = "border-box";
     trigger.appendChild(text(() => selected.value ?? "Choose a framework"));
     final after = web.HTMLButtonElement()
       ..id = "select-after"
@@ -68,6 +70,26 @@ void mountSolidSelectDemo(web.Element mount) {
       ..textContent = "Outside action (increments)";
     on(outsideAction, "click", (_) => outsideClicks.value++);
     root.appendChild(outsideAction);
+
+    void syncTriggerWidth() {
+      if (!trigger.isConnected || !outsideAction.isConnected) return;
+      final width = outsideAction.getBoundingClientRect().width;
+      if (width <= 0) return;
+      trigger.style.width = "${width.toStringAsFixed(0)}px";
+    }
+
+    void syncTriggerWidthWhenConnected() {
+      if (!trigger.isConnected || !outsideAction.isConnected) {
+        scheduleMicrotask(syncTriggerWidthWhenConnected);
+        return;
+      }
+      syncTriggerWidth();
+      // One more tick after layout/styles settle.
+      Timer(Duration.zero, syncTriggerWidth);
+    }
+
+    scheduleMicrotask(syncTriggerWidthWhenConnected);
+    on(web.window, "resize", (_) => syncTriggerWidth());
 
     final opts = <SelectOption<String>>[
       const SelectOption(value: "Solid", label: "Solid"),

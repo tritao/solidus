@@ -166,7 +166,6 @@ SelectableItemResult createSelectableItem({
   void onKeyDown(web.KeyboardEvent e) {
     if (!allowsSelection()) return;
     if (e.key != "Enter" && e.key != " ") return;
-    e.preventDefault();
 
     if (isNonContiguousSelectionModifier(e)) {
       manager().toggleSelection(key());

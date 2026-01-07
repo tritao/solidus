@@ -595,12 +595,21 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     orientation: () => Orientation.vertical,
   );
 
+  // Bind tabIndex (virtual focus omits the attribute).
+  createRenderEffect(() {
+    final ti = selectableCollection.tabIndex();
+    if (ti == null) {
+      listbox.removeAttribute("tabindex");
+    } else {
+      listbox.tabIndex = ti;
+    }
+  });
+
   void handleKeyDown(
     web.KeyboardEvent e, {
     bool allowTypeAhead = true,
     bool allowSpaceSelect = true,
   }) {
-    if (!enableKeyboardNavigation) return;
     if (e.defaultPrevented) return;
 
     if (e.key == "Tab") {
@@ -613,68 +622,27 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
       return;
     }
 
-    if (e.key == "Enter" || e.key == " ") {
+    // Only handle selection keys at the container level in virtual focus mode.
+    // In real focus mode, let the focused option handle Enter/Space so we don't
+    // double-trigger (item keydown + container keydown).
+    if (shouldUseVirtualFocus && (e.key == "Enter" || e.key == " ")) {
       if (e.key == " " && !allowSpaceSelect) return;
       e.preventDefault();
       selectActive();
       return;
     }
-
-    if (!allowTypeAhead) {
-      // Temporarily disable typeahead for this event by short-circuiting it.
-      if (e.key.length == 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        // let it through (e.g. typing in an input) — no op.
-        return;
-      }
-    }
   }
 
   void onKeydown(web.Event e) {
     if (e is! web.KeyboardEvent) return;
+    if (!enableKeyboardNavigation) return;
     handleKeyDown(e);
     if (e.defaultPrevented) return;
-
-    void navigateToKey(String? nextKey) {
-      if (nextKey == null) return;
-      selection.setFocusedKey(nextKey);
-      if (e.shiftKey && selection.selectionMode() == SelectionMode.multiple) {
-        selection.extendSelection(nextKey);
-      } else if (selectOnFocus && !isNonContiguousSelectionModifier(e)) {
-        selection.replaceSelection(nextKey);
-      }
-      if (!shouldUseVirtualFocus) scheduleMicrotask(focusActive);
-    }
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        moveActive(1);
-        return;
-      case "ArrowUp":
-        e.preventDefault();
-        moveActive(-1);
-        return;
-      case "Home":
-        e.preventDefault();
-        navigateToKey(delegate.getFirstKey());
-        return;
-      case "End":
-        e.preventDefault();
-        navigateToKey(delegate.getLastKey());
-        return;
-      case "PageDown":
-        e.preventDefault();
-        final base = selection.focusedKey() ?? delegate.getFirstKey();
-        if (base != null) navigateToKey(delegate.getKeyPageBelow(base));
-        return;
-      case "PageUp":
-        e.preventDefault();
-        final base = selection.focusedKey() ?? delegate.getLastKey();
-        if (base != null) navigateToKey(delegate.getKeyPageAbove(base));
-        return;
-    }
-
-    selectableCollection.onKeyDown(e);
+    selectableCollection.onKeyDownWithOptions(
+      e,
+      allowTypeAhead: !disallowTypeAhead,
+      bypassTargetCheck: false,
+    );
   }
 
   if (enableKeyboardNavigation) {
@@ -721,17 +689,6 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   onCleanup(disposeItems);
 
-  Timer? typeaheadTimer;
-  var typeaheadBuffer = "";
-
-  void clearTypeahead() {
-    typeaheadBuffer = "";
-    typeaheadTimer?.cancel();
-    typeaheadTimer = null;
-  }
-
-  onCleanup(clearTypeahead);
-
   return ListboxHandle._(
     listbox,
     selectionManager: selection,
@@ -755,62 +712,28 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
         return;
       }
 
-      // Navigation keys.
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          moveActive(1);
-          return;
-        case "ArrowUp":
-          e.preventDefault();
-          moveActive(-1);
-          return;
-        case "Home":
-          e.preventDefault();
-          setActiveIndex(0);
-          return;
-        case "End":
-          e.preventDefault();
-          setActiveIndex(999999);
-          return;
-        case "PageDown":
-          e.preventDefault();
-          final base = selection.focusedKey();
-          if (base != null) setActiveKey(delegate.getKeyPageBelow(base));
-          return;
-        case "PageUp":
-          e.preventDefault();
-          final base = selection.focusedKey();
-          if (base != null) setActiveKey(delegate.getKeyPageAbove(base));
-          return;
-        case "Enter":
-          e.preventDefault();
-          selectActive();
-          return;
-        case " ":
-          if (!allowSpaceSelect) return;
-          e.preventDefault();
-          selectActive();
-          return;
-      }
-
-      if (!allowTypeAhead || disallowTypeAhead) return;
-      final character = e.key;
-      if (character.length != 1 || e.ctrlKey || e.metaKey || e.altKey) return;
-      // Use delegate search to implement typeahead without relying on DOM focus.
-      typeaheadBuffer += character.toLowerCase();
-      typeaheadTimer?.cancel();
-      typeaheadTimer = Timer(const Duration(milliseconds: 500), () {
-        clearTypeahead();
-      });
-
-      final from = selection.focusedKey();
-      final match = delegate.getKeyForSearch(typeaheadBuffer, from) ??
-          delegate.getKeyForSearch(typeaheadBuffer);
-      if (match != null) {
+      if (e.key == "Enter" || e.key == " ") {
+        if (e.key == " " && !allowSpaceSelect) return;
         e.preventDefault();
-        setActiveKey(match);
+        selectActive();
+        return;
       }
+
+      // If the external key target is an input (e.g. combobox), don't steal
+      // printable characters unless typeahead is explicitly enabled.
+      if (!allowTypeAhead &&
+          e.key.length == 1 &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !e.altKey) {
+        return;
+      }
+
+      selectableCollection.onKeyDownWithOptions(
+        e,
+        allowTypeAhead: allowTypeAhead && !disallowTypeAhead,
+        bypassTargetCheck: true,
+      );
     },
   );
 }

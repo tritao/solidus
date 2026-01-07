@@ -14,7 +14,8 @@ void mountSolidMenuDemo(web.Element mount) {
     root.appendChild(solidDemoNav(active: "menu"));
 
     final open = createSignal(false);
-    final last = createSignal("none");
+    final lastClose = createSignal("none");
+    final lastAction = createSignal("none");
 
     root.appendChild(
         web.HTMLHeadingElement.h1()..textContent = "Solid Menu Demo");
@@ -42,7 +43,11 @@ void mountSolidMenuDemo(web.Element mount) {
     final status = web.HTMLParagraphElement()
       ..id = "menu-status"
       ..className = "muted";
-    status.appendChild(text(() => "Close: ${last.value}"));
+    status.appendChild(
+      text(
+        () => "Action: ${lastAction.value} • Close: ${lastClose.value}",
+      ),
+    );
     root.appendChild(status);
 
     root.appendChild(
@@ -53,7 +58,7 @@ void mountSolidMenuDemo(web.Element mount) {
         portalId: "menu-portal",
         placement: "bottom-start",
         offset: 6,
-        onClose: (reason) => last.value = reason,
+        onClose: (reason) => lastClose.value = reason,
         builder: (close) {
           final menu = web.HTMLDivElement()
             ..id = "menu-content"
@@ -71,7 +76,7 @@ void mountSolidMenuDemo(web.Element mount) {
               ..textContent = label
               ..setAttribute("role", "menuitem");
             on(el, "click", (_) {
-              last.value = "select:$label";
+              lastAction.value = label;
               close("select");
             });
             return el;
@@ -80,6 +85,7 @@ void mountSolidMenuDemo(web.Element mount) {
           final items = <web.HTMLElement>[
             item("Profile", id: "menu-item-profile"),
             item("Billing", id: "menu-item-billing"),
+            item("Disabled", id: "menu-item-disabled")..disabled = true,
             item("Settings", id: "menu-item-settings"),
             item("Log out", id: "menu-item-logout", destructive: true),
           ];

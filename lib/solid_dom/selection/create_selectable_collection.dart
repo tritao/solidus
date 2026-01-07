@@ -15,16 +15,33 @@ final class SelectableCollectionResult {
   SelectableCollectionResult({
     required this.tabIndex,
     required this.onKeyDown,
+    SelectableCollectionKeyDownHandler? onKeyDownWithOptions,
     required this.onMouseDown,
     required this.onFocusIn,
     required this.onFocusOut,
-  });
+  }) : _onKeyDownWithOptions =
+            onKeyDownWithOptions ??
+                ((e, {allowTypeAhead = true, bypassTargetCheck = false}) =>
+                    onKeyDown(e));
 
   final int? Function() tabIndex;
   final void Function(web.KeyboardEvent e) onKeyDown;
+  final SelectableCollectionKeyDownHandler _onKeyDownWithOptions;
   final void Function(web.MouseEvent e) onMouseDown;
   final void Function(web.FocusEvent e) onFocusIn;
   final void Function(web.FocusEvent e) onFocusOut;
+
+  void onKeyDownWithOptions(
+    web.KeyboardEvent e, {
+    bool allowTypeAhead = true,
+    bool bypassTargetCheck = false,
+  }) {
+    _onKeyDownWithOptions(
+      e,
+      allowTypeAhead: allowTypeAhead,
+      bypassTargetCheck: bypassTargetCheck,
+    );
+  }
 
   void attach(
     web.HTMLElement el, {
@@ -53,6 +70,12 @@ final class SelectableCollectionResult {
     });
   }
 }
+
+typedef SelectableCollectionKeyDownHandler = void Function(
+  web.KeyboardEvent e, {
+  bool allowTypeAhead,
+  bool bypassTargetCheck,
+});
 
 SelectableCollectionResult createSelectableCollection({
   required SelectionManager Function() selectionManager,
@@ -139,8 +162,14 @@ SelectableCollectionResult createSelectableCollection({
     // Timer cleanup is internal to createTypeSelect.
   });
 
-  void onKeyDown(web.KeyboardEvent e) {
-    typeSelect.typeSelectHandlers.onKeyDown(e);
+  void onKeyDownInternal(
+    web.KeyboardEvent e, {
+    bool allowTypeAhead = true,
+    bool bypassTargetCheck = false,
+  }) {
+    if (allowTypeAhead && !disallowTypeAheadAccessor()) {
+      typeSelect.typeSelectHandlers.onKeyDown(e);
+    }
 
     if (e.altKey && e.key == "Tab") {
       e.preventDefault();
@@ -148,8 +177,10 @@ SelectableCollectionResult createSelectableCollection({
 
     final root = refAccessor();
     if (root == null) return;
-    final target = e.target;
-    if (target is web.Node && !root.contains(target)) return;
+    if (!bypassTargetCheck) {
+      final target = e.target;
+      if (target is web.Node && !root.contains(target)) return;
+    }
 
     final manager = managerAccessor();
     final delegate = delegateAccessor();
@@ -312,6 +343,8 @@ SelectableCollectionResult createSelectableCollection({
     }
   }
 
+  void onKeyDown(web.KeyboardEvent e) => onKeyDownInternal(e);
+
   void onFocusIn(web.FocusEvent e) {
     final manager = managerAccessor();
     final delegate = delegateAccessor();
@@ -472,6 +505,7 @@ SelectableCollectionResult createSelectableCollection({
   return SelectableCollectionResult(
     tabIndex: () => tabIndexMemo.value,
     onKeyDown: onKeyDown,
+    onKeyDownWithOptions: onKeyDownInternal,
     onMouseDown: onMouseDown,
     onFocusIn: onFocusIn,
     onFocusOut: onFocusOut,

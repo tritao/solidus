@@ -2424,9 +2424,30 @@ async function inspectUrl(
           const initialFocus = await page.evaluate(() => document.activeElement?.id ?? "");
           await page.keyboard.press("ArrowDown");
           const afterDown = await page.evaluate(() => document.activeElement?.id ?? "");
+          // Skip disabled item on navigation.
+          await page.keyboard.press("ArrowDown");
+          const afterDown2 = await page.evaluate(() => document.activeElement?.id ?? "");
           await page.keyboard.press("End");
           const afterEnd = await page.evaluate(() => document.activeElement?.id ?? "");
 
+          // Enter should activate the focused item (button click).
+          await page.keyboard.press("Enter");
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          const afterEnter = await page.evaluate(() => ({
+            status: document.querySelector("#menu-status")?.textContent ?? null,
+            activeId: document.activeElement?.id ?? null,
+          }));
+
+          // Reopen and close via Escape to ensure dismiss path still works.
+          await trigger.first().click({ timeout: timeoutMs });
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") != null,
+            { timeout: timeoutMs },
+          );
           await page.keyboard.press("Escape");
           await page.waitForFunction(
             () => document.querySelector("#menu-content") == null,
@@ -2439,13 +2460,25 @@ async function inspectUrl(
             touchDismiss.stillOpenAfterDown === true &&
             initialFocus === "menu-item-profile" &&
             afterDown === "menu-item-billing" &&
+            afterDown2 === "menu-item-settings" &&
             afterEnd === "menu-item-logout" &&
+            (afterEnter.status ?? "").includes("Action: Log out") &&
+            (afterEnter.status ?? "").includes("Close: select") &&
+            afterEnter.activeId === "menu-trigger" &&
             focusAfterClose === "menu-trigger";
 
           interactionResults.push({
             name: "solid-menu",
             ok,
-            details: { touchDismiss, initialFocus, afterDown, afterEnd, focusAfterClose },
+            details: {
+              touchDismiss,
+              initialFocus,
+              afterDown,
+              afterDown2,
+              afterEnd,
+              afterEnter,
+              focusAfterClose,
+            },
           });
         }
       } catch (e) {

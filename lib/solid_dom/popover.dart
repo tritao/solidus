@@ -24,6 +24,9 @@ web.DocumentFragment Popover({
   web.Element? anchor,
   String placement = "bottom-start",
   double offset = 8,
+  double shift = 0,
+  bool slide = true,
+  bool overlap = false,
   String role = "dialog",
   String? portalId,
 }) {
@@ -48,6 +51,9 @@ web.DocumentFragment Popover({
             floating: popover,
             placement: placement,
             offset: offset,
+            shift: shift,
+            slide: slide,
+            overlap: overlap,
           );
         }
 

@@ -19,6 +19,7 @@ void mountSolidPopoverDemo(web.Element mount) {
     final open = createSignal(false);
     final bottomOpen = createSignal(false);
     final edgeOpen = createSignal(false);
+    final shiftOpen = createSignal(false);
     final lastDismiss = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Popover Demo");
@@ -50,6 +51,15 @@ void mountSolidPopoverDemo(web.Element mount) {
       ..textContent = "Toggle popover";
     on(trigger, "click", (_) => open.value = !open.value);
     root.appendChild(trigger);
+
+    final shiftTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-shift"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Shift popover (+40)";
+    shiftTrigger.style.marginLeft = "200px";
+    on(shiftTrigger, "click", (_) => shiftOpen.value = !shiftOpen.value);
+    root.appendChild(shiftTrigger);
 
     final edgeTrigger = web.HTMLButtonElement()
       ..id = "popover-trigger-edge"
@@ -114,12 +124,42 @@ void mountSolidPopoverDemo(web.Element mount) {
 
     root.appendChild(
       Popover(
+        open: () => shiftOpen.value,
+        setOpen: (next) => shiftOpen.value = next,
+        portalId: "popover-shift-portal",
+        anchor: shiftTrigger,
+        placement: "bottom-start",
+        offset: 8,
+        shift: 40,
+        onClose: (reason) => lastDismiss.value = "shift:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-shift"
+            ..className = "card";
+          panel.style.width = "240px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent = "Shifted popover (skidding +40px).");
+          final closeBtn = web.HTMLButtonElement()
+            ..id = "popover-close-shift"
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
         open: () => edgeOpen.value,
         setOpen: (next) => edgeOpen.value = next,
         portalId: "popover-edge-portal",
         anchor: edgeTrigger,
         placement: "right-start",
         offset: 8,
+        overlap: true,
         onClose: (reason) => lastDismiss.value = "edge:$reason",
         builder: (close) {
           final panel = web.HTMLDivElement()

@@ -1381,6 +1381,72 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-popover-shift") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#popover-trigger-shift");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-popover-shift",
+            ok: false,
+            details: { reason: "missing #popover-trigger-shift" },
+          });
+        } else {
+          step = "set viewport";
+          await page.setViewportSize({ width: 900, height: 520 });
+          await page.waitForTimeout(40);
+
+          step = "open shift popover";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait panel open";
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel-shift") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const t = document.querySelector("#popover-trigger-shift");
+            const p = document.querySelector("#popover-panel-shift");
+            if (!t || !p) return null;
+            const a = t.getBoundingClientRect();
+            const r = p.getBoundingClientRect();
+            const dx = Math.round(r.left - a.left);
+            return {
+              vw: window.innerWidth,
+              vh: window.innerHeight,
+              anchorLeft: Math.round(a.left),
+              panelLeft: Math.round(r.left),
+              dx,
+              panel: {
+                left: Math.round(r.left),
+                right: Math.round(r.right),
+                top: Math.round(r.top),
+                bottom: Math.round(r.bottom),
+              },
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            metrics.dx >= 35 &&
+            metrics.dx <= 45 &&
+            metrics.panel.left >= 6 &&
+            metrics.panel.right <= metrics.vw - 6;
+
+          interactionResults.push({
+            name: "solid-popover-shift",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-shift",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-popover-resize") {
       try {
         const trigger = page.locator("#popover-trigger-edge");
@@ -1405,6 +1471,7 @@ async function inspectUrl(
             const panel = document.querySelector("#popover-panel-edge");
             if (!panel) return null;
             const r = panel.getBoundingClientRect();
+            const cs = getComputedStyle(panel);
             return {
               left: r.left,
               right: r.right,
@@ -1412,6 +1479,10 @@ async function inspectUrl(
               bottom: r.bottom,
               vw: window.innerWidth,
               vh: window.innerHeight,
+              scrollX: window.scrollX,
+              scrollY: window.scrollY,
+              styleLeft: cs.left,
+              styleTop: cs.top,
             };
           });
 
@@ -1422,6 +1493,7 @@ async function inspectUrl(
             const panel = document.querySelector("#popover-panel-edge");
             if (!panel) return null;
             const r = panel.getBoundingClientRect();
+            const cs = getComputedStyle(panel);
             return {
               left: r.left,
               right: r.right,
@@ -1429,6 +1501,10 @@ async function inspectUrl(
               bottom: r.bottom,
               vw: window.innerWidth,
               vh: window.innerHeight,
+              scrollX: window.scrollX,
+              scrollY: window.scrollY,
+              styleLeft: cs.left,
+              styleTop: cs.top,
             };
           });
 
@@ -1574,6 +1650,83 @@ async function inspectUrl(
           name: "solid-tooltip",
           ok: false,
           details: { error: String(e) },
+        });
+      }
+    } else if (scenario === "solid-tooltip-edge") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#tooltip-edge-trigger");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-tooltip-edge",
+            ok: false,
+            details: { reason: "missing #tooltip-edge-trigger" },
+          });
+        } else {
+          step = "set small viewport";
+          await page.setViewportSize({ width: 320, height: 240 });
+          await page.waitForTimeout(50);
+
+          step = "hover edge trigger";
+          await trigger.first().hover({ timeout: timeoutMs });
+          step = "wait tooltip open";
+          await page.waitForFunction(
+            () => document.querySelector("#tooltip-edge-panel") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const t = document.querySelector("#tooltip-edge-trigger");
+            const p = document.querySelector("#tooltip-edge-panel");
+            if (!t || !p) return null;
+            const a = t.getBoundingClientRect();
+            const r = p.getBoundingClientRect();
+            return {
+              vw: window.innerWidth,
+              vh: window.innerHeight,
+              anchor: {
+                left: Math.round(a.left),
+                right: Math.round(a.right),
+                top: Math.round(a.top),
+                bottom: Math.round(a.bottom),
+              },
+              panel: {
+                left: Math.round(r.left),
+                right: Math.round(r.right),
+                top: Math.round(r.top),
+                bottom: Math.round(r.bottom),
+              },
+              flippedToLeft: Math.round(r.right) <= Math.round(a.left) - 2,
+            };
+          });
+
+          step = "move away to close";
+          await page.mouse.move(2, 2);
+          await page.waitForFunction(
+            () => document.querySelector("#tooltip-edge-panel") == null,
+            { timeout: timeoutMs },
+          );
+
+          const ok =
+            metrics != null &&
+            metrics.panel.left >= 0 &&
+            metrics.panel.right <= metrics.vw &&
+            metrics.panel.top >= 0 &&
+            metrics.panel.bottom <= metrics.vh &&
+            metrics.flippedToLeft === true;
+
+          interactionResults.push({
+            name: "solid-tooltip-edge",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-tooltip-edge",
+          ok: false,
+          details: { error: String(e), step },
         });
       }
     } else if (scenario === "solid-select") {

@@ -27,6 +27,7 @@ void _positionFixed({
   required web.HTMLElement floating,
   required String placement,
   required double offset,
+  required double shift,
   required double viewportPadding,
   required bool flip,
 }) {
@@ -100,6 +101,16 @@ void _positionFixed({
       break;
   }
 
+  // Approximate Kobalte's "shift" (skidding) behavior: apply shift on the
+  // cross-axis relative to the placement side.
+  if (shift != 0) {
+    if (side == "top" || side == "bottom") {
+      left += shift;
+    } else if (side == "left" || side == "right") {
+      top += shift;
+    }
+  }
+
   left = _clampSafe(
       left, viewportPadding, viewportWidth - f.width - viewportPadding);
   top = _clampSafe(
@@ -128,8 +139,11 @@ FloatingHandle floatToAnchor({
   required web.HTMLElement floating,
   String placement = "bottom-start",
   double offset = 8,
+  double shift = 0,
   double viewportPadding = 8,
   bool flip = true,
+  bool slide = true,
+  bool overlap = false,
   bool sameWidth = false,
   bool fitViewport = false,
   bool updateOnAnimationFrame = false,
@@ -163,8 +177,11 @@ FloatingHandle floatToAnchor({
             js_util.jsify({
               "placement": placement,
               "offset": offset,
+              "shift": shift,
               "viewportPadding": viewportPadding,
               "flip": flip,
+              "slide": slide,
+              "overlap": overlap,
               "sameWidth": sameWidth,
               "fitViewport": fitViewport,
               "updateOnAnimationFrame": updateOnAnimationFrame,
@@ -213,6 +230,7 @@ FloatingHandle floatToAnchor({
       floating: floating,
       placement: placement,
       offset: offset,
+      shift: shift,
       viewportPadding: viewportPadding,
       flip: flip,
     );

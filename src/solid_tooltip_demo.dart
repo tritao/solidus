@@ -15,6 +15,7 @@ void mountSolidTooltipDemo(web.Element mount) {
 
     final open = createSignal(false);
     final focusOpen = createSignal(false);
+    final edgeOpen = createSignal(false);
     final lastEvent = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Tooltip Demo");
@@ -33,7 +34,7 @@ void mountSolidTooltipDemo(web.Element mount) {
     final status = web.HTMLParagraphElement()
       ..id = "tooltip-status"
       ..className = "muted";
-    status.appendChild(text(() => "Open: ${open.value || focusOpen.value} • Last: ${lastEvent.value}"));
+    status.appendChild(text(() => "Open: ${open.value || focusOpen.value || edgeOpen.value} • Last: ${lastEvent.value}"));
     root.appendChild(status);
 
     final trigger = web.HTMLButtonElement()
@@ -51,6 +52,17 @@ void mountSolidTooltipDemo(web.Element mount) {
     row.appendChild(trigger);
     row.appendChild(focusTrigger);
     root.appendChild(row);
+
+    // Edge trigger to validate flip/shift behavior near the viewport boundary.
+    final edgeTrigger = web.HTMLButtonElement()
+      ..id = "tooltip-edge-trigger"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Edge trigger";
+    edgeTrigger.style.position = "fixed";
+    edgeTrigger.style.right = "8px";
+    edgeTrigger.style.top = "120px";
+    root.appendChild(edgeTrigger);
 
     root.appendChild(
       Tooltip(
@@ -94,6 +106,29 @@ void mountSolidTooltipDemo(web.Element mount) {
           el.style.padding = "8px 10px";
           el.style.fontSize = "13px";
           el.textContent = "Tooltip opened from focus.";
+          return el;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Tooltip(
+        open: () => edgeOpen.value,
+        setOpen: (next) => edgeOpen.value = next,
+        trigger: edgeTrigger,
+        portalId: "tooltip-edge-portal",
+        placement: "right",
+        offset: 8,
+        openDelayMs: 30,
+        closeDelayMs: 30,
+        onClose: (reason) => lastEvent.value = "edge:$reason",
+        builder: (close) {
+          final el = web.HTMLDivElement()
+            ..id = "tooltip-edge-panel"
+            ..className = "card";
+          el.style.padding = "8px 10px";
+          el.style.fontSize = "13px";
+          el.textContent = "Edge tooltip (should flip left).";
           return el;
         },
       ),

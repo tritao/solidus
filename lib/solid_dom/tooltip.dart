@@ -39,8 +39,11 @@ web.DocumentFragment Tooltip({
   void Function(String reason)? onClose,
   String placement = "top",
   double offset = 6,
+  double shift = 0,
   double viewportPadding = 8,
   bool flip = true,
+  bool slide = true,
+  bool overlap = false,
   bool interactive = false,
   int openDelayMs = 500,
   int closeDelayMs = 150,
@@ -123,8 +126,11 @@ web.DocumentFragment Tooltip({
           floating: el,
           placement: placement,
           offset: offset,
+          shift: shift,
           viewportPadding: viewportPadding,
           flip: flip,
+          slide: slide,
+          overlap: overlap,
           updateOnScrollParents: true,
         );
 

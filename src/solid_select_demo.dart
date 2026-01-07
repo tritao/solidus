@@ -47,6 +47,8 @@ void mountSolidSelectDemo(web.Element mount) {
       ..id = "select-trigger"
       ..type = "button"
       ..className = "btn primary";
+    trigger.style.minWidth = "220px";
+    trigger.style.textAlign = "left";
     trigger.appendChild(text(() => selected.value ?? "Choose a framework"));
     final after = web.HTMLButtonElement()
       ..id = "select-after"

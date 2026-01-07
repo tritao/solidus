@@ -44,9 +44,6 @@ void mountSolidOverlayDemo(web.Element mount) {
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Outside action (increments)";
-    underBtn.style.position = "fixed";
-    underBtn.style.left = "24px";
-    underBtn.style.bottom = "24px";
     on(underBtn, "click", (_) => underCount.value++);
 
     final row = web.HTMLDivElement()..className = "row";
@@ -73,24 +70,13 @@ void mountSolidOverlayDemo(web.Element mount) {
           children: () {
             final wrapper = web.HTMLDivElement()
               ..id = "overlay-wrapper";
-            wrapper.style.position = "fixed";
-            wrapper.style.inset = "0";
-            wrapper.style.display = "flex";
-            wrapper.style.alignItems = "center";
-            wrapper.style.justifyContent = "center";
-            wrapper.style.padding = "24px";
-            wrapper.style.boxSizing = "border-box";
 
             final backdrop = web.HTMLDivElement()..id = "overlay-backdrop";
             backdrop.setAttribute("data-solid-backdrop", "1");
-            backdrop.style.position = "fixed";
-            backdrop.style.inset = "0";
-            backdrop.style.background = "transparent";
 
             final dialog = web.HTMLDivElement()
               ..id = "overlay-dialog"
               ..className = "card";
-            dialog.style.width = "min(520px, 100%)";
 
             dialog.appendChild(
                 web.HTMLHeadingElement.h2()..textContent = "Dialog");

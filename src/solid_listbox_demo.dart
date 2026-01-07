@@ -84,6 +84,10 @@ void mountSolidListboxDemo(web.Element mount) {
         selected.value = opt.value;
         lastEvent.value = "select";
       },
+      onClearSelection: () {
+        selected.value = null;
+        lastEvent.value = "clear";
+      },
     );
 
     sectionHandle.element.style.maxHeight = "220px";
@@ -141,6 +145,10 @@ void mountSolidListboxDemo(web.Element mount) {
       onSelect: (opt, _) {
         vfSelected.value = opt.value;
         lastEvent.value = "select-virtual";
+      },
+      onClearSelection: () {
+        vfSelected.value = null;
+        lastEvent.value = "clear-virtual";
       },
     );
 

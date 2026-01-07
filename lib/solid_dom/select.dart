@@ -57,6 +57,7 @@ web.DocumentFragment Select<T>({
   double offset = 4,
   double viewportPadding = 8,
   bool flip = true,
+  bool disallowEmptySelection = false,
   int exitMs = 120,
   String? portalId,
   String? listboxId,
@@ -128,6 +129,7 @@ web.DocumentFragment Select<T>({
           idRegistry: ids,
           shouldUseVirtualFocus: true,
           shouldFocusOnHover: true,
+          disallowEmptySelection: disallowEmptySelection,
           onTabOut: () {
             close("tab");
             try {
@@ -137,6 +139,10 @@ web.DocumentFragment Select<T>({
           onEscape: () => close("escape"),
           onSelect: (opt, idx) {
             setValue(opt.value);
+            close("select");
+          },
+          onClearSelection: () {
+            setValue(null);
             close("select");
           },
           optionBuilder: optionBuilder == null

@@ -111,30 +111,13 @@ SelectableItemResult createSelectableItem({
     if (m.selectionMode() == SelectionMode.none) return;
 
     final k = key();
-    if (m.selectionMode() == SelectionMode.single) {
-      if (m.selectionBehavior() == SelectionBehavior.toggle) {
-        m.toggleSelection(k);
-      } else {
-        m.replaceSelection(k);
-      }
-      return;
-    }
-
-    final shiftKey = _boolProp(e, "shiftKey");
-
-    if (shiftKey) {
-      m.extendSelection(k);
-      return;
-    }
-
     final isTouch = _stringProp(e, "pointerType") == "touch";
-    final toggleKey = isCtrlKeyPressed(e) || isTouch;
-
-    if (m.selectionBehavior() == SelectionBehavior.toggle || toggleKey) {
-      m.toggleSelection(k);
-    } else {
-      m.replaceSelection(k);
-    }
+    m.select(
+      k,
+      shiftKey: _boolProp(e, "shiftKey"),
+      toggleKey: isCtrlKeyPressed(e),
+      isTouch: isTouch,
+    );
   }
 
   bool isSelected() => manager().isSelected(key());

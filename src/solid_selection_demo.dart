@@ -34,6 +34,7 @@ void mountSolidSelectionDemo(web.Element mount) {
         title: "Option meanings",
         bullets: const [
           "Replace vs Toggle: Replace clears previous selection; Toggle adds/removes items from the selected set (checkbox-style).",
+          "Disallow empty selection: prevents clearing the last selected item (selecting an already-selected item won’t deselect).",
           "Select on press up: selection happens on pointer up/click (not pointer down). Useful for menus where selection may close immediately.",
           "Allow different press origin: only relevant with “select on press up”. Press on one item, drag, release on another → selects the release target.",
         ],
@@ -44,6 +45,7 @@ void mountSolidSelectionDemo(web.Element mount) {
     final selectionBehavior = createSignal(SelectionBehavior.replace);
     final selectOnPressUp = createSignal(false);
     final allowsDifferentPressOrigin = createSignal(false);
+    final disallowEmptySelection = createSignal(false);
 
     final keys = <String>[
       "solid",
@@ -68,6 +70,7 @@ void mountSolidSelectionDemo(web.Element mount) {
     createEffect(() {
       manager.setSelectionMode(selectionMode.value);
       manager.setSelectionBehavior(selectionBehavior.value);
+      manager.setDisallowEmptySelection(disallowEmptySelection.value);
     });
 
     final controls = web.HTMLDivElement()..className = "row";
@@ -136,12 +139,38 @@ void mountSolidSelectionDemo(web.Element mount) {
       web.HTMLSpanElement()..textContent = "Allow different press origin",
     );
 
+    final disallowEmptyToggle = web.HTMLLabelElement()
+      ..className = "row"
+      ..style.gap = "8px";
+    final disallowEmptyCb = web.HTMLInputElement()
+      ..id = "selection-disallow-empty"
+      ..type = "checkbox";
+    on(disallowEmptyCb, "change", (_) {
+      disallowEmptySelection.value = disallowEmptyCb.checked;
+    });
+    createRenderEffect(() => disallowEmptyCb.checked = disallowEmptySelection.value);
+    disallowEmptyToggle.appendChild(disallowEmptyCb);
+    disallowEmptyToggle.appendChild(
+      web.HTMLSpanElement()..textContent = "Disallow empty selection",
+    );
+
+    final resetFocus = web.HTMLButtonElement()
+      ..id = "selection-reset-focus"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Reset focus";
+    on(resetFocus, "click", (_) {
+      manager.setFocusedKey(null);
+    });
+
     controls.appendChild(modeBtn("selection-mode-multi", "Multiple", SelectionMode.multiple));
     controls.appendChild(modeBtn("selection-mode-single", "Single", SelectionMode.single));
     controls.appendChild(behaviorBtn("selection-behavior-replace", "Replace", SelectionBehavior.replace));
     controls.appendChild(behaviorBtn("selection-behavior-toggle", "Toggle", SelectionBehavior.toggle));
     controls.appendChild(pressUpToggle);
     controls.appendChild(originToggle);
+    controls.appendChild(disallowEmptyToggle);
+    controls.appendChild(resetFocus);
     root.appendChild(controls);
 
     final status = web.HTMLParagraphElement()
@@ -199,8 +228,6 @@ void mountSolidSelectionDemo(web.Element mount) {
       getItemElement: (k) => elByKey[k],
     );
 
-    manager.setFocusedKey(keys.firstWhere((k) => !disabled.contains(k)));
-
     final collection = createSelectableCollection(
       selectionManager: () => manager,
       keyboardDelegate: () => delegate,
@@ -208,6 +235,7 @@ void mountSolidSelectionDemo(web.Element mount) {
       scrollRef: () => list,
       shouldFocusWrap: () => true,
       selectOnFocus: () => false,
+      disallowEmptySelection: () => disallowEmptySelection.value,
       disallowSelectAll: () => false,
       disallowTypeAhead: () => false,
       shouldUseVirtualFocus: () => false,
@@ -217,7 +245,20 @@ void mountSolidSelectionDemo(web.Element mount) {
     );
     collection.attach(list, scrollEl: list);
 
+    final before = web.HTMLButtonElement()
+      ..id = "selection-before"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Before";
+    final after = web.HTMLButtonElement()
+      ..id = "selection-after"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "After";
+
+    root.appendChild(before);
     root.appendChild(list);
+    root.appendChild(after);
     return root;
   });
 }

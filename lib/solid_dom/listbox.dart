@@ -83,6 +83,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   Iterable<ListboxSection<T, O>> Function()? sections,
   required T? Function() selected,
   required void Function(O option, int index) onSelect,
+  void Function()? onClearSelection,
   bool Function(T a, T b)? equals,
   Signal<int>? activeIndex,
   int Function()? initialActiveIndex,
@@ -285,6 +286,12 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
     final idx = indexByKey[k];
     if (opt == null || idx == null) return;
     if (opt.disabled) return;
+    final wasSelected = selection.isSelected(k);
+    selection.select(k, shiftKey: false, toggleKey: false, isTouch: false);
+    if (!selection.isSelected(k) && wasSelected) {
+      onClearSelection?.call();
+      return;
+    }
     onSelect(opt, idx);
   }
 
@@ -525,7 +532,13 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
             shouldSelectOnPressUp: () => shouldSelectOnPressUp,
             shouldUseVirtualFocus: () => shouldUseVirtualFocus,
             allowsDifferentPressOrigin: () => allowsDifferentPressOrigin,
-            onAction: () => onSelect(opt, idx),
+            onAction: () {
+              if (selection.isSelected(key)) {
+                onSelect(opt, idx);
+              } else {
+                onClearSelection?.call();
+              }
+            },
           );
           selectableItem.attach(el);
 

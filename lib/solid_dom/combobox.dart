@@ -63,6 +63,7 @@ web.DocumentFragment Combobox<T>({
   bool keepOpenOnEmpty = false,
   String emptyText = "No results.",
   bool noResetInputOnBlur = false,
+  bool disallowEmptySelection = false,
   bool closeOnSelection = true,
   ComboboxFilter<T>? filter,
   String triggerMode = "input",
@@ -350,6 +351,7 @@ web.DocumentFragment Combobox<T>({
           shouldFocusOnHover: true,
           enableKeyboardNavigation: true,
           disallowTypeAhead: true,
+          disallowEmptySelection: disallowEmptySelection,
           showEmptyState: showEmptyState,
           emptyText: emptyText,
           idRegistry: ids,
@@ -364,6 +366,11 @@ web.DocumentFragment Combobox<T>({
           onSelect: (opt, idx) {
             setValue(opt.value);
             inputValue.value = opt.label;
+            if (closeOnSelection) closeNow("select");
+          },
+          onClearSelection: () {
+            setValue(null);
+            inputValue.value = "";
             if (closeOnSelection) closeNow("select");
           },
           optionBuilder: optionBuilder == null

@@ -1757,6 +1757,8 @@ async function inspectUrl(
             (afterSelect2.triggerText ?? "").includes("React") &&
             afterSelect2.activeId === "select-trigger" &&
             afterClickSelected.activeId === "select-trigger" &&
+            (afterClickSelected.status ?? "").includes("Value: none") &&
+            (afterClickSelected.triggerText ?? "").includes("Choose") &&
             (afterEscape.status ?? "").includes("Last: escape") &&
             afterEscape.activeId === "select-trigger" &&
             (afterTab.status ?? "").includes("Last: tab") &&
@@ -1934,6 +1936,11 @@ async function inspectUrl(
         const list = page.locator("#selection-list");
         const status = page.locator("#selection-status");
         const first = page.locator("#selection-item-solid");
+        const beforeBtn = page.locator("#selection-before");
+        const afterBtn = page.locator("#selection-after");
+        const resetFocus = page.locator("#selection-reset-focus");
+        const disallowEmpty = page.locator("#selection-disallow-empty");
+        const modeSingle = page.locator("#selection-mode-single");
         if (!(await list.count()) || !(await status.count()) || !(await first.count())) {
           interactionResults.push({
             name: "solid-selection",
@@ -1941,6 +1948,30 @@ async function inspectUrl(
             details: { reason: "missing selection elements" },
           });
         } else {
+          let single = null;
+          let singleOk = true;
+
+          step = "Tab into list focuses first enabled";
+          if (await beforeBtn.count()) {
+            await beforeBtn.first().click({ timeout: timeoutMs });
+            await page.keyboard.press("Tab");
+            await page.waitForFunction(
+              () => document.activeElement?.id === "selection-item-solid",
+              { timeout: timeoutMs },
+            );
+          }
+
+          step = "Shift+Tab into list focuses last enabled";
+          if ((await afterBtn.count()) && (await resetFocus.count())) {
+            await resetFocus.first().click({ timeout: timeoutMs });
+            await afterBtn.first().click({ timeout: timeoutMs });
+            await page.keyboard.press("Shift+Tab");
+            await page.waitForFunction(
+              () => document.activeElement?.id === "selection-item-dart",
+              { timeout: timeoutMs },
+            );
+          }
+
           step = "focus first item";
           await first.first().click({ timeout: timeoutMs });
           await page.waitForTimeout(60);
@@ -1959,6 +1990,46 @@ async function inspectUrl(
           await page.keyboard.press("Control+a");
           await page.waitForTimeout(60);
           const afterSelectAll = (await status.first().textContent())?.trim() ?? "";
+
+          step = "single selection toggles off when empty allowed";
+          if ((await modeSingle.count()) && (await disallowEmpty.count())) {
+            await modeSingle.first().click({ timeout: timeoutMs });
+            await disallowEmpty.uncheck();
+            await first.first().click({ timeout: timeoutMs });
+            await page.keyboard.press(" ");
+            await page.waitForTimeout(60);
+            const singleSelected = (await status.first().textContent())?.trim() ?? "";
+            await page.keyboard.press(" ");
+            await page.waitForTimeout(60);
+            const singleDeselected = (await status.first().textContent())?.trim() ?? "";
+
+            await disallowEmpty.check();
+            await page.waitForTimeout(60);
+            const afterDisallow = (await status.first().textContent())?.trim() ?? "";
+            await page.keyboard.press(" ");
+            await page.waitForTimeout(60);
+            const afterDisallowPress = (await status.first().textContent())?.trim() ?? "";
+
+            const selectedPart = (s) => {
+              const idx = (s ?? "").indexOf("Selected:");
+              if (idx === -1) return "";
+              return (s ?? "").slice(idx).trim();
+            };
+
+            singleOk =
+              selectedPart(singleSelected).includes("solid") &&
+              selectedPart(singleDeselected) === "Selected:" &&
+              selectedPart(afterDisallow).includes("solid") &&
+              selectedPart(afterDisallowPress).includes("solid");
+
+            single = {
+              ok: singleOk,
+              singleSelected,
+              singleDeselected,
+              afterDisallow,
+              afterDisallowPress,
+            };
+          }
 
           step = "pressUp selection happens on pointerup";
           await page.locator("#selection-pressup").check();
@@ -1992,6 +2063,7 @@ async function inspectUrl(
             afterExtend.includes("react") &&
             afterSelectAll.includes("dart") &&
             !afterSelectAll.includes("vue") &&
+            singleOk === true &&
             pressUp.ok === true &&
             selectedPart(pressUp.before) === selectedPart(pressUp.afterDown) &&
             selectedPart(pressUp.afterUp) !== selectedPart(pressUp.afterDown) &&
@@ -2000,7 +2072,7 @@ async function inspectUrl(
           interactionResults.push({
             name: "solid-selection",
             ok,
-            details: { afterSpace, afterExtend, afterSelectAll, pressUp },
+            details: { afterSpace, afterExtend, afterSelectAll, single, pressUp },
           });
         }
       } catch (e) {

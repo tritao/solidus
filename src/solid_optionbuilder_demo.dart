@@ -96,6 +96,10 @@ void mountSolidOptionBuilderDemo(web.Element mount) {
         selected.value = opt.value;
         lastEvent.value = "select";
       },
+      onClearSelection: () {
+        selected.value = null;
+        lastEvent.value = "clear";
+      },
       optionBuilderReactive: _reactiveOptionBuilder,
     );
     handle.element.style.padding = "6px";
@@ -129,6 +133,10 @@ void mountSolidOptionBuilderDemo(web.Element mount) {
       onSelect: (opt, _) {
         vfSelected.value = opt.value;
         lastEvent.value = "select-virtual";
+      },
+      onClearSelection: () {
+        vfSelected.value = null;
+        lastEvent.value = "clear-virtual";
       },
       optionBuilderReactive: _reactiveOptionBuilder,
     );
@@ -168,4 +176,3 @@ void mountSolidOptionBuilderDemo(web.Element mount) {
     return root;
   });
 }
-

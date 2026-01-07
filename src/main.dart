@@ -17,6 +17,7 @@ import './solid_combobox_demo.dart';
 import './solid_listbox_demo.dart';
 import './solid_selection_demo.dart';
 import 'package:dart_web_test/wordproc/wordproc.dart';
+import './solid_nesting_demo.dart';
 
 void main() {
   final mount = web.document.querySelector('#app');
@@ -72,6 +73,10 @@ void main() {
   }
   if (solid == 'wordproc') {
     mountSolidWordprocShellDemo(mount);
+    return;
+  }
+  if (solid == 'nesting') {
+    mountSolidNestingDemo(mount);
     return;
   }
   if (solid == '1') {

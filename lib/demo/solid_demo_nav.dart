@@ -33,6 +33,9 @@ web.HTMLElement solidDemoNav({required String active}) {
   row.appendChild(link("Roving", "/?solid=roving", current: active == "roving"));
   row.appendChild(link("Overlay", "/?solid=overlay", current: active == "overlay"));
   row.appendChild(
+    link("Nesting", "/?solid=nesting", current: active == "nesting"),
+  );
+  row.appendChild(
     link("Wordproc", "/?solid=wordproc", current: active == "wordproc"),
   );
   row.appendChild(link("Solid DOM", "/?solid=1", current: active == "solid-dom"));
@@ -40,4 +43,3 @@ web.HTMLElement solidDemoNav({required String active}) {
   nav.appendChild(row);
   return nav;
 }
-

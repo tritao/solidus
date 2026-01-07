@@ -89,7 +89,7 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
 
   const update = async () => {
     if (!anchor || !floating) return;
-    const { x, y } = await computePosition(anchor, floating, {
+    const { x, y, placement: computedPlacement } = await computePosition(anchor, floating, {
       placement,
       strategy: "fixed",
       middleware,
@@ -97,6 +97,10 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
     floating.style.position = "fixed";
     floating.style.left = `${x}px`;
     floating.style.top = `${y}px`;
+    try {
+      floating.setAttribute("data-solid-placement", computedPlacement);
+      floating.style.setProperty("--solid-popper-current-placement", computedPlacement);
+    } catch {}
   };
 
   const cleanup = autoUpdate(anchor, floating, update, {

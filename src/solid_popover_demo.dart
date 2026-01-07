@@ -20,6 +20,11 @@ void mountSolidPopoverDemo(web.Element mount) {
     final bottomOpen = createSignal(false);
     final edgeOpen = createSignal(false);
     final shiftOpen = createSignal(false);
+    final slideOffOpen = createSignal(false);
+    final slideOnOpen = createSignal(false);
+    final overlapOffOpen = createSignal(false);
+    final overlapOnOpen = createSignal(false);
+    final flipHOpen = createSignal(false);
     final lastDismiss = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Popover Demo");
@@ -60,6 +65,62 @@ void mountSolidPopoverDemo(web.Element mount) {
     shiftTrigger.style.marginLeft = "200px";
     on(shiftTrigger, "click", (_) => shiftOpen.value = !shiftOpen.value);
     root.appendChild(shiftTrigger);
+
+    // Slide/overlap parity triggers (fixed so we can assert viewport behavior).
+    final slideOffTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-slide-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide off";
+    slideOffTrigger.style.position = "fixed";
+    slideOffTrigger.style.right = "16px";
+    slideOffTrigger.style.top = "64px";
+    on(slideOffTrigger, "click", (_) => slideOffOpen.value = !slideOffOpen.value);
+    root.appendChild(slideOffTrigger);
+
+    final slideOnTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-slide-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide on";
+    slideOnTrigger.style.position = "fixed";
+    slideOnTrigger.style.right = "16px";
+    slideOnTrigger.style.top = "104px";
+    on(slideOnTrigger, "click", (_) => slideOnOpen.value = !slideOnOpen.value);
+    root.appendChild(slideOnTrigger);
+
+    final overlapOffTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-overlap-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap off";
+    overlapOffTrigger.style.position = "fixed";
+    overlapOffTrigger.style.right = "16px";
+    overlapOffTrigger.style.top = "144px";
+    on(overlapOffTrigger, "click", (_) => overlapOffOpen.value = !overlapOffOpen.value);
+    root.appendChild(overlapOffTrigger);
+
+    final overlapOnTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-overlap-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap on";
+    overlapOnTrigger.style.position = "fixed";
+    overlapOnTrigger.style.right = "16px";
+    overlapOnTrigger.style.top = "184px";
+    on(overlapOnTrigger, "click", (_) => overlapOnOpen.value = !overlapOnOpen.value);
+    root.appendChild(overlapOnTrigger);
+
+    final flipHTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-flip-h"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Flip H";
+    flipHTrigger.style.position = "fixed";
+    flipHTrigger.style.right = "16px";
+    flipHTrigger.style.top = "224px";
+    on(flipHTrigger, "click", (_) => flipHOpen.value = !flipHOpen.value);
+    root.appendChild(flipHTrigger);
 
     final edgeTrigger = web.HTMLButtonElement()
       ..id = "popover-trigger-edge"
@@ -141,6 +202,160 @@ void mountSolidPopoverDemo(web.Element mount) {
             ..textContent = "Shifted popover (skidding +40px).");
           final closeBtn = web.HTMLButtonElement()
             ..id = "popover-close-shift"
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => slideOffOpen.value,
+        setOpen: (next) => slideOffOpen.value = next,
+        portalId: "popover-slide-off-portal",
+        anchor: slideOffTrigger,
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        onClose: (reason) => lastDismiss.value = "slide-off:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-slide-off"
+            ..className = "card";
+          panel.style.width = "360px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent =
+                "Slide off (bottom-start; should overflow on narrow viewport).");
+          final closeBtn = web.HTMLButtonElement()
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => slideOnOpen.value,
+        setOpen: (next) => slideOnOpen.value = next,
+        portalId: "popover-slide-on-portal",
+        anchor: slideOnTrigger,
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: true,
+        overlap: false,
+        onClose: (reason) => lastDismiss.value = "slide-on:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-slide-on"
+            ..className = "card";
+          panel.style.width = "360px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent =
+                "Slide on (bottom-start; should stay within viewport).");
+          final closeBtn = web.HTMLButtonElement()
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => overlapOffOpen.value,
+        setOpen: (next) => overlapOffOpen.value = next,
+        portalId: "popover-overlap-off-portal",
+        anchor: overlapOffTrigger,
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        onClose: (reason) => lastDismiss.value = "overlap-off:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-overlap-off"
+            ..className = "card";
+          panel.style.width = "360px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent =
+                "Overlap off (right-start; should overflow on narrow viewport).");
+          final closeBtn = web.HTMLButtonElement()
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => overlapOnOpen.value,
+        setOpen: (next) => overlapOnOpen.value = next,
+        portalId: "popover-overlap-on-portal",
+        anchor: overlapOnTrigger,
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: true,
+        onClose: (reason) => lastDismiss.value = "overlap-on:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-overlap-on"
+            ..className = "card";
+          panel.style.width = "360px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent =
+                "Overlap on (right-start; should stay within viewport).");
+          final closeBtn = web.HTMLButtonElement()
+            ..type = "button"
+            ..className = "btn secondary"
+            ..textContent = "Close";
+          on(closeBtn, "click", (_) => close());
+          panel.appendChild(closeBtn);
+          return panel;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Popover(
+        open: () => flipHOpen.value,
+        setOpen: (next) => flipHOpen.value = next,
+        portalId: "popover-flip-h-portal",
+        anchor: flipHTrigger,
+        placement: "right-start",
+        offset: 8,
+        flip: true,
+        slide: false,
+        overlap: false,
+        onClose: (reason) => lastDismiss.value = "flip-h:$reason",
+        builder: (close) {
+          final panel = web.HTMLDivElement()
+            ..id = "popover-panel-flip-h"
+            ..className = "card";
+          panel.style.width = "180px";
+          panel.appendChild(web.HTMLParagraphElement()
+            ..textContent = "Horizontal flip (right -> left).");
+          final closeBtn = web.HTMLButtonElement()
             ..type = "button"
             ..className = "btn secondary"
             ..textContent = "Close";

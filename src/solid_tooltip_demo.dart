@@ -119,6 +119,8 @@ void mountSolidTooltipDemo(web.Element mount) {
         portalId: "tooltip-edge-portal",
         placement: "right",
         offset: 8,
+        slide: false,
+        overlap: false,
         openDelayMs: 30,
         closeDelayMs: 30,
         onClose: (reason) => lastEvent.value = "edge:$reason",

@@ -119,6 +119,10 @@ void _positionFixed({
   floating.style.position = "fixed";
   _setPx(floating, "left", left);
   _setPx(floating, "top", top);
+  try {
+    floating.setAttribute("data-solid-placement", effective);
+    floating.style.setProperty("--solid-popper-current-placement", effective);
+  } catch (_) {}
 }
 
 void _ensureOverlayZIndex(web.HTMLElement el) {

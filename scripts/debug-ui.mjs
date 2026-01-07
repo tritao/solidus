@@ -1381,6 +1381,71 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-popover-flip-horizontal") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#popover-trigger-flip-h");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-popover-flip-horizontal",
+            ok: false,
+            details: { reason: "missing #popover-trigger-flip-h" },
+          });
+        } else {
+          await page.setViewportSize({ width: 320, height: 520 });
+          await page.waitForTimeout(80);
+
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait panel";
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel-flip-h") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const panel = document.querySelector("#popover-panel-flip-h");
+            const anchor = document.querySelector("#popover-trigger-flip-h");
+            if (!panel || !anchor) return null;
+            const pr = panel.getBoundingClientRect();
+            const ar = anchor.getBoundingClientRect();
+            return {
+              vw: window.innerWidth,
+              panel: {
+                left: pr.left,
+                right: pr.right,
+                top: pr.top,
+                bottom: pr.bottom,
+              },
+              anchor: {
+                left: ar.left,
+                right: ar.right,
+              },
+              placement: panel.getAttribute("data-solid-placement"),
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            metrics.panel.left >= 0 &&
+            metrics.panel.right <= metrics.vw &&
+            typeof metrics.placement === "string" &&
+            metrics.placement.startsWith("left");
+
+          interactionResults.push({
+            name: "solid-popover-flip-horizontal",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-flip-horizontal",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-popover-shift") {
       let step = "init";
       try {
@@ -1483,6 +1548,7 @@ async function inspectUrl(
               scrollY: window.scrollY,
               styleLeft: cs.left,
               styleTop: cs.top,
+              placement: panel.getAttribute("data-solid-placement"),
             };
           });
 
@@ -1505,6 +1571,7 @@ async function inspectUrl(
               scrollY: window.scrollY,
               styleLeft: cs.left,
               styleTop: cs.top,
+              placement: panel.getAttribute("data-solid-placement"),
             };
           });
 
@@ -1522,7 +1589,9 @@ async function inspectUrl(
             after != null &&
             inViewport(before) &&
             inViewport(after) &&
-            (before.left !== after.left || before.top !== after.top);
+            (before.left !== after.left || before.top !== after.top) &&
+            typeof before.placement === "string" &&
+            typeof after.placement === "string";
 
           interactionResults.push({
             name: "solid-popover-resize",
@@ -1535,6 +1604,123 @@ async function inspectUrl(
           name: "solid-popover-resize",
           ok: false,
           details: { error: String(e) },
+        });
+      }
+    } else if (scenario === "solid-popover-slide-overlap") {
+      let step = "init";
+      try {
+        const padding = 8;
+        await page.setViewportSize({ width: 420, height: 520 });
+        await page.waitForTimeout(80);
+
+        const openAndRead = async (triggerSel, panelSel) => {
+          const trigger = page.locator(triggerSel);
+          step = `open ${triggerSel}`;
+          await trigger.first().click({ timeout: timeoutMs });
+          step = `wait ${panelSel}`;
+          await page.waitForFunction(
+            (sel) => document.querySelector(sel) != null,
+            panelSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const m = await page.evaluate(
+            ({ panelSel }) => {
+              const panel = document.querySelector(panelSel);
+              if (!panel) return null;
+              const r = panel.getBoundingClientRect();
+              return {
+                vw: window.innerWidth,
+                vh: window.innerHeight,
+                left: r.left,
+                right: r.right,
+                top: r.top,
+                bottom: r.bottom,
+                placement: panel.getAttribute("data-solid-placement"),
+              };
+            },
+            { panelSel },
+          );
+          // close (trigger can be covered by the panel, so prefer Escape/outside).
+          step = `close ${panelSel}`;
+          let closed = false;
+          try {
+            await page.keyboard.press("Escape");
+            await page.waitForFunction(
+              (sel) => document.querySelector(sel) == null,
+              panelSel,
+              { timeout: 1500 },
+            );
+            closed = true;
+          } catch {}
+          if (!closed) {
+            try {
+              await page.click("body", { position: { x: 2, y: 2 } });
+              await page.waitForFunction(
+                (sel) => document.querySelector(sel) == null,
+                panelSel,
+                { timeout: 1500 },
+              );
+              closed = true;
+            } catch {}
+          }
+          if (!closed) throw new Error(`failed to close ${panelSel}`);
+          return m;
+        };
+
+        const slideOff = await openAndRead(
+          "#popover-trigger-slide-off",
+          "#popover-panel-slide-off",
+        );
+        const slideOn = await openAndRead(
+          "#popover-trigger-slide-on",
+          "#popover-panel-slide-on",
+        );
+        const overlapOff = await openAndRead(
+          "#popover-trigger-overlap-off",
+          "#popover-panel-overlap-off",
+        );
+        const overlapOn = await openAndRead(
+          "#popover-trigger-overlap-on",
+          "#popover-panel-overlap-on",
+        );
+
+        const overflowsRight = (m) => m && m.right > m.vw - padding + 0.5;
+        const inViewport = (m) =>
+          m &&
+          m.left >= padding - 0.5 &&
+          m.top >= padding - 0.5 &&
+          m.right <= m.vw - padding + 0.5 &&
+          m.bottom <= m.vh - padding + 0.5;
+
+        const ok =
+          // slide=false: allow main-axis overflow for bottom-start.
+          slideOff != null &&
+          overflowsRight(slideOff) &&
+          slideOff.placement?.startsWith("bottom") === true &&
+          // slide=true: main-axis shift keeps it in viewport (bottom-start shifts on x).
+          slideOn != null &&
+          inViewport(slideOn) &&
+          slideOn.placement?.startsWith("bottom") === true &&
+          // overlap=false: cross-axis overflow allowed for right-start.
+          overlapOff != null &&
+          overflowsRight(overlapOff) &&
+          overlapOff.placement?.startsWith("right") === true &&
+          // overlap=true: cross-axis shift keeps it in viewport (right-start shifts on x).
+          overlapOn != null &&
+          inViewport(overlapOn) &&
+          overlapOn.placement?.startsWith("right") === true;
+
+        interactionResults.push({
+          name: "solid-popover-slide-overlap",
+          ok,
+          details: { slideOff, slideOn, overlapOff, overlapOn },
+        });
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-slide-overlap",
+          ok: false,
+          details: { error: String(e), step },
         });
       }
     } else if (scenario === "solid-tooltip") {
@@ -1697,7 +1883,7 @@ async function inspectUrl(
                 top: Math.round(r.top),
                 bottom: Math.round(r.bottom),
               },
-              flippedToLeft: Math.round(r.right) <= Math.round(a.left) - 2,
+              placement: p.getAttribute("data-solid-placement"),
             };
           });
 
@@ -1714,7 +1900,8 @@ async function inspectUrl(
             metrics.panel.right <= metrics.vw &&
             metrics.panel.top >= 0 &&
             metrics.panel.bottom <= metrics.vh &&
-            metrics.flippedToLeft === true;
+            typeof metrics.placement === "string" &&
+            metrics.placement.startsWith("left");
 
           interactionResults.push({
             name: "solid-tooltip-edge",

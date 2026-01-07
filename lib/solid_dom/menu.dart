@@ -3,9 +3,9 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./floating.dart";
 import "./focus_scope.dart";
 import "./overlay.dart";
+import "./popper.dart";
 import "./presence.dart";
 import "./selection/create_selectable_collection.dart";
 import "./selection/create_selectable_item.dart";
@@ -126,7 +126,7 @@ web.DocumentFragment DropdownMenu({
           orientation: () => Orientation.vertical,
         );
 
-        floatToAnchor(
+        attachPopper(
           anchor: anchor,
           floating: menu,
           placement: placement,

@@ -1,5 +1,6 @@
 export "solid_dom/dialog.dart";
 export "solid_dom/floating.dart";
+export "solid_dom/popper.dart";
 export "solid_dom/focus_scope.dart";
 export "solid_dom/menu.dart";
 export "solid_dom/overlay.dart";

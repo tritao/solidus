@@ -3,9 +3,9 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./floating.dart";
 import "./focus_scope.dart";
 import "./overlay.dart";
+import "./popper.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
 
@@ -51,8 +51,7 @@ web.DocumentFragment Popover({
         popover.tabIndex = -1;
 
         if (anchor != null) {
-          final arrow = popover.querySelector("[data-solid-popper-arrow]");
-          floatToAnchor(
+          attachPopper(
             anchor: anchor,
             floating: popover,
             placement: placement,
@@ -64,7 +63,6 @@ web.DocumentFragment Popover({
             overlap: overlap,
             hideWhenDetached: hideWhenDetached,
             detachedPadding: detachedPadding,
-            arrow: arrow is web.HTMLElement ? arrow : null,
             arrowPadding: arrowPadding,
           );
         }

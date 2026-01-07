@@ -3,8 +3,8 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./floating.dart";
 import "./overlay.dart";
+import "./popper.dart";
 import "./presence.dart";
 import "./solid_dom.dart";
 
@@ -120,12 +120,11 @@ web.DocumentFragment Tooltip({
         el.setAttribute("role", "tooltip");
         el.style.position = "fixed";
         if (!interactive) el.style.pointerEvents = "none";
-        final arrow = el.querySelector("[data-solid-popper-arrow]");
 
         final tooltipId = el.id.isNotEmpty ? el.id : _nextTooltipId();
         el.id = tooltipId;
 
-        floatToAnchor(
+        attachPopper(
           anchor: trigger,
           floating: el,
           placement: placement,
@@ -137,7 +136,6 @@ web.DocumentFragment Tooltip({
           overlap: overlap,
           hideWhenDetached: hideWhenDetached,
           detachedPadding: detachedPadding,
-          arrow: arrow is web.HTMLElement ? arrow : null,
           arrowPadding: arrowPadding,
           updateOnScrollParents: true,
         );

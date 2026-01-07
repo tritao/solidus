@@ -59,6 +59,8 @@ web.DocumentFragment Combobox<T>({
   double offset = 6,
   double viewportPadding = 8,
   bool flip = true,
+  bool showArrow = false,
+  double arrowPadding = 4,
   bool allowsEmptyCollection = false,
   bool keepOpenOnEmpty = false,
   String emptyText = "No results.",
@@ -342,6 +344,7 @@ web.DocumentFragment Combobox<T>({
     children: () => Portal(
       id: portalId,
       children: () {
+        web.HTMLElement? arrowEl;
         final listbox = createListbox<T, ComboboxOption<T>>(
           id: resolvedListboxId,
           options: displayedOptions,
@@ -379,6 +382,12 @@ web.DocumentFragment Combobox<T>({
                   optionBuilder(opt, selected: selected, active: active),
         );
         listbox.element.style.padding = "6px";
+        if (showArrow) {
+          arrowEl = web.HTMLDivElement()
+            ..className = "popperArrow"
+            ..setAttribute("data-solid-popper-arrow", "1");
+          listbox.element.appendChild(arrowEl!);
+        }
         listboxRef = listbox.element;
         listboxHandleSig.value = listbox;
         onCleanup(() {
@@ -397,6 +406,8 @@ web.DocumentFragment Combobox<T>({
           flip: flip,
           sameWidth: true,
           fitViewport: true,
+          arrow: arrowEl,
+          arrowPadding: arrowPadding,
           updateOnScrollParents: true,
         );
 

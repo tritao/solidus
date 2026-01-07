@@ -138,6 +138,37 @@ void mountSolidSelectDemo(web.Element mount) {
       ),
     );
 
+    // Flip integration: fixed trigger near bottom-right, forcing listbox to flip.
+    final flipOpen = createSignal(false);
+    final flipSelected = createSignal<String?>(null);
+    final flipLast = createSignal("none");
+
+    final flipTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-flip"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Flip select";
+    flipTrigger.style.position = "fixed";
+    flipTrigger.style.right = "16px";
+    flipTrigger.style.bottom = "16px";
+    root.appendChild(flipTrigger);
+
+    root.appendChild(
+      Select<String>(
+        open: () => flipOpen.value,
+        setOpen: (next) => flipOpen.value = next,
+        trigger: flipTrigger,
+        options: () => longOpts,
+        value: () => flipSelected.value,
+        setValue: (next) => flipSelected.value = next,
+        portalId: "select-portal-flip",
+        listboxId: "select-listbox-flip",
+        placement: "bottom-start",
+        offset: 8,
+        onClose: (reason) => flipLast.value = reason,
+      ),
+    );
+
     return root;
   });
 }

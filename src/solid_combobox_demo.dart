@@ -95,6 +95,62 @@ void mountSolidComboboxDemo(web.Element mount) {
 
     root.appendChild(web.HTMLHRElement());
 
+    final arrowOpen = createSignal(false);
+    final arrowSelected = createSignal<String?>(null);
+    final arrowLast = createSignal("none");
+
+    root.appendChild(web.HTMLHeadingElement.h2()..textContent = "Combobox (arrow)");
+
+    final arrowStatus = web.HTMLParagraphElement()
+      ..id = "combobox-status-arrow"
+      ..className = "muted";
+    arrowStatus.appendChild(
+      text(() =>
+          "Value: ${arrowSelected.value ?? "none"} • Last: ${arrowLast.value}"),
+    );
+    root.appendChild(arrowStatus);
+
+    final arrowControl = web.HTMLDivElement()
+      ..id = "combobox-control-arrow"
+      ..className = "row";
+    arrowControl.style.gap = "8px";
+    arrowControl.style.alignItems = "center";
+
+    final arrowInput = web.HTMLInputElement()
+      ..id = "combobox-input-arrow"
+      ..className = "input"
+      ..placeholder = "Type to open (arrow)...";
+    arrowControl.appendChild(arrowInput);
+
+    final arrowAfter = web.HTMLButtonElement()
+      ..id = "combobox-after-arrow"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "After";
+    arrowControl.appendChild(arrowAfter);
+
+    root.appendChild(arrowControl);
+
+    root.appendChild(
+      Combobox<String>(
+        open: () => arrowOpen.value,
+        setOpen: (next) => arrowOpen.value = next,
+        anchor: arrowControl,
+        input: arrowInput,
+        options: () => opts,
+        value: () => arrowSelected.value,
+        setValue: (next) => arrowSelected.value = next,
+        listboxId: "combobox-listbox-arrow",
+        portalId: "combobox-portal-arrow",
+        onClose: (reason) => arrowLast.value = reason,
+        placement: "bottom-start",
+        offset: 8,
+        showArrow: true,
+      ),
+    );
+
+    root.appendChild(web.HTMLHRElement());
+
     final emptyOpen = createSignal(false);
     final emptySelected = createSignal<String?>(null);
     final emptyLast = createSignal("none");

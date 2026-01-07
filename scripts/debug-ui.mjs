@@ -2603,6 +2603,81 @@ async function inspectUrl(
           details: { error: String(e), step },
         });
       }
+    } else if (scenario === "solid-select-flip") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#select-trigger-flip");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-select-flip",
+            ok: false,
+            details: { reason: "missing #select-trigger-flip" },
+          });
+        } else {
+          step = "set small viewport";
+          await page.setViewportSize({ width: 420, height: 240 });
+          await page.waitForTimeout(50);
+
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait listbox open";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox-flip") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () =>
+              document
+                .querySelector("#select-listbox-flip")
+                ?.getAttribute("data-solid-placement") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const lb = document.querySelector("#select-listbox-flip");
+            if (!lb) return null;
+            const r = lb.getBoundingClientRect();
+            const cs = getComputedStyle(lb);
+            return {
+              vw: window.innerWidth,
+              vh: window.innerHeight,
+              placement: lb.getAttribute("data-solid-placement"),
+              transform: cs.transform,
+              rect: {
+                left: Math.round(r.left),
+                right: Math.round(r.right),
+                top: Math.round(r.top),
+                bottom: Math.round(r.bottom),
+              },
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            typeof metrics.placement === "string" &&
+            metrics.placement.startsWith("top") &&
+            typeof metrics.transform === "string" &&
+            metrics.transform !== "" &&
+            metrics.transform !== "none" &&
+            metrics.rect.left >= 0 &&
+            metrics.rect.right <= metrics.vw &&
+            metrics.rect.top >= 0 &&
+            metrics.rect.bottom <= metrics.vh;
+
+          interactionResults.push({
+            name: "solid-select-flip",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-select-flip",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-listbox") {
       let step = "init";
       try {
@@ -3197,6 +3272,90 @@ async function inspectUrl(
       } catch (e) {
         interactionResults.push({
           name: "solid-combobox",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
+    } else if (scenario === "solid-combobox-arrow-integration") {
+      let step = "init";
+      try {
+        const input = page.locator("#combobox-input-arrow");
+        if (!(await input.count())) {
+          interactionResults.push({
+            name: "solid-combobox-arrow-integration",
+            ok: false,
+            details: { reason: "missing #combobox-input-arrow" },
+          });
+        } else {
+          step = "type 'e'";
+          await input.fill("e", { timeout: timeoutMs });
+
+          step = "wait listbox open";
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox-arrow") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () =>
+              document
+                .querySelector("#combobox-listbox-arrow")
+                ?.getAttribute("data-solid-placement") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const lb = document.querySelector("#combobox-listbox-arrow");
+            if (!lb) return null;
+            const arrow = lb.querySelector("[data-solid-popper-arrow]");
+            const placement = lb.getAttribute("data-solid-placement") ?? "";
+            const base = String(placement).split("-")[0] ?? "";
+            return {
+              placement,
+              base,
+              transform: getComputedStyle(lb).transform,
+              arrow: arrow
+                ? {
+                    exists: true,
+                    baseValue:
+                      // @ts-ignore
+                      typeof arrow.style?.[base] === "string"
+                        ? // @ts-ignore
+                          arrow.style[base]
+                        : null,
+                  }
+                : { exists: false, baseValue: null },
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            typeof metrics.placement === "string" &&
+            metrics.placement.length > 0 &&
+            typeof metrics.base === "string" &&
+            metrics.base.length > 0 &&
+            typeof metrics.transform === "string" &&
+            metrics.transform !== "" &&
+            metrics.transform !== "none" &&
+            metrics.arrow?.exists === true &&
+            metrics.arrow?.baseValue === "100%";
+
+          step = "escape closes";
+          await page.keyboard.press("Escape");
+          await page.waitForFunction(
+            () => document.querySelector("#combobox-listbox-arrow") == null,
+            { timeout: timeoutMs },
+          );
+
+          interactionResults.push({
+            name: "solid-combobox-arrow-integration",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-combobox-arrow-integration",
           ok: false,
           details: { error: String(e), step },
         });

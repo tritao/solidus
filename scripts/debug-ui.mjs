@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { runSolidWordprocScenario } from "./scenarios/solid-wordproc.mjs";
 import { runSolidNestingScenario } from "./scenarios/solid-nesting.mjs";
+import { runSolidToastModalScenario } from "./scenarios/solid-toast-modal.mjs";
 
 const HOST = "127.0.0.1";
 
@@ -2366,6 +2367,17 @@ async function inspectUrl(
       } catch (e) {
         interactionResults.push({
           name: "solid-nesting",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
+    } else if (scenario === "solid-toast-modal") {
+      try {
+        const result = await runSolidToastModalScenario(page, { timeoutMs });
+        interactionResults.push(result);
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-toast-modal",
           ok: false,
           details: { error: String(e) },
         });

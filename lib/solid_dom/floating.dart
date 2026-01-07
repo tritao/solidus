@@ -110,6 +110,19 @@ void _positionFixed({
   _setPx(floating, "top", top);
 }
 
+void _ensureOverlayZIndex(web.HTMLElement el) {
+  // Keep overlays (popover/select/menu/tooltip) above modal dialogs by default.
+  // Do not override explicit z-index styling.
+  try {
+    if (el.style.zIndex.isNotEmpty) return;
+    final computed = web.window.getComputedStyle(el).zIndex;
+    if (computed.isNotEmpty && computed != "auto") return;
+    el.style.zIndex = "1001";
+  } catch (_) {
+    if (el.style.zIndex.isEmpty) el.style.zIndex = "1001";
+  }
+}
+
 FloatingHandle floatToAnchor({
   required web.Element anchor,
   required web.HTMLElement floating,
@@ -122,6 +135,8 @@ FloatingHandle floatToAnchor({
   bool preferFloatingUi = true,
 }) {
   var disposed = false;
+
+  _ensureOverlayZIndex(floating);
 
   Object? jsHandle;
   void disposeJsHandle() {

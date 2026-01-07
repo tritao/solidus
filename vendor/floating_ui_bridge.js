@@ -166,5 +166,8 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
     dispose() {
       cleanup();
     },
+    update() {
+      void update();
+    },
   };
 };

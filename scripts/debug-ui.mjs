@@ -4114,6 +4114,16 @@ async function inspectUrl(
             () => document.querySelector("#menu-sub-content") != null,
           );
 
+          // Focusing the trigger should not close the submenu (Kobalte behavior).
+          step = "focus trigger while submenu open";
+          await page.evaluate(() => {
+            document.querySelector("#menu-item-more")?.focus?.();
+          });
+          await page.waitForTimeout(50);
+          const submenuStillOpenAfterTriggerFocus = await page.evaluate(
+            () => document.querySelector("#menu-sub-content") != null,
+          );
+
           // Reset for keyboard-only open/close test.
           step = "close root (Escape)";
           await page.keyboard.press("Escape");
@@ -4168,6 +4178,7 @@ async function inspectUrl(
           const ok =
             stillOpenAfterMove === true &&
             submenuStillOpenAfterToggle === true &&
+            submenuStillOpenAfterTriggerFocus === true &&
             beforeChecked !== afterChecked &&
             activeBeforeOpen === "menu-item-more" &&
             activeInSubmenu === "menu-sub-invite" &&
@@ -4181,6 +4192,7 @@ async function inspectUrl(
               beforeChecked,
               afterChecked,
               submenuStillOpenAfterToggle,
+              submenuStillOpenAfterTriggerFocus,
               activeBeforeOpen,
               activeInSubmenu,
               activeAfterClose,

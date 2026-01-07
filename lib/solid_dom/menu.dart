@@ -106,6 +106,15 @@ double _pointerClientY(web.PointerEvent e) {
   }
 }
 
+web.Element? _pointerRelatedTarget(web.PointerEvent e) {
+  try {
+    final v = js_util.getProperty(e, "relatedTarget");
+    return v is web.Element ? v : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 bool _isPointInPolygon(double x, double y, _Polygon polygon) {
   if (polygon.isEmpty) return false;
 
@@ -443,7 +452,7 @@ web.DocumentFragment DropdownMenu({
           parent: null,
         );
 
-        attachPopper(
+        final rootPopper = attachPopper(
           anchor: anchor,
           floating: menu,
           placement: placement,
@@ -452,6 +461,7 @@ web.DocumentFragment DropdownMenu({
           flip: flip,
           updateOnScrollParents: true,
         );
+        scheduleMicrotask(rootPopper.update);
 
         // Root menu: match Kobalte's dismissable-layer behavior:
         // - anchor excluded
@@ -690,17 +700,19 @@ web.DocumentFragment DropdownMenu({
 
               final contentEl = submenuContent;
               if (contentEl != null) {
-                // If the popper hasn't computed its first position yet, the
-                // bounding rect can be off-screen (we mount pending off-screen
-                // to avoid first-frame flicker). Treat this transition as a
-                // "grace" move and avoid stealing focus back to the parent.
-                if (contentEl.getAttribute("data-solid-popper-pending") != null) {
-                  rootController.setPointerGraceIntent(null);
-                  rootController.clearPointerGraceLater();
+                // Fast-path: if the pointer is leaving directly into the
+                // submenu content (relatedTarget), do nothing. This is more
+                // reliable than polygon math when the submenu is already
+                // positioned.
+                final rt = _pointerRelatedTarget(ev);
+                if (rt != null && (identical(rt, contentEl) || contentEl.contains(rt))) {
                   return;
                 }
                 final place = contentEl.getAttribute("data-solid-placement") ??
                     (_documentDirection() == "rtl" ? "left-start" : "right-start");
+                // Bias the direction check toward the submenu side at the
+                // moment we set the grace intent.
+                rootController.pointerDir = place.split("-").first;
                 rootController.setPointerGraceIntent(
                   _GraceIntent(
                     area: _getPointerGraceArea(
@@ -840,15 +852,18 @@ web.DocumentFragment DropdownMenu({
                     parent: rootController,
                   );
 
-                  attachPopper(
+                  final subPopper = attachPopper(
                     anchor: el,
                     floating: subMenu,
-                    placement: _documentDirection() == "rtl" ? "left-start" : "right-start",
+                    placement:
+                        _documentDirection() == "rtl" ? "left-start" : "right-start",
                     offset: offset,
                     viewportPadding: viewportPadding,
                     flip: true,
                     updateOnScrollParents: true,
                   );
+                  // Ensure the submenu is positioned as soon as it mounts.
+                  scheduleMicrotask(subPopper.update);
 
                   dismissableLayer(
                     subMenu,
@@ -856,6 +871,15 @@ web.DocumentFragment DropdownMenu({
                       () => el,
                     ],
                     onDismiss: (reason) => closeSub(reason),
+                    onFocusOutside: (e) {
+                      // Mirror Kobalte MenuSubContent: don't close when focus
+                      // moves to the trigger (avoids close/reopen flicker).
+                      final t = e.target;
+                      if (t is web.Element &&
+                          (identical(t, el) || el.contains(t))) {
+                        e.preventDefault();
+                      }
+                    },
                     bypassTopMostLayerCheck: true,
                     preventClickThrough: false,
                   );

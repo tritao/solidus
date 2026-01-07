@@ -8,9 +8,11 @@ import "package:web/web.dart" as web;
 import "./solid_dom.dart";
 
 final class FloatingHandle {
-  FloatingHandle._(this._dispose);
+  FloatingHandle._(this._dispose, this._update);
   final void Function() _dispose;
+  final void Function() _update;
   void dispose() => _dispose();
+  void update() => _update();
 }
 
 void _setPx(web.HTMLElement el, String prop, double value) {
@@ -231,7 +233,15 @@ FloatingHandle floatToAnchor({
     }
 
     onCleanup(dispose);
-    return FloatingHandle._(dispose);
+    void update() {
+      final h = jsHandle;
+      if (h == null) return;
+      try {
+        js_util.callMethod(h, "update", const []);
+      } catch (_) {}
+    }
+
+    return FloatingHandle._(dispose, update);
   }
 
   void finalizeFirstPaint() {
@@ -335,5 +345,5 @@ FloatingHandle floatToAnchor({
   }
 
   onCleanup(dispose);
-  return FloatingHandle._(dispose);
+  return FloatingHandle._(dispose, compute);
 }

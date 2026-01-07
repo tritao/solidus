@@ -57,4 +57,3 @@ FloatingHandle attachPopper({
     preferFloatingUi: preferFloatingUi,
   );
 }
-

@@ -57,6 +57,10 @@ web.DocumentFragment Select<T>({
   double offset = 4,
   double viewportPadding = 8,
   bool flip = true,
+  double shift = 0,
+  bool slide = true,
+  bool overlap = false,
+  bool fitViewport = true,
   bool disallowEmptySelection = false,
   int exitMs = 120,
   String? portalId,
@@ -163,8 +167,11 @@ web.DocumentFragment Select<T>({
           offset: offset,
           viewportPadding: viewportPadding,
           flip: flip,
+          shift: shift,
+          slide: slide,
+          overlap: overlap,
           sameWidth: true,
-          fitViewport: true,
+          fitViewport: fitViewport,
           updateOnScrollParents: true,
         );
 
@@ -176,6 +183,7 @@ web.DocumentFragment Select<T>({
             () => trigger,
           ],
           onDismiss: (reason) => close(reason),
+          preventClickThrough: true,
         );
         // Use the created listbox element as our positioned element.
         // (createListbox already set id/role/className).

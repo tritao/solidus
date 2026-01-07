@@ -75,6 +75,7 @@ web.DocumentFragment Dialog({
           disableOutsidePointerEvents: modal,
           dismissOnFocusOutside: false,
           onDismiss: (reason) => close(reason),
+          preventClickThrough: true,
         );
         if (modal) {
           focusScope(

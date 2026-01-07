@@ -412,6 +412,7 @@ DismissableLayerHandle dismissableLayer(
   void Function(web.Event event)? onFocusOutside,
   void Function(web.Event event)? onInteractOutside,
   bool bypassTopMostLayerCheck = false,
+  bool preventClickThrough = false,
 }) {
   final stackEl = stackElement ?? layer;
   final entry = _LayerEntry(
@@ -458,12 +459,75 @@ DismissableLayerHandle dismissableLayer(
     return true;
   }
 
+  var disposed = false;
+  JSFunction? jsTouchClick;
+  JSFunction? jsClickBlocker;
+  web.Element? clickBlockTarget;
+  Timer? clickBlockTimer;
+  var dismissedByPointerDown = false;
+
+  void stopEvent(web.Event e) {
+    try {
+      e.preventDefault();
+    } catch (_) {}
+    try {
+      e.stopPropagation();
+    } catch (_) {}
+    try {
+      e.stopImmediatePropagation();
+    } catch (_) {}
+  }
+
+  void stopPropagationOnly(web.Event e) {
+    try {
+      e.stopPropagation();
+    } catch (_) {}
+  }
+
+  void clearClickBlocker() {
+    clickBlockTimer?.cancel();
+    clickBlockTimer = null;
+    clickBlockTarget = null;
+    if (jsClickBlocker != null) {
+      web.document.removeEventListener("click", jsClickBlocker, true.toJS);
+      jsClickBlocker = null;
+    }
+  }
+
+  void installClickBlocker(web.Element? target) {
+    if (disposed) return;
+    if (!preventClickThrough) return;
+    clearClickBlocker();
+    clickBlockTarget = target;
+    void onClickBlock(web.Event e) {
+      if (disposed) return;
+      final t = e.target;
+      if (t is! web.Element) return;
+      // Only block the click that corresponds to the outside interaction that
+      // dismissed the layer. This keeps the behavior predictable while still
+      // preventing accidental "click-through" activation.
+      final expected = clickBlockTarget;
+      if (expected == null || identical(t, expected) || expected.contains(t)) {
+        stopEvent(e);
+      }
+      clearClickBlocker();
+    }
+
+    jsClickBlocker = (onClickBlock).toJS;
+    web.document.addEventListener("click", jsClickBlocker, true.toJS);
+    clickBlockTimer =
+        Timer(const Duration(milliseconds: 700), clearClickBlocker);
+  }
+
   void maybeDismissOutside(web.Event e) {
     if (!bypassTopMostLayerCheck && !_isTopMostLayer(entry)) return;
     if (!isEventOutside(e)) return;
     onPointerDownOutside?.call(e);
     onInteractOutside?.call(e);
     if (e.defaultPrevented) return;
+    if (e is web.PointerEvent && e.type == "pointerdown") {
+      dismissedByPointerDown = true;
+    }
     onDismiss("outside");
   }
 
@@ -486,11 +550,13 @@ DismissableLayerHandle dismissableLayer(
     onDismiss("escape");
   }
 
-  var disposed = false;
-  JSFunction? jsClick;
-
   void onClick(web.Event e) {
     if (disposed) return;
+    if (preventClickThrough && isEventOutside(e)) {
+      // Avoid preventDefault here: it would set defaultPrevented and stop the
+      // dismissable layer from closing itself via maybeDismissOutside().
+      stopPropagationOnly(e);
+    }
     maybeDismissOutside(e);
   }
 
@@ -499,39 +565,41 @@ DismissableLayerHandle dismissableLayer(
     if (e is web.PointerEvent && e.pointerType == "touch") {
       // On touch, defer to the follow-up click. Browsers can delay click, and
       // pointer events may be canceled by scrolling/long-press.
-      if (jsClick != null) {
-        web.document.removeEventListener("click", jsClick, true.toJS);
+      if (jsTouchClick != null) {
+        web.document.removeEventListener("click", jsTouchClick, true.toJS);
       }
-      jsClick = (onClick).toJS;
-      web.document.addEventListener("click", jsClick, true.toJS);
+      jsTouchClick = (onClick).toJS;
+      web.document.addEventListener("click", jsTouchClick, true.toJS);
       return;
     }
+    dismissedByPointerDown = false;
     maybeDismissOutside(e);
+    if (preventClickThrough &&
+        dismissedByPointerDown &&
+        e is web.PointerEvent &&
+        e.pointerType != "touch" &&
+        e.target is web.Element) {
+      installClickBlocker(e.target as web.Element);
+    }
   }
 
   final jsPointerDown = (onPointerDown).toJS;
   final jsFocusOutside = (maybeDismissFocusOutside).toJS;
   final jsEscape = (maybeDismissEscape).toJS;
 
-  Timer? registerTimer;
-  registerTimer = Timer(Duration.zero, () {
-    web.document.addEventListener("pointerdown", jsPointerDown, true.toJS);
-    web.document.addEventListener("focusin", jsFocusOutside, true.toJS);
-    registerTimer = null;
-  });
-
+  web.document.addEventListener("pointerdown", jsPointerDown, true.toJS);
+  web.document.addEventListener("focusin", jsFocusOutside, true.toJS);
   web.document.addEventListener("keydown", jsEscape, true.toJS);
 
   void dispose() {
     disposed = true;
-    registerTimer?.cancel();
-    registerTimer = null;
+    clearClickBlocker();
     web.document.removeEventListener("pointerdown", jsPointerDown, true.toJS);
     web.document.removeEventListener("focusin", jsFocusOutside, true.toJS);
     web.document.removeEventListener("keydown", jsEscape, true.toJS);
-    if (jsClick != null) {
-      web.document.removeEventListener("click", jsClick, true.toJS);
-      jsClick = null;
+    if (jsTouchClick != null) {
+      web.document.removeEventListener("click", jsTouchClick, true.toJS);
+      jsTouchClick = null;
     }
     _restoreEntryPointerPatch(entry);
     _layerStack.remove(entry);

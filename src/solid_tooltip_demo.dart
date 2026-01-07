@@ -17,6 +17,10 @@ void mountSolidTooltipDemo(web.Element mount) {
     final focusOpen = createSignal(false);
     final edgeOpen = createSignal(false);
     final arrowOpen = createSignal(false);
+    final slideOffOpen = createSignal(false);
+    final slideOnOpen = createSignal(false);
+    final overlapOffOpen = createSignal(false);
+    final overlapOnOpen = createSignal(false);
     final lastEvent = createSignal("none");
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Tooltip Demo");
@@ -35,7 +39,12 @@ void mountSolidTooltipDemo(web.Element mount) {
     final status = web.HTMLParagraphElement()
       ..id = "tooltip-status"
       ..className = "muted";
-    status.appendChild(text(() => "Open: ${open.value || focusOpen.value || edgeOpen.value || arrowOpen.value} • Last: ${lastEvent.value}"));
+    status.appendChild(
+      text(
+        () =>
+            "Open: ${open.value || focusOpen.value || edgeOpen.value || arrowOpen.value || slideOffOpen.value || slideOnOpen.value || overlapOffOpen.value || overlapOnOpen.value} • Last: ${lastEvent.value}",
+      ),
+    );
     root.appendChild(status);
 
     final trigger = web.HTMLButtonElement()
@@ -74,6 +83,47 @@ void mountSolidTooltipDemo(web.Element mount) {
     arrowTrigger.style.left = "16px";
     arrowTrigger.style.top = "120px";
     root.appendChild(arrowTrigger);
+
+    // Slide/overlap parity triggers (fixed so we can assert viewport behavior).
+    final slideOffTrigger = web.HTMLButtonElement()
+      ..id = "tooltip-trigger-slide-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide off";
+    slideOffTrigger.style.position = "fixed";
+    slideOffTrigger.style.right = "16px";
+    slideOffTrigger.style.bottom = "200px";
+    root.appendChild(slideOffTrigger);
+
+    final slideOnTrigger = web.HTMLButtonElement()
+      ..id = "tooltip-trigger-slide-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide on";
+    slideOnTrigger.style.position = "fixed";
+    slideOnTrigger.style.right = "16px";
+    slideOnTrigger.style.bottom = "160px";
+    root.appendChild(slideOnTrigger);
+
+    final overlapOffTrigger = web.HTMLButtonElement()
+      ..id = "tooltip-trigger-overlap-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap off";
+    overlapOffTrigger.style.position = "fixed";
+    overlapOffTrigger.style.right = "16px";
+    overlapOffTrigger.style.bottom = "120px";
+    root.appendChild(overlapOffTrigger);
+
+    final overlapOnTrigger = web.HTMLButtonElement()
+      ..id = "tooltip-trigger-overlap-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap on";
+    overlapOnTrigger.style.position = "fixed";
+    overlapOnTrigger.style.right = "16px";
+    overlapOnTrigger.style.bottom = "80px";
+    root.appendChild(overlapOnTrigger);
 
     root.appendChild(
       Tooltip(
@@ -173,6 +223,116 @@ void mountSolidTooltipDemo(web.Element mount) {
             ..setAttribute("data-solid-popper-arrow", "1");
           el.appendChild(arrow);
           el.appendChild(web.HTMLSpanElement()..textContent = "Tooltip with arrow.");
+          return el;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Tooltip(
+        open: () => slideOffOpen.value,
+        setOpen: (next) => slideOffOpen.value = next,
+        trigger: slideOffTrigger,
+        portalId: "tooltip-slide-off-portal",
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        openDelayMs: 30,
+        closeDelayMs: 30,
+        onClose: (reason) => lastEvent.value = "slide-off:$reason",
+        builder: (close) {
+          final el = web.HTMLDivElement()
+            ..id = "tooltip-panel-slide-off"
+            ..className = "card";
+          el.style.padding = "8px 10px";
+          el.style.fontSize = "13px";
+          el.style.width = "360px";
+          el.textContent =
+              "Slide off (right-start; should overflow on narrow viewport).";
+          return el;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Tooltip(
+        open: () => slideOnOpen.value,
+        setOpen: (next) => slideOnOpen.value = next,
+        trigger: slideOnTrigger,
+        portalId: "tooltip-slide-on-portal",
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: true,
+        overlap: false,
+        openDelayMs: 30,
+        closeDelayMs: 30,
+        onClose: (reason) => lastEvent.value = "slide-on:$reason",
+        builder: (close) {
+          final el = web.HTMLDivElement()
+            ..id = "tooltip-panel-slide-on"
+            ..className = "card";
+          el.style.padding = "8px 10px";
+          el.style.fontSize = "13px";
+          el.style.width = "360px";
+          el.textContent = "Slide on (right-start; should stay within viewport).";
+          return el;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Tooltip(
+        open: () => overlapOffOpen.value,
+        setOpen: (next) => overlapOffOpen.value = next,
+        trigger: overlapOffTrigger,
+        portalId: "tooltip-overlap-off-portal",
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        openDelayMs: 30,
+        closeDelayMs: 30,
+        onClose: (reason) => lastEvent.value = "overlap-off:$reason",
+        builder: (close) {
+          final el = web.HTMLDivElement()
+            ..id = "tooltip-panel-overlap-off"
+            ..className = "card";
+          el.style.padding = "8px 10px";
+          el.style.fontSize = "13px";
+          el.style.width = "360px";
+          el.textContent =
+              "Overlap off (bottom-start; should overflow on narrow viewport).";
+          return el;
+        },
+      ),
+    );
+
+    root.appendChild(
+      Tooltip(
+        open: () => overlapOnOpen.value,
+        setOpen: (next) => overlapOnOpen.value = next,
+        trigger: overlapOnTrigger,
+        portalId: "tooltip-overlap-on-portal",
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: true,
+        openDelayMs: 30,
+        closeDelayMs: 30,
+        onClose: (reason) => lastEvent.value = "overlap-on:$reason",
+        builder: (close) {
+          final el = web.HTMLDivElement()
+            ..id = "tooltip-panel-overlap-on"
+            ..className = "card";
+          el.style.padding = "8px 10px";
+          el.style.fontSize = "13px";
+          el.style.width = "360px";
+          el.textContent = "Overlap on (bottom-start; should stay within viewport).";
           return el;
         },
       ),

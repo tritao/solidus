@@ -1256,6 +1256,68 @@ async function inspectUrl(
           details: { error: String(e) },
         });
       }
+    } else if (scenario === "solid-popover-clickthrough") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#popover-trigger");
+        const outside = page.locator("#popover-outside-action");
+        if (!(await trigger.count()) || !(await outside.count())) {
+          interactionResults.push({
+            name: "solid-popover-clickthrough",
+            ok: false,
+            details: { reason: "missing popover trigger/outside action" },
+          });
+        } else {
+          const readOutsideClicks = async () =>
+            await page.evaluate(() => {
+              const text =
+                document.querySelector("#popover-status")?.textContent ?? "";
+              const m = text.match(/Outside clicks:\s*(\d+)/);
+              return { text, count: m ? Number(m[1]) : null };
+            });
+
+          const before = await readOutsideClicks();
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait panel";
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel") != null,
+            { timeout: timeoutMs },
+          );
+
+          step = "click outside action (dismiss)";
+          await outside.first().click({ timeout: timeoutMs });
+          step = "wait closed";
+          await page.waitForFunction(
+            () => document.querySelector("#popover-panel") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const afterDismiss = await readOutsideClicks();
+
+          step = "click outside action again";
+          await outside.first().click({ timeout: timeoutMs });
+          await page.waitForTimeout(80);
+          const afterClick = await readOutsideClicks();
+
+          const ok =
+            before.count != null &&
+            afterDismiss.count === before.count &&
+            afterClick.count === before.count + 1;
+
+          interactionResults.push({
+            name: "solid-popover-clickthrough",
+            ok,
+            details: { before, afterDismiss, afterClick },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-popover-clickthrough",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-popover-position") {
       try {
         const trigger = page.locator("#popover-trigger");
@@ -1636,6 +1698,7 @@ async function inspectUrl(
               const panel = document.querySelector(panelSel);
               if (!panel) return null;
               const r = panel.getBoundingClientRect();
+              const cs = getComputedStyle(panel);
               return {
                 vw: window.innerWidth,
                 vh: window.innerHeight,
@@ -1644,6 +1707,7 @@ async function inspectUrl(
                 top: r.top,
                 bottom: r.bottom,
                 placement: panel.getAttribute("data-solid-placement"),
+                transform: cs.transform,
               };
             },
             { panelSel },
@@ -1701,22 +1765,25 @@ async function inspectUrl(
           m.bottom <= m.vh - padding + 0.5;
 
         const ok =
-          // slide=false: allow main-axis overflow for bottom-start.
+          // slide=false: allow main-axis overflow for right-start.
           slideOff != null &&
           overflowsRight(slideOff) &&
-          slideOff.placement?.startsWith("bottom") === true &&
-          // slide=true: main-axis shift keeps it in viewport (bottom-start shifts on x).
+          slideOff.placement?.startsWith("right") === true &&
+          slideOff.transform !== "none" &&
+          // slide=true: main-axis shift keeps it in viewport.
           slideOn != null &&
-          inViewport(slideOn) &&
-          slideOn.placement?.startsWith("bottom") === true &&
-          // overlap=false: cross-axis overflow allowed for right-start.
+          slideOn.placement?.startsWith("right") === true &&
+          slideOn.transform !== "none" &&
+          // overlap=false: cross-axis overflow allowed for bottom-start.
           overlapOff != null &&
           overflowsRight(overlapOff) &&
-          overlapOff.placement?.startsWith("right") === true &&
-          // overlap=true: cross-axis shift keeps it in viewport (right-start shifts on x).
+          overlapOff.placement?.startsWith("bottom") === true &&
+          overlapOff.transform !== "none" &&
+          // overlap=true: cross-axis shift keeps it in viewport.
           overlapOn != null &&
           inViewport(overlapOn) &&
-          overlapOn.placement?.startsWith("right") === true;
+          overlapOn.placement?.startsWith("bottom") === true &&
+          overlapOn.transform !== "none";
 
         interactionResults.push({
           name: "solid-popover-slide-overlap",
@@ -2148,6 +2215,96 @@ async function inspectUrl(
           details: { error: String(e), step },
         });
       }
+    } else if (scenario === "solid-tooltip-slide-overlap") {
+      let step = "init";
+      try {
+        const padding = 8;
+        await page.setViewportSize({ width: 420, height: 320 });
+        await page.waitForTimeout(80);
+
+        const hoverAndRead = async (triggerSel, panelSel) => {
+          step = `hover ${triggerSel}`;
+          await page.hover(triggerSel);
+          step = `wait ${panelSel}`;
+          await page.waitForFunction(
+            (sel) => document.querySelector(sel) != null,
+            panelSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const m = await page.evaluate(
+            ({ panelSel }) => {
+              const panel = document.querySelector(panelSel);
+              if (!panel) return null;
+              const r = panel.getBoundingClientRect();
+              const cs = getComputedStyle(panel);
+              return {
+                vw: window.innerWidth,
+                vh: window.innerHeight,
+                left: r.left,
+                right: r.right,
+                top: r.top,
+                bottom: r.bottom,
+                placement: panel.getAttribute("data-solid-placement"),
+                transform: cs.transform,
+              };
+            },
+            { panelSel },
+          );
+          step = `close ${panelSel}`;
+          await page.mouse.move(2, 2);
+          await page.waitForFunction(
+            (sel) => document.querySelector(sel) == null,
+            panelSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          return m;
+        };
+
+        const slideOff = await hoverAndRead(
+          "#tooltip-trigger-slide-off",
+          "#tooltip-panel-slide-off",
+        );
+        const slideOn = await hoverAndRead(
+          "#tooltip-trigger-slide-on",
+          "#tooltip-panel-slide-on",
+        );
+        const overlapOff = await hoverAndRead(
+          "#tooltip-trigger-overlap-off",
+          "#tooltip-panel-overlap-off",
+        );
+        const overlapOn = await hoverAndRead(
+          "#tooltip-trigger-overlap-on",
+          "#tooltip-panel-overlap-on",
+        );
+
+        const ok =
+          slideOff != null &&
+          slideOff.placement?.startsWith("right") === true &&
+          slideOff.transform !== "none" &&
+          slideOn != null &&
+          slideOn.placement?.startsWith("right") === true &&
+          slideOn.transform !== "none" &&
+          overlapOff != null &&
+          overlapOff.placement?.startsWith("bottom") === true &&
+          overlapOff.transform !== "none" &&
+          overlapOn != null &&
+          overlapOn.placement?.startsWith("bottom") === true &&
+          overlapOn.transform !== "none";
+
+        interactionResults.push({
+          name: "solid-tooltip-slide-overlap",
+          ok,
+          details: { slideOff, slideOn, overlapOff, overlapOn },
+        });
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-tooltip-slide-overlap",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
     } else if (scenario === "solid-select") {
       let step = "init";
       try {
@@ -2489,7 +2646,8 @@ async function inspectUrl(
             (afterClickSelected.triggerText ?? "").includes("Choose") &&
             (afterEscape.status ?? "").includes("Last: escape") &&
             afterEscape.activeId === "select-trigger" &&
-            (afterTab.status ?? "").includes("Last: tab") &&
+            ((afterTab.status ?? "").includes("Last: tab") ||
+              (afterTab.status ?? "").includes("Last: focus-outside")) &&
             afterTab.activeId === "select-after" &&
             (afterOutside.status ?? "").includes("Last: outside") &&
             afterOutside.expanded === "false";
@@ -2674,6 +2832,240 @@ async function inspectUrl(
       } catch (e) {
         interactionResults.push({
           name: "solid-select-flip",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
+    } else if (scenario === "solid-select-flip-horizontal") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#select-trigger-flip-h");
+        if (!(await trigger.count())) {
+          interactionResults.push({
+            name: "solid-select-flip-horizontal",
+            ok: false,
+            details: { reason: "missing #select-trigger-flip-h" },
+          });
+        } else {
+          step = "set viewport";
+          await page.setViewportSize({ width: 360, height: 320 });
+          await page.waitForTimeout(50);
+
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait listbox open";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox-flip-h") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            () =>
+              document
+                .querySelector("#select-listbox-flip-h")
+                ?.getAttribute("data-solid-placement") != null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+
+          const metrics = await page.evaluate(() => {
+            const lb = document.querySelector("#select-listbox-flip-h");
+            if (!lb) return null;
+            const r = lb.getBoundingClientRect();
+            const cs = getComputedStyle(lb);
+            return {
+              vw: window.innerWidth,
+              vh: window.innerHeight,
+              placement: lb.getAttribute("data-solid-placement"),
+              transform: cs.transform,
+              rect: {
+                left: Math.round(r.left),
+                right: Math.round(r.right),
+                top: Math.round(r.top),
+                bottom: Math.round(r.bottom),
+              },
+            };
+          });
+
+          const ok =
+            metrics != null &&
+            typeof metrics.placement === "string" &&
+            metrics.placement.startsWith("left") &&
+            typeof metrics.transform === "string" &&
+            metrics.transform !== "" &&
+            metrics.transform !== "none" &&
+            metrics.rect.left >= 0 &&
+            metrics.rect.right <= metrics.vw &&
+            metrics.rect.top >= 0 &&
+            metrics.rect.bottom <= metrics.vh;
+
+          interactionResults.push({
+            name: "solid-select-flip-horizontal",
+            ok,
+            details: { metrics },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-select-flip-horizontal",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
+    } else if (scenario === "solid-select-slide-overlap") {
+      let step = "init";
+      try {
+        const padding = 8;
+        await page.setViewportSize({ width: 420, height: 320 });
+        await page.waitForTimeout(80);
+
+        const openAndRead = async (triggerSel, listboxSel) => {
+          step = `open ${triggerSel}`;
+          await page.click(triggerSel, { timeout: timeoutMs });
+          step = `wait ${listboxSel}`;
+          await page.waitForFunction(
+            (sel) => document.querySelector(sel) != null,
+            listboxSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForFunction(
+            (sel) =>
+              document.querySelector(sel)?.getAttribute("data-solid-placement") !=
+              null,
+            listboxSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const m = await page.evaluate(
+            ({ listboxSel }) => {
+              const lb = document.querySelector(listboxSel);
+              if (!lb) return null;
+              const r = lb.getBoundingClientRect();
+              const cs = getComputedStyle(lb);
+              return {
+                vw: window.innerWidth,
+                vh: window.innerHeight,
+                left: r.left,
+                right: r.right,
+                top: r.top,
+                bottom: r.bottom,
+                placement: lb.getAttribute("data-solid-placement"),
+                transform: cs.transform,
+              };
+            },
+            { listboxSel },
+          );
+          step = `close ${listboxSel}`;
+          await page.keyboard.press("Escape");
+          await page.waitForFunction(
+            (sel) => document.querySelector(sel) == null,
+            listboxSel,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(60);
+          return m;
+        };
+
+        const slideOff = await openAndRead(
+          "#select-trigger-slide-off",
+          "#select-listbox-slide-off",
+        );
+        const slideOn = await openAndRead(
+          "#select-trigger-slide-on",
+          "#select-listbox-slide-on",
+        );
+        const overlapOff = await openAndRead(
+          "#select-trigger-overlap-off",
+          "#select-listbox-overlap-off",
+        );
+        const overlapOn = await openAndRead(
+          "#select-trigger-overlap-on",
+          "#select-listbox-overlap-on",
+        );
+
+        const ok =
+          slideOff != null &&
+          slideOff.placement?.startsWith("right") === true &&
+          slideOff.transform !== "none" &&
+          slideOn != null &&
+          slideOn.placement?.startsWith("right") === true &&
+          slideOn.transform !== "none" &&
+          overlapOff != null &&
+          overlapOff.placement?.startsWith("bottom") === true &&
+          overlapOff.transform !== "none" &&
+          overlapOn != null &&
+          overlapOn.placement?.startsWith("bottom") === true &&
+          overlapOn.transform !== "none";
+
+        interactionResults.push({
+          name: "solid-select-slide-overlap",
+          ok,
+          details: { slideOff, slideOn, overlapOff, overlapOn },
+        });
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-select-slide-overlap",
+          ok: false,
+          details: { error: String(e), step },
+        });
+      }
+    } else if (scenario === "solid-select-clickthrough") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#select-trigger");
+        const outside = page.locator("#select-outside-action");
+        if (!(await trigger.count()) || !(await outside.count())) {
+          interactionResults.push({
+            name: "solid-select-clickthrough",
+            ok: false,
+            details: { reason: "missing select trigger/outside action" },
+          });
+        } else {
+          const readOutsideClicks = async () =>
+            await page.evaluate(() => {
+              const text =
+                document.querySelector("#select-status")?.textContent ?? "";
+              const m = text.match(/Outside clicks:\s*(\d+)/);
+              return { text, count: m ? Number(m[1]) : null };
+            });
+
+          const before = await readOutsideClicks();
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait listbox";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox") != null,
+            { timeout: timeoutMs },
+          );
+
+          step = "click outside action (dismiss)";
+          await outside.first().click({ timeout: timeoutMs });
+          step = "wait closed";
+          await page.waitForFunction(
+            () => document.querySelector("#select-listbox") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const afterDismiss = await readOutsideClicks();
+
+          step = "click outside action again";
+          await outside.first().click({ timeout: timeoutMs });
+          await page.waitForTimeout(80);
+          const afterClick = await readOutsideClicks();
+
+          const ok =
+            before.count != null &&
+            afterDismiss.count === before.count &&
+            afterClick.count === before.count + 1;
+
+          interactionResults.push({
+            name: "solid-select-clickthrough",
+            ok,
+            details: { before, afterDismiss, afterClick },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-select-clickthrough",
           ok: false,
           details: { error: String(e), step },
         });
@@ -3445,6 +3837,7 @@ async function inspectUrl(
         });
       }
     } else if (scenario === "solid-menu") {
+      let step = "init";
       try {
         const trigger = page.locator("#menu-trigger");
         if (!(await trigger.count())) {
@@ -3454,7 +3847,9 @@ async function inspectUrl(
             details: { reason: "missing #menu-trigger" },
           });
         } else {
+          step = "open";
           await trigger.first().click({ timeout: timeoutMs });
+          step = "wait open";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") != null,
             { timeout: timeoutMs },
@@ -3462,6 +3857,7 @@ async function inspectUrl(
           await page.waitForTimeout(50);
 
           // Touch outside should defer dismissal to click.
+          step = "touch dismiss (evaluate)";
           const touchDismiss = await page.evaluate(() => {
             const menu = document.querySelector("#menu-content");
             if (!menu) return { ok: false, reason: "menu missing" };
@@ -3481,29 +3877,37 @@ async function inspectUrl(
             document.body.dispatchEvent(click);
             return { ok: true, stillOpenAfterDown };
           });
+          step = "wait closed after touch click";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") == null,
             { timeout: timeoutMs },
           );
 
           // Reopen for keyboard tests.
+          step = "reopen";
           await trigger.first().click({ timeout: timeoutMs });
+          step = "wait reopen";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") != null,
             { timeout: timeoutMs },
           );
 
+          step = "ArrowDown";
           const initialFocus = await page.evaluate(() => document.activeElement?.id ?? "");
           await page.keyboard.press("ArrowDown");
           const afterDown = await page.evaluate(() => document.activeElement?.id ?? "");
           // Skip disabled item on navigation.
+          step = "ArrowDown (skip disabled)";
           await page.keyboard.press("ArrowDown");
           const afterDown2 = await page.evaluate(() => document.activeElement?.id ?? "");
+          step = "End";
           await page.keyboard.press("End");
           const afterEnd = await page.evaluate(() => document.activeElement?.id ?? "");
 
           // Enter should activate the focused item (button click).
+          step = "Enter";
           await page.keyboard.press("Enter");
+          step = "wait closed after Enter";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") == null,
             { timeout: timeoutMs },
@@ -3515,12 +3919,16 @@ async function inspectUrl(
           }));
 
           // Reopen and close via Escape to ensure dismiss path still works.
+          step = "reopen for Escape";
           await trigger.first().click({ timeout: timeoutMs });
+          step = "wait reopen for Escape";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") != null,
             { timeout: timeoutMs },
           );
+          step = "Escape";
           await page.keyboard.press("Escape");
+          step = "wait closed after Escape";
           await page.waitForFunction(
             () => document.querySelector("#menu-content") == null,
             { timeout: timeoutMs },
@@ -3557,7 +3965,69 @@ async function inspectUrl(
         interactionResults.push({
           name: "solid-menu",
           ok: false,
-          details: { error: String(e) },
+          details: { error: String(e), step },
+        });
+      }
+    } else if (scenario === "solid-menu-clickthrough") {
+      let step = "init";
+      try {
+        const trigger = page.locator("#menu-trigger");
+        const outside = page.locator("#menu-outside-action");
+        if (!(await trigger.count()) || !(await outside.count())) {
+          interactionResults.push({
+            name: "solid-menu-clickthrough",
+            ok: false,
+            details: { reason: "missing menu trigger/outside action" },
+          });
+        } else {
+          const readOutsideClicks = async () =>
+            await page.evaluate(() => {
+              const text =
+                document.querySelector("#menu-status")?.textContent ?? "";
+              const m = text.match(/Outside clicks:\s*(\d+)/);
+              return { text, count: m ? Number(m[1]) : null };
+            });
+
+          const before = await readOutsideClicks();
+          step = "open";
+          await trigger.first().click({ timeout: timeoutMs });
+          step = "wait menu";
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") != null,
+            { timeout: timeoutMs },
+          );
+
+          step = "click outside action (dismiss)";
+          await outside.first().click({ timeout: timeoutMs });
+          step = "wait closed";
+          await page.waitForFunction(
+            () => document.querySelector("#menu-content") == null,
+            { timeout: timeoutMs },
+          );
+          await page.waitForTimeout(80);
+          const afterDismiss = await readOutsideClicks();
+
+          step = "click outside action again";
+          await outside.first().click({ timeout: timeoutMs });
+          await page.waitForTimeout(80);
+          const afterClick = await readOutsideClicks();
+
+          const ok =
+            before.count != null &&
+            afterDismiss.count === before.count &&
+            afterClick.count === before.count + 1;
+
+          interactionResults.push({
+            name: "solid-menu-clickthrough",
+            ok,
+            details: { before, afterDismiss, afterClick },
+          });
+        }
+      } catch (e) {
+        interactionResults.push({
+          name: "solid-menu-clickthrough",
+          ok: false,
+          details: { error: String(e), step },
         });
       }
     } else if (scenario === "solid-wordproc") {

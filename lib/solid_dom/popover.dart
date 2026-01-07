@@ -75,6 +75,7 @@ web.DocumentFragment Popover({
                   () => anchor,
                 ],
           onDismiss: (reason) => close(reason),
+          preventClickThrough: true,
         );
         focusScope(
           popover,

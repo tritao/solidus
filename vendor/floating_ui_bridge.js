@@ -45,8 +45,6 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
       ? (() => {
           const flipOpts = {
             padding: viewportPadding,
-            rootBoundary: "viewport",
-            boundary: document.documentElement,
           };
           if (fallbackPlacements) flipOpts.fallbackPlacements = fallbackPlacements;
           return [flip(flipOpts)];
@@ -57,11 +55,11 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
           (() => {
             const shiftOpts = {
               padding: viewportPadding,
-              rootBoundary: "viewport",
-              boundary: document.documentElement,
+              // Keep overlap-only meaningful: Floating UI's crossAxis shifting is
+              // only useful when the middleware can also shift the main axis.
+              mainAxis: slide || overlap,
+              crossAxis: overlap,
             };
-            if (!slide) shiftOpts.mainAxis = false;
-            if (overlap) shiftOpts.crossAxis = true;
             return shift(shiftOpts);
           })(),
         ]

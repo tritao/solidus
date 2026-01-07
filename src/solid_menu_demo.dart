@@ -16,6 +16,7 @@ void mountSolidMenuDemo(web.Element mount) {
     final open = createSignal(false);
     final lastClose = createSignal("none");
     final lastAction = createSignal("none");
+    final outsideClicks = createSignal(0);
 
     root.appendChild(
         web.HTMLHeadingElement.h1()..textContent = "Solid Menu Demo");
@@ -40,12 +41,21 @@ void mountSolidMenuDemo(web.Element mount) {
     on(trigger, "click", (_) => open.value = !open.value);
     root.appendChild(trigger);
 
+    final outsideAction = web.HTMLButtonElement()
+      ..id = "menu-outside-action"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Outside action (increments)";
+    on(outsideAction, "click", (_) => outsideClicks.value++);
+    root.appendChild(outsideAction);
+
     final status = web.HTMLParagraphElement()
       ..id = "menu-status"
       ..className = "muted";
     status.appendChild(
       text(
-        () => "Action: ${lastAction.value} • Close: ${lastClose.value}",
+        () =>
+            "Action: ${lastAction.value} • Close: ${lastClose.value} • Outside clicks: ${outsideClicks.value}",
       ),
     );
     root.appendChild(status);

@@ -144,6 +144,7 @@ web.DocumentFragment DropdownMenu({
             () => anchor,
           ],
           onDismiss: (reason) => close(reason),
+          preventClickThrough: true,
         );
 
         for (final entry in elByKey.entries) {

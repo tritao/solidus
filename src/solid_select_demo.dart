@@ -16,6 +16,7 @@ void mountSolidSelectDemo(web.Element mount) {
     final open = createSignal(false);
     final selected = createSignal<String?>(null);
     final lastEvent = createSignal("none");
+    final outsideClicks = createSignal(0);
 
     root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid Select Demo");
 
@@ -34,7 +35,12 @@ void mountSolidSelectDemo(web.Element mount) {
     final status = web.HTMLParagraphElement()
       ..id = "select-status"
       ..className = "muted";
-    status.appendChild(text(() => "Value: ${selected.value ?? "none"} • Last: ${lastEvent.value}"));
+    status.appendChild(
+      text(
+        () =>
+            "Value: ${selected.value ?? "none"} • Last: ${lastEvent.value} • Outside clicks: ${outsideClicks.value}",
+      ),
+    );
     root.appendChild(status);
 
     final trigger = web.HTMLButtonElement()
@@ -52,6 +58,14 @@ void mountSolidSelectDemo(web.Element mount) {
     row.appendChild(trigger);
     row.appendChild(after);
     root.appendChild(row);
+
+    final outsideAction = web.HTMLButtonElement()
+      ..id = "select-outside-action"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Outside action (increments)";
+    on(outsideAction, "click", (_) => outsideClicks.value++);
+    root.appendChild(outsideAction);
 
     final opts = <SelectOption<String>>[
       const SelectOption(value: "Solid", label: "Solid"),
@@ -166,6 +180,176 @@ void mountSolidSelectDemo(web.Element mount) {
         placement: "bottom-start",
         offset: 8,
         onClose: (reason) => flipLast.value = reason,
+      ),
+    );
+
+    // Horizontal flip integration: fixed trigger near the right edge, placement
+    // is right-start, and flip should resolve to left-start.
+    final flipHOpen = createSignal(false);
+    final flipHSelected = createSignal<String?>(null);
+    final flipHLast = createSignal("none");
+
+    final flipHTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-flip-h"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Flip H select";
+    flipHTrigger.style.position = "fixed";
+    flipHTrigger.style.right = "16px";
+    flipHTrigger.style.top = "16px";
+    root.appendChild(flipHTrigger);
+
+    root.appendChild(
+      Select<String>(
+        open: () => flipHOpen.value,
+        setOpen: (next) => flipHOpen.value = next,
+        trigger: flipHTrigger,
+        options: () => opts,
+        value: () => flipHSelected.value,
+        setValue: (next) => flipHSelected.value = next,
+        portalId: "select-portal-flip-h",
+        listboxId: "select-listbox-flip-h",
+        placement: "right-start",
+        offset: 8,
+        flip: true,
+        fitViewport: false,
+        onClose: (reason) => flipHLast.value = reason,
+      ),
+    );
+
+    // Slide/overlap matrix: fixed triggers near the viewport edges so we can
+    // assert overflow vs. clamping behavior deterministically.
+    final slideOffOpen = createSignal(false);
+    final slideOnOpen = createSignal(false);
+    final overlapOffOpen = createSignal(false);
+    final overlapOnOpen = createSignal(false);
+
+    final slideOffTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-slide-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide off";
+    slideOffTrigger.style.position = "fixed";
+    slideOffTrigger.style.right = "16px";
+    slideOffTrigger.style.bottom = "96px";
+    slideOffTrigger.style.minWidth = "220px";
+    on(slideOffTrigger, "click", (_) => slideOffOpen.value = !slideOffOpen.value);
+    root.appendChild(slideOffTrigger);
+
+    final slideOnTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-slide-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Slide on";
+    slideOnTrigger.style.position = "fixed";
+    slideOnTrigger.style.right = "16px";
+    slideOnTrigger.style.bottom = "56px";
+    slideOnTrigger.style.minWidth = "220px";
+    on(slideOnTrigger, "click", (_) => slideOnOpen.value = !slideOnOpen.value);
+    root.appendChild(slideOnTrigger);
+
+    final overlapOffTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-overlap-off"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap off";
+    overlapOffTrigger.style.position = "fixed";
+    overlapOffTrigger.style.right = "16px";
+    overlapOffTrigger.style.bottom = "200px";
+    overlapOffTrigger.style.minWidth = "260px";
+    on(overlapOffTrigger, "click", (_) => overlapOffOpen.value = !overlapOffOpen.value);
+    root.appendChild(overlapOffTrigger);
+
+    final overlapOnTrigger = web.HTMLButtonElement()
+      ..id = "select-trigger-overlap-on"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Overlap on";
+    overlapOnTrigger.style.position = "fixed";
+    overlapOnTrigger.style.right = "16px";
+    overlapOnTrigger.style.bottom = "160px";
+    overlapOnTrigger.style.minWidth = "260px";
+    on(overlapOnTrigger, "click", (_) => overlapOnOpen.value = !overlapOnOpen.value);
+    root.appendChild(overlapOnTrigger);
+
+    final matrixOpts = <SelectOption<String>>[
+      for (var i = 1; i <= 30; i++)
+        SelectOption(value: "Item $i", label: "Item $i"),
+    ];
+
+    root.appendChild(
+      Select<String>(
+        open: () => slideOffOpen.value,
+        setOpen: (next) => slideOffOpen.value = next,
+        trigger: slideOffTrigger,
+        options: () => matrixOpts,
+        value: () => null,
+        setValue: (_) {},
+        portalId: "select-portal-slide-off",
+        listboxId: "select-listbox-slide-off",
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        fitViewport: false,
+      ),
+    );
+
+    root.appendChild(
+      Select<String>(
+        open: () => slideOnOpen.value,
+        setOpen: (next) => slideOnOpen.value = next,
+        trigger: slideOnTrigger,
+        options: () => matrixOpts,
+        value: () => null,
+        setValue: (_) {},
+        portalId: "select-portal-slide-on",
+        listboxId: "select-listbox-slide-on",
+        placement: "right-start",
+        offset: 8,
+        flip: false,
+        slide: true,
+        overlap: false,
+        fitViewport: false,
+      ),
+    );
+
+    root.appendChild(
+      Select<String>(
+        open: () => overlapOffOpen.value,
+        setOpen: (next) => overlapOffOpen.value = next,
+        trigger: overlapOffTrigger,
+        options: () => matrixOpts,
+        value: () => null,
+        setValue: (_) {},
+        portalId: "select-portal-overlap-off",
+        listboxId: "select-listbox-overlap-off",
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: false,
+        fitViewport: false,
+      ),
+    );
+
+    root.appendChild(
+      Select<String>(
+        open: () => overlapOnOpen.value,
+        setOpen: (next) => overlapOnOpen.value = next,
+        trigger: overlapOnTrigger,
+        options: () => matrixOpts,
+        value: () => null,
+        setValue: (_) {},
+        portalId: "select-portal-overlap-on",
+        listboxId: "select-listbox-overlap-on",
+        placement: "bottom-start",
+        offset: 8,
+        flip: false,
+        slide: false,
+        overlap: true,
+        fitViewport: false,
       ),
     );
 

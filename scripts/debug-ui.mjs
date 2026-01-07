@@ -2661,8 +2661,8 @@ async function inspectUrl(
             (afterSelect2.triggerText ?? "").includes("React") &&
             afterSelect2.activeId === "select-trigger" &&
             afterClickSelected.activeId === "select-trigger" &&
-            (afterClickSelected.status ?? "").includes("Value: none") &&
-            (afterClickSelected.triggerText ?? "").includes("Choose") &&
+            (afterClickSelected.status ?? "").includes("Value: React") &&
+            (afterClickSelected.triggerText ?? "").includes("React") &&
             (afterEscape.status ?? "").includes("Last: escape") &&
             afterEscape.activeId === "select-trigger" &&
             ((afterTab.status ?? "").includes("Last: tab") ||

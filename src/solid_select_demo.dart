@@ -30,6 +30,7 @@ void mountSolidSelectDemo(web.Element mount) {
           "Hover moves the active option (mouse-only); focus stays on the listbox (virtual focus).",
           "Escape closes and restores focus; Tab closes and moves focus to \"After\".",
           "Click outside to dismiss (reason shows below).",
+          "Re-selecting the selected item does not clear it (disallow empty selection).",
         ],
       ),
     );
@@ -111,6 +112,7 @@ void mountSolidSelectDemo(web.Element mount) {
         listboxId: "select-listbox",
         placement: "bottom-start",
         offset: 8,
+        disallowEmptySelection: true,
         onClose: (reason) => lastEvent.value = reason,
       ),
     );

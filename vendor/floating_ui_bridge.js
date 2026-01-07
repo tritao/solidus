@@ -88,7 +88,9 @@ globalThis.__solidFloatToAnchor = (anchor, floating, opts = {}) => {
 
         if (sameWidth) {
           if (!floating.style.boxSizing) floating.style.boxSizing = "border-box";
-          floating.style.width = `${referenceWidth}px`;
+          // Match Kobalte-style behavior: ensure the popper is *at least* the
+          // anchor width (but allow it to grow to fit content).
+          floating.style.minWidth = `${referenceWidth}px`;
         }
 
         if (fitViewport) {

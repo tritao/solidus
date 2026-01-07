@@ -2644,7 +2644,8 @@ async function inspectUrl(
             afterOpen.activeElId === "select-listbox-opt-0" &&
             typeof afterOpen.triggerWidth === "number" &&
             typeof afterOpen.listboxWidth === "number" &&
-            Math.abs(afterOpen.triggerWidth - afterOpen.listboxWidth) <= 2.5 &&
+            // sameWidth uses minWidth: listbox can be wider, but never narrower.
+            afterOpen.listboxWidth + 0.5 >= afterOpen.triggerWidth &&
             afterDown1.activeDescendant === afterDown1.activeElId &&
             afterDown1.activeElId === "select-listbox-opt-1" &&
             afterDown2.activeDescendant === afterDown2.activeElId &&

@@ -251,7 +251,7 @@ FloatingHandle floatToAnchor({
           floating.style.boxSizing = "border-box";
         }
         final rect = anchor.getBoundingClientRect();
-        _setPx(floating, "width", rect.width);
+        _setPx(floating, "min-width", rect.width);
       } catch (_) {}
     }
     if (fitViewport) {

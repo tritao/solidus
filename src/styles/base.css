@@ -63,14 +63,18 @@
     max-width: 1240px;
   }
 
-  .introLogo {
-    display: block;
-    width: 220px;
-    max-width: min(320px, 70vw);
-    height: auto;
-    margin: 0 0 14px;
-    opacity: 0.96;
-    filter: drop-shadow(0 12px 32px hsl(0 0% 0% / 0.25));
+  .introTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .introTitleLogo {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
+    border-radius: 14px;
+    box-shadow: 0 14px 32px hsl(0 0% 0% / 0.25);
   }
 
   .spacer {

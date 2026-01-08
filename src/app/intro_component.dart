@@ -6,23 +6,25 @@ import "package:dart_web_test/dom_ui/dom.dart" as dom;
 final class IntroComponent extends Component {
   @override
   web.Element render() {
-    final logo = web.HTMLImageElement()
-      ..className = "introLogo"
-      ..src = "assets/solidus-logo.png"
-      ..alt = "Solidus";
-
     return dom.div(id: "intro-root", className: "container containerWide", children: [
-      logo,
-      dom.header(
-        title: "Solidus (Dart on the web)",
-        subtitle:
-            "A Solid-style runtime + robust DOM primitives (focus, overlay, positioning, selection) for building high-quality web apps in Dart.",
-        actions: [
+      dom.div(className: "header introHeader", children: [
+        dom.div(className: "introTitleRow", children: [
+          web.HTMLImageElement()
+            ..className = "introTitleLogo"
+            ..src = "assets/solidus-mark.png"
+            ..alt = "",
+          dom.h1("Solidus (Dart on the web)"),
+        ]),
+        dom.p(
+          "A Solid-style runtime + robust DOM primitives (focus, overlay, positioning, selection) for building high-quality web apps in Dart.",
+          className: "muted",
+        ),
+        dom.buttonRow(children: [
           dom.linkButton("Docs", href: "?docs=1"),
           dom.linkButton("Labs", href: "?solid=catalog"),
           dom.linkButton("Demos", href: "?demos=1", kind: "primary"),
-        ],
-      ),
+        ]),
+      ]),
       dom.spacer(),
       dom.section(
         title: "What’s here",

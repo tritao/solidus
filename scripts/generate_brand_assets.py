@@ -15,12 +15,54 @@ def _resize_by_width(img: Image.Image, *, width: int) -> Image.Image:
     return img.resize((width, height), Image.Resampling.LANCZOS)
 
 
-def _center_square_crop(img: Image.Image, *, side: int) -> Image.Image:
+def _clamp(v: int, lo: int, hi: int) -> int:
+    return lo if v < lo else hi if v > hi else v
+
+
+def _autocrop_by_saturation(
+    img: Image.Image,
+    *,
+    threshold: int,
+    pad_ratio: float,
+    force_square: bool,
+) -> Image.Image:
+    """
+    Crop to the saturated (colorful) region (the gold S), then expand by pad_ratio
+    to include the surrounding badge. This works well for these logo renders since
+    the background is mostly desaturated gray.
+    """
+    rgb = img.convert("RGB")
+    hsv = rgb.convert("HSV")
+    s = hsv.getchannel("S")
+    mask = s.point(lambda v: 255 if v > threshold else 0)
+    bbox = mask.getbbox()
+    if bbox is None:
+        return img
+
+    left, top, right, bottom = bbox
+    bw = right - left
+    bh = bottom - top
+    pad = max(1, round(max(bw, bh) * pad_ratio))
+
     w, h = img.size
-    side = min(side, w, h)
-    left = (w - side) // 2
-    top = (h - side) // 2
-    return img.crop((left, top, left + side, top + side))
+    left = _clamp(left - pad, 0, w)
+    top = _clamp(top - pad, 0, h)
+    right = _clamp(right + pad, 0, w)
+    bottom = _clamp(bottom + pad, 0, h)
+
+    if force_square:
+        cw = right - left
+        ch = bottom - top
+        side = max(cw, ch)
+        cx = (left + right) // 2
+        cy = (top + bottom) // 2
+        half = side // 2
+        left = _clamp(cx - half, 0, w - side)
+        top = _clamp(cy - half, 0, h - side)
+        right = left + side
+        bottom = top + side
+
+    return img.crop((left, top, right, bottom))
 
 
 def main() -> int:
@@ -40,12 +82,6 @@ def main() -> int:
     parser.add_argument("--outdir", type=Path, default=Path("public/assets"))
     parser.add_argument("--logo-width", type=int, default=720)
     parser.add_argument("--mark-size", type=int, default=64)
-    parser.add_argument(
-        "--mark-crop-ratio",
-        type=float,
-        default=0.72,
-        help="Crop ratio relative to min(image side) for the nav mark (default: 0.72).",
-    )
     args = parser.parse_args()
 
     outdir: Path = args.outdir
@@ -62,15 +98,14 @@ def main() -> int:
     # Regular logo: keep full canvas, just downscale for web usage.
     with Image.open(logo_src) as img:
         img = img.convert("RGBA")
-        logo = _resize_by_width(img, width=args.logo_width)
+        logo = _autocrop_by_saturation(img, threshold=40, pad_ratio=0.65, force_square=False)
+        logo = _resize_by_width(logo, width=args.logo_width)
         logo.save(outdir / "solidus-logo.png", format="PNG", optimize=True)
 
     # Navbar mark: crop around the emblem and downscale to a small square.
     with Image.open(mark_src) as img:
         img = img.convert("RGBA")
-        w, h = img.size
-        crop_side = max(1, round(min(w, h) * float(args.mark_crop_ratio)))
-        cropped = _center_square_crop(img, side=crop_side)
+        cropped = _autocrop_by_saturation(img, threshold=55, pad_ratio=1.25, force_square=True)
         mark = cropped.resize((args.mark_size, args.mark_size), Image.Resampling.LANCZOS)
         mark.save(outdir / "solidus-mark.png", format="PNG", optimize=True)
 

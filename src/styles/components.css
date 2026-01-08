@@ -310,6 +310,28 @@
     background: hsl(var(--accent));
   }
 
+  /* Listbox state styling:
+     - data-active=true: current hover/keyboard highlight
+     - aria-selected=true: committed selection
+     - both: selected + active */
+  .listbox [role="option"][data-active="true"]:not([aria-disabled="true"]) {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--border));
+  }
+
+  .listbox [role="option"][aria-selected="true"]:not([aria-disabled="true"]) {
+    background: hsl(var(--primary) / 0.12);
+    border-color: hsl(var(--primary) / 0.25);
+  }
+
+  .listbox
+    [role="option"][aria-selected="true"][data-active="true"]:not(
+      [aria-disabled="true"]
+    ) {
+    background: hsl(var(--primary) / 0.16);
+    border-color: hsl(var(--primary) / 0.35);
+  }
+
   .menuItem.destructive[data-active="true"] {
     background: hsl(var(--destructive) / 0.12);
     border-color: hsl(var(--destructive) / 0.35);

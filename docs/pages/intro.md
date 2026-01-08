@@ -8,73 +8,47 @@ status: beta
 tags: [docs]
 ---
 
-This repo is a **Dart-on-the-web** playground that implements a **Solid-like reactive runtime** and a growing set of **Kobalte-inspired DOM primitives** (Dialog/Popover/Menu/Select/etc).
+This project aims to make it practical to build **robust web applications in Dart** with a UI layer that feels modern, reactive, and accessible.
 
-The goal is a robust, accessible UI foundation in Dart, with behavior parity validated by automated scenarios.
+It combines:
 
-## How to navigate
+- A **Solid-like reactive runtime** (signals, effects, resources, ownership).
+- A growing set of **accessible DOM primitives** inspired by Kobalte/Radix-style behavior (overlays, menus, selection, positioning).
+- A focus on **correct semantics and keyboard behavior**, backed by automated scenarios.
 
-- **Docs** (`/?docs=…`) are the clean, consumer-facing pages:
-  - Minimal examples you’d actually copy/paste.
-  - Short explanations of behavior and APIs.
-  - Tables driven by `docs/api/*.json` where possible.
-- **Labs** (`/?solid=…`) are the conformance harness:
-  - Edge-case controls and “stress” scenarios.
-  - Playwright-driven flows (`npm run debug:*`) for regression coverage.
+## Who this is for
 
-## Structure
+- Teams who want to ship production-grade UI on the web, but prefer **Dart** as the primary language.
+- People who like the **Solid mental model** (fine-grained reactivity) and want it in Dart.
+- Anyone who cares about **accessibility parity** (focus management, dismiss behavior, ARIA, keyboard nav) without reinventing it for every widget.
 
-### Runtime
+## What the runtime gives you
 
-The Solid-like runtime lives under `lib/solid/` and is re-exported via `lib/solid.dart`.
+The runtime provides the basics you need to build UI without a heavyweight framework:
 
-Key concepts:
+- **Signals and derivations**: update state and automatically re-render only the pieces that depend on it.
+- **Effects**: react to state changes, with render effects intended for DOM writes.
+- **Ownership & cleanup**: structured lifetimes for timers/listeners/subtrees so teardown is reliable.
+- **Resources**: async values with `loading` / `error` state integrated into reactivity.
+- **Context**: scoped values for configuration and shared services.
 
-- **Signals / memos / effects**: `createSignal`, `createMemo`, `createEffect`, `createRenderEffect`.
-- **Ownership**: `createRoot`, `createChildRoot`, `onCleanup` define lifetimes.
-- **Async**: `createResource` and `createResourceWithSource` for reactive fetching.
-- **Context**: `createContext`, `useContext`, `provideContext`.
+## What the UI layer gives you
 
-### DOM helpers
+The primitives are designed to be composed into “real” components while keeping behaviors correct:
 
-DOM integration helpers live under `lib/solid_dom/solid_dom.dart` and are re-exported via `lib/solid_dom.dart`.
+- **Overlay foundations**: portals, presence/animations, dismissable layers, scroll lock, aria-hiding.
+- **Focus management**: focus scopes and trapping for modals/menus.
+- **Positioning**: popper-style anchored floating UIs (with a Floating UI bridge when available).
+- **Selection core**: keyboard navigation + typeahead + disabled skipping for list-like UIs.
 
-They provide Solid-style DOM building blocks:
+These foundations power components like Dialog, Popover, Tooltip, DropdownMenu, Select, Combobox, Tabs, Accordion, Switch, and more.
 
-- `render`, `Portal`
-- `text`, `insert`
-- `attr`, `prop`, `classList`, `style`
-- `on` (auto-cleaned event listeners)
+## How to use these docs
 
-### UI primitives
+Use the docs as the “happy path” reference:
 
-The Kobalte-inspired primitives live under `lib/solid_dom/` (e.g. `dialog.dart`, `overlay.dart`, `menu.dart`, `select.dart`, `popper.dart`).
+- Start with the **Runtime** pages if you’re new to the reactive model.
+- Use **Foundations** to understand the shared behaviors that underpin multiple components.
+- Use the component pages when you want a minimal example and the API surface.
 
-The most important foundations are documented under **Foundations**:
-
-- Overlay / InteractOutside
-- FocusScope
-- Popper / Positioning
-- Selection core
-
-### Docs pipeline
-
-Docs are authored in Markdown under `docs/pages/` and built via a Dart tool:
-
-- Build: `npm run docs:build`
-- Source: `docs/pages/**/*.md` + `docs/api/*.json`
-- Output: `assets/docs/manifest.json`, `assets/docs/pages/*.html`, `assets/docs/props.json`
-- Runtime loader: `src/docs/router.dart`
-
-Directives supported today:
-
-- `:::demo ...` mounts a live example from `src/docs/demos.dart`
-- `:::code file=... region=...` embeds a snippet from source
-- `:::props name=...` renders an API table from `docs/api/props.json`
-
-## Contributing to docs
-
-- Keep docs examples minimal; put edge cases in Labs.
-- Prefer adding/maintaining `docs/api/*.json` so API tables stay consistent.
-- Add a Playwright scenario when a behavior becomes important to guarantee.
-
+When you need to validate edge cases (nested overlays, flip/slide positioning, click-through prevention), jump to the labs and run the automated scenarios.

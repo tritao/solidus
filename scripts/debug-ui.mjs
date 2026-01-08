@@ -15,6 +15,7 @@ import { solidPopperUiScenarios } from "./scenarios/solid-popper-ui.mjs";
 import { solidSelectionUiScenarios } from "./scenarios/solid-selection-ui.mjs";
 import { solidMenuUiScenarios } from "./scenarios/solid-menu-ui.mjs";
 import { solidSwitchUiScenarios } from "./scenarios/solid-switch-ui.mjs";
+import { runDocsNavScenario } from "./scenarios/docs-nav.mjs";
 
 const solidScenarioRunners = {
   ...solidBasicUiScenarios,
@@ -26,6 +27,7 @@ const solidScenarioRunners = {
   "solid-nesting": (page, ctx) => runSolidNestingScenario(page, ctx),
   "solid-toast-modal": (page, ctx) => runSolidToastModalScenario(page, ctx),
   "solid-optionbuilder": (page, ctx) => runSolidOptionBuilderScenario(page, ctx),
+  "docs-nav": (page, ctx) => runDocsNavScenario(page, ctx),
 };
 
 const HOST = "127.0.0.1";

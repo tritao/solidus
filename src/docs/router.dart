@@ -4,6 +4,7 @@ import "dart:js_interop";
 
 import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
+import "package:dart_web_test/dom_ui/router.dart" as router;
 import "package:http/http.dart" as http;
 import "package:web/web.dart" as web;
 
@@ -151,7 +152,7 @@ String _escapeHtml(String input) {
 
 void mountSolidDocs(web.Element mount, String? page) {
   render(mount, () {
-    final slug = (page == null || page == "1") ? "index" : page;
+    final slug = createSignal(router.normalizeDocsSlug(page));
 
     final root = web.HTMLDivElement()..id = "docs-root";
 
@@ -171,7 +172,7 @@ void mountSolidDocs(web.Element mount, String? page) {
     container.appendChild(layout);
 
     final manifest = createResource(_fetchManifest);
-    final pageHtml = createResourceWithSource(() => slug, _fetchPageHtml);
+    final pageHtml = createResourceWithSource(() => slug.value, _fetchPageHtml);
     final propsData = createResource(_fetchProps);
 
     final searchQuery = createSignal("");
@@ -189,6 +190,49 @@ void mountSolidDocs(web.Element mount, String? page) {
         }
       });
     }
+
+    // Client-side docs navigation: intercept `?docs=...` clicks and drive URL +
+    // state with pushState. This avoids full reloads and keeps the manifest
+    // resource warm, removing the sidebar "Loading…" flash on page changes.
+    on(root, "click", (e) {
+      if (e is! web.MouseEvent) return;
+      if (e.defaultPrevented) return;
+      if (e.button != 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      final target = e.target;
+      if (target is! web.Element) return;
+
+      final closest = target.closest("a");
+      if (closest is! web.HTMLAnchorElement) return;
+      if (closest.target == "_blank") return;
+
+      final href = closest.getAttribute("href");
+      if (href == null || href.isEmpty) return;
+
+      // Only handle local query-string links; let external/absolute URLs behave
+      // normally.
+      Uri uri;
+      try {
+        uri = Uri.parse(href);
+      } catch (_) {
+        return;
+      }
+      if (uri.hasScheme || uri.host.isNotEmpty) return;
+
+      final nextDocs = uri.queryParameters["docs"];
+      if (nextDocs == null) return;
+
+      e.preventDefault();
+      router.setQueryParam("docs", nextDocs, replace: false);
+      slug.value = router.normalizeDocsSlug(nextDocs);
+    });
+
+    // Back/forward support within docs.
+    final stopPop = router.listenPopState((_) {
+      slug.value = router.normalizeDocsSlug(router.getQueryParam("docs"));
+    });
+    onCleanup(stopPop);
 
     final title = web.HTMLHeadingElement.h1()
       ..id = "docs-title"
@@ -221,7 +265,7 @@ void mountSolidDocs(web.Element mount, String? page) {
         ..href = "?docs=1"
         ..className = "docsNavLink"
         ..textContent = "Docs home";
-      if (slug == "index") {
+      if (slug.value == "index") {
         home.setAttribute("data-active", "true");
         home.setAttribute("aria-current", "page");
       }
@@ -280,7 +324,7 @@ void mountSolidDocs(web.Element mount, String? page) {
             ..href = "?docs=${p.slug}"
             ..className = "docsNavLink"
             ..textContent = p.title;
-          if (slug == p.slug) {
+          if (slug.value == p.slug) {
             a.setAttribute("data-active", "true");
             a.setAttribute("aria-current", "page");
           }
@@ -313,8 +357,10 @@ void mountSolidDocs(web.Element mount, String? page) {
 
       scheduleMicrotask(() {
         final m = manifest.value;
-        final meta = m?.bySlug[slug];
-        title.textContent = meta?.title ?? (slug == "index" ? "Solid UI Docs" : slug);
+        final currentSlug = slug.value;
+        final meta = m?.bySlug[currentSlug];
+        title.textContent = meta?.title ??
+            (currentSlug == "index" ? "Solid UI Docs" : currentSlug);
 
         final mounts = content.querySelectorAll("[data-doc-demo]");
         for (var i = 0; i < mounts.length; i++) {

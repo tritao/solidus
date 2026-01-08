@@ -172,6 +172,17 @@
     margin-top: 12px;
   }
 
+  /* Prevent markdown list styling from affecting demo UIs. */
+  .docDemoMount .list {
+    margin: 12px 0 0;
+    padding-left: 0;
+  }
+
+  .docDemoMount .list li {
+    margin: 0;
+    color: inherit;
+  }
+
   .docPopperExample {
     position: relative;
     min-height: 140px;
@@ -343,4 +354,3 @@
     }
   }
 }
-

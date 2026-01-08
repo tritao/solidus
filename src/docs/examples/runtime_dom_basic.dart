@@ -34,7 +34,9 @@ Dispose mountDocsRuntimeDomBasic(web.Element mount) {
     list.appendChild(insert(list, () {
       return [
         for (final item in items.value)
-          (web.HTMLLIElement()..textContent = item),
+          (web.HTMLLIElement()
+            ..className = "item"
+            ..textContent = item),
       ];
     }));
 
@@ -45,4 +47,3 @@ Dispose mountDocsRuntimeDomBasic(web.Element mount) {
   });
   // #doc:endregion snippet
 }
-

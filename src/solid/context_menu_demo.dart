@@ -2,7 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:dart_web_test/solid_dom.dart";
 import "package:web/web.dart" as web;
 
-import "./solid_demo_help.dart";
+import "./demo_help.dart";
 import "package:dart_web_test/demo/solid_demo_nav.dart";
 
 void mountSolidContextMenuDemo(web.Element mount) {
@@ -133,4 +133,3 @@ void mountSolidContextMenuDemo(web.Element mount) {
     return root;
   });
 }
-

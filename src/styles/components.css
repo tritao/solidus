@@ -390,9 +390,17 @@
     position: absolute;
     inset: 0;
     background: hsl(0 0% 0% / 0.4);
+    z-index: 0;
+  }
+
+  [data-solid-backdrop="1"] + * {
+    position: relative;
+    z-index: 1;
   }
 
   [data-solid-dialog-content="1"] {
+    position: relative;
+    z-index: 1;
     width: 100%;
     max-width: min(640px, calc(100vw - 48px));
     max-height: calc(100vh - 48px);

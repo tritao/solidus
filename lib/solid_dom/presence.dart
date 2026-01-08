@@ -2,6 +2,7 @@ import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "dart:async";
+import "dart:js_interop";
 
 /// Mounts/unmounts children with an optional exit delay (for animations).
 ///
@@ -42,8 +43,9 @@ web.DocumentFragment Presence({
       final built = untrack(children);
       final nodes = _normalizeToNodes(built);
       current.addAll(nodes);
+      if (end.parentNode == null) return;
       for (final node in nodes) {
-        end.parentNode?.insertBefore(node, end);
+        end.before(node as JSAny);
       }
     });
   }
@@ -83,13 +85,19 @@ web.DocumentFragment Presence({
 
 List<web.Node> _normalizeToNodes(Object? value) {
   if (value == null) return const <web.Node>[];
-  if (value is web.Node) return <web.Node>[value];
   if (value is Iterable) {
     final out = <web.Node>[];
     for (final v in value) {
       out.addAll(_normalizeToNodes(v));
     }
     return out;
+  }
+  if (value is web.Node) {
+    try {
+      if (value.nodeType > 0) return <web.Node>[value];
+    } catch (_) {
+      // Fall through; treat as non-node (JS objects like arrays can match).
+    }
   }
   if (value is String || value is num || value is bool) {
     return <web.Node>[web.Text(value.toString())];

@@ -1,6 +1,59 @@
 export async function runSolidBasicUiScenario(page, { timeoutMs, scenario }) {
   const interactionResults = [];
 
+    if (scenario === "docs-runtime-dom") {
+      try {
+        const mount = page.locator('[data-doc-demo="runtime-dom-basic"]');
+        const list = mount.locator("ul.list");
+        const add = mount.getByRole("button", { name: "Add item" });
+        const clear = mount.getByRole("button", { name: "Clear" });
+        const count = mount.locator("p.muted");
+
+        await page.waitForFunction(() => {
+          const mount = document.querySelector('[data-doc-demo="runtime-dom-basic"]');
+          return !!mount;
+        });
+
+        await page.waitForFunction(() => {
+          const items = document.querySelectorAll('[data-doc-demo="runtime-dom-basic"] ul.list li');
+          return items.length === 2;
+        });
+
+        const initial = await list.locator("li").allTextContents();
+        await add.click({ timeout: timeoutMs });
+        await page.waitForFunction(() => {
+          const items = document.querySelectorAll('[data-doc-demo="runtime-dom-basic"] ul.list li');
+          return items.length === 3;
+        });
+        const afterAdd = await list.locator("li").allTextContents();
+
+        await clear.click({ timeout: timeoutMs });
+        await page.waitForFunction(() => {
+          const items = document.querySelectorAll('[data-doc-demo="runtime-dom-basic"] ul.list li');
+          return items.length === 0;
+        });
+
+        const countText = ((await count.first().textContent()) ?? "").trim();
+
+        const ok =
+          initial.join("|") === "Solid|React" &&
+          afterAdd[2]?.includes("Item 3") &&
+          /count=0\b/.test(countText);
+
+        interactionResults.push({
+          name: "docs-runtime-dom",
+          ok,
+          details: { initial, afterAdd, countText },
+        });
+      } catch (e) {
+        interactionResults.push({
+          name: "docs-runtime-dom",
+          ok: false,
+          details: { error: String(e) },
+        });
+      }
+    }
+
     if (scenario === "solid-dom") {
       try {
         const inc = page.locator("#solid-inc");
@@ -953,4 +1006,6 @@ export const solidBasicUiScenarios = {
   "solid-overlay": (page, ctx) => runSolidBasicUiScenario(page, { ...ctx, scenario: "solid-overlay" }),
   "solid-dialog": (page, ctx) => runSolidBasicUiScenario(page, { ...ctx, scenario: "solid-dialog" }),
   "solid-roving": (page, ctx) => runSolidBasicUiScenario(page, { ...ctx, scenario: "solid-roving" }),
+  "docs-runtime-dom": (page, ctx) =>
+    runSolidBasicUiScenario(page, { ...ctx, scenario: "docs-runtime-dom" }),
 };

@@ -5,6 +5,18 @@ import "package:web/web.dart" as web;
 
 typedef SolidView = Object? Function();
 
+bool _isDomNode(Object value) {
+  if (value is! web.Node) return false;
+  try {
+    // `web.Node` is represented as a JS interop type at runtime, so the `is`
+    // check above is too permissive (it matches any JS object, including
+    // arrays). A real DOM Node must have a valid `nodeType`.
+    return value.nodeType > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
 Dispose render(web.Node mount, SolidView view) {
   return createRoot<Dispose>((dispose) {
     mount.textContent = "";
@@ -136,6 +148,16 @@ void on(
   });
 }
 
+void _appendBefore(web.Comment end, Iterable<web.Node> nodes) {
+  // `end.parentNode` can be a raw JS value (not the typed wrapper), so calling
+  // DOM methods on it can fail to coerce Node arguments. Calling `before()` on
+  // the typed `end` anchor keeps the interop coercions intact.
+  if (end.parentNode == null) return;
+  for (final node in nodes) {
+    end.before(node as JSAny);
+  }
+}
+
 /// Inserts dynamic content into [parent] between comment anchors.
 ///
 /// The [compute] callback may return:
@@ -170,9 +192,7 @@ web.DocumentFragment insert(web.Node parent, Object? Function() compute) {
       ..clear()
       ..addAll(next);
 
-    for (final node in next) {
-      end.parentNode?.insertBefore(node, end);
-    }
+    _appendBefore(end, next);
   }
 
   createRenderEffect(() {
@@ -292,9 +312,7 @@ web.DocumentFragment Show({
       disposeSubtree = dispose;
       final nodes = _normalizeToNodes(untrack(builder));
       current.addAll(nodes);
-      for (final node in nodes) {
-        end.parentNode?.insertBefore(node, end);
-      }
+      _appendBefore(end, nodes);
     });
   }
 
@@ -385,11 +403,11 @@ web.DocumentFragment For<T, K>({
   createRenderEffect(() {
     // ignore: unused_local_variable
     final _ = orderTick.value;
+    final flat = <web.Node>[];
     for (final item in ordered) {
-      for (final node in item.nodes) {
-        end.parentNode?.insertBefore(node, end);
-      }
+      flat.addAll(item.nodes);
     }
+    _appendBefore(end, flat);
   });
 
   onCleanup(() {
@@ -409,7 +427,6 @@ web.DocumentFragment For<T, K>({
 
 List<web.Node> _normalizeToNodes(Object? value) {
   if (value == null) return const <web.Node>[];
-  if (value is web.Node) return <web.Node>[value];
   if (value is Iterable) {
     final out = <web.Node>[];
     for (final v in value) {
@@ -417,6 +434,7 @@ List<web.Node> _normalizeToNodes(Object? value) {
     }
     return out;
   }
+  if (value is Object && _isDomNode(value)) return <web.Node>[value as web.Node];
   if (value is String || value is num || value is bool) {
     return <web.Node>[web.Text(value.toString())];
   }

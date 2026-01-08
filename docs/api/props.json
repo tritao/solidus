@@ -1,0 +1,91 @@
+{
+  "Dialog": {
+    "title": "Dialog",
+    "rows": [
+      {
+        "name": "open",
+        "type": "bool Function()",
+        "required": true,
+        "notes": "Controls visibility."
+      },
+      {
+        "name": "setOpen",
+        "type": "void Function(bool next)",
+        "required": true,
+        "notes": "Called on dismiss/close; update your signal/state here."
+      },
+      {
+        "name": "builder",
+        "type": "DialogBuilder (close) → HTMLElement",
+        "required": true,
+        "notes": "Builds the dialog content; call close(reason?) to dismiss."
+      },
+      {
+        "name": "onClose",
+        "type": "void Function(String reason)?",
+        "notes": "Dismiss reason: escape/outside/close/etc (implementation-defined)."
+      },
+      {
+        "name": "modal",
+        "type": "bool",
+        "default": "true",
+        "notes": "When true: traps focus, disables outside pointer events, scroll-locks, and aria-hides outside content."
+      },
+      {
+        "name": "backdrop",
+        "type": "bool",
+        "default": "false",
+        "notes": "Renders a backdrop element behind the dialog panel."
+      },
+      {
+        "name": "exitMs",
+        "type": "int",
+        "default": "120",
+        "notes": "Presence exit duration for animations."
+      },
+      {
+        "name": "initialFocus",
+        "type": "HTMLElement?",
+        "notes": "Element to focus on open (modal focus-scope only)."
+      },
+      {
+        "name": "restoreFocus",
+        "type": "bool",
+        "default": "true",
+        "notes": "Restore focus to the previously focused element on close."
+      },
+      {
+        "name": "onOpenAutoFocus",
+        "type": "void Function(FocusScopeAutoFocusEvent event)?",
+        "notes": "Preventable hook to customize autofocus on mount."
+      },
+      {
+        "name": "onCloseAutoFocus",
+        "type": "void Function(FocusScopeAutoFocusEvent event)?",
+        "notes": "Preventable hook to customize autofocus on unmount."
+      },
+      {
+        "name": "labelledBy",
+        "type": "String?",
+        "notes": "Sets aria-labelledby on the dialog content."
+      },
+      {
+        "name": "describedBy",
+        "type": "String?",
+        "notes": "Sets aria-describedby on the dialog content."
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "default": "\"dialog\"",
+        "notes": "Use \"alertdialog\" for urgent confirmations."
+      },
+      {
+        "name": "portalId",
+        "type": "String?",
+        "notes": "Optional id for the Portal container."
+      }
+    ]
+  }
+}
+

@@ -14,6 +14,18 @@ final class DocsPropRow {
   final bool required;
   final String? defaultValue;
   final String? notes;
+
+  static DocsPropRow fromJson(Map<String, Object?> json) {
+    final requiredValue = json["required"];
+    final defaultValue = json["default"] ?? json["defaultValue"];
+    return DocsPropRow(
+      name: (json["name"] as String?) ?? "",
+      type: (json["type"] as String?) ?? "",
+      required: requiredValue is bool ? requiredValue : false,
+      defaultValue: defaultValue is String ? defaultValue : null,
+      notes: (json["notes"] as String?) ?? (json["description"] as String?),
+    );
+  }
 }
 
 final class DocsPropsSpec {
@@ -24,99 +36,35 @@ final class DocsPropsSpec {
 
   final String title;
   final List<DocsPropRow> rows;
+
+  static DocsPropsSpec fromJson(Map<String, Object?> json) {
+    final rows = <DocsPropRow>[];
+    final rawRows = json["rows"];
+    if (rawRows is List) {
+      for (final r in rawRows) {
+        if (r is! Map) continue;
+        rows.add(DocsPropRow.fromJson((r as Map).cast<String, Object?>()));
+      }
+    }
+    return DocsPropsSpec(
+      title: (json["title"] as String?) ?? "",
+      rows: rows,
+    );
+  }
 }
 
-final Map<String, DocsPropsSpec> docsProps = {
-  "Dialog": DocsPropsSpec(
-    title: "Dialog",
-    rows: [
-      DocsPropRow(
-        name: "open",
-        type: "bool Function()",
-        required: true,
-        notes: "Controls visibility.",
-      ),
-      DocsPropRow(
-        name: "setOpen",
-        type: "void Function(bool next)",
-        required: true,
-        notes: "Called on dismiss/close; update your signal/state here.",
-      ),
-      DocsPropRow(
-        name: "builder",
-        type: "DialogBuilder (close) → HTMLElement",
-        required: true,
-        notes: "Builds the dialog content; call close(reason?) to dismiss.",
-      ),
-      DocsPropRow(
-        name: "onClose",
-        type: "void Function(String reason)?",
-        notes: "Dismiss reason: escape/outside/close/etc (implementation-defined).",
-      ),
-      DocsPropRow(
-        name: "modal",
-        type: "bool",
-        defaultValue: "true",
-        notes:
-            "When true: traps focus, disables outside pointer events, scroll-locks, and aria-hides outside content.",
-      ),
-      DocsPropRow(
-        name: "backdrop",
-        type: "bool",
-        defaultValue: "false",
-        notes: "Renders a backdrop element behind the dialog panel.",
-      ),
-      DocsPropRow(
-        name: "exitMs",
-        type: "int",
-        defaultValue: "120",
-        notes: "Presence exit duration for animations.",
-      ),
-      DocsPropRow(
-        name: "initialFocus",
-        type: "HTMLElement?",
-        notes: "Element to focus on open (modal focus-scope only).",
-      ),
-      DocsPropRow(
-        name: "restoreFocus",
-        type: "bool",
-        defaultValue: "true",
-        notes: "Restore focus to the previously focused element on close.",
-      ),
-      DocsPropRow(
-        name: "onOpenAutoFocus",
-        type: "void Function(FocusScopeAutoFocusEvent event)?",
-        notes: "Preventable hook to customize autofocus on mount.",
-      ),
-      DocsPropRow(
-        name: "onCloseAutoFocus",
-        type: "void Function(FocusScopeAutoFocusEvent event)?",
-        notes: "Preventable hook to customize autofocus on unmount.",
-      ),
-      DocsPropRow(
-        name: "labelledBy",
-        type: "String?",
-        notes: "Sets aria-labelledby on the dialog content.",
-      ),
-      DocsPropRow(
-        name: "describedBy",
-        type: "String?",
-        notes: "Sets aria-describedby on the dialog content.",
-      ),
-      DocsPropRow(
-        name: "role",
-        type: "String",
-        defaultValue: "\"dialog\"",
-        notes: "Use \"alertdialog\" for urgent confirmations.",
-      ),
-      DocsPropRow(
-        name: "portalId",
-        type: "String?",
-        notes: "Optional id for the Portal container.",
-      ),
-    ],
-  ),
-};
+Map<String, DocsPropsSpec> parseDocsPropsJson(Object? decoded) {
+  if (decoded is! Map) return const {};
+  final out = <String, DocsPropsSpec>{};
+  for (final entry in decoded.entries) {
+    final key = entry.key;
+    final value = entry.value;
+    if (key is! String) continue;
+    if (value is! Map) continue;
+    out[key] = DocsPropsSpec.fromJson((value as Map).cast<String, Object?>());
+  }
+  return out;
+}
 
 web.HTMLElement renderDocsPropsTable(DocsPropsSpec spec) {
   final wrap = web.HTMLDivElement()..className = "docPropsInner";
@@ -180,4 +128,3 @@ web.HTMLElement renderDocsPropsTable(DocsPropsSpec spec) {
   wrap.appendChild(foot);
   return wrap;
 }
-

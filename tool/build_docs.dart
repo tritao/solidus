@@ -125,7 +125,18 @@ Future<void> main(List<String> args) async {
   final manifestFile = File("assets/docs/manifest.json");
   await manifestFile.writeAsString(const JsonEncoder.withIndent("  ").convert(manifest));
 
+  _copyOptionalDocsAssets();
   stdout.writeln("Built ${pages.length} docs page(s) -> assets/docs/");
+}
+
+void _copyOptionalDocsAssets() {
+  final outDir = Directory("assets/docs");
+  outDir.createSync(recursive: true);
+
+  final props = File("docs/api/props.json");
+  if (props.existsSync()) {
+    props.copySync("assets/docs/props.json");
+  }
 }
 
 ({Map<String, Object?> meta, String body}) _parseFrontmatter(String raw) {

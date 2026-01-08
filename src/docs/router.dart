@@ -114,6 +114,15 @@ Future<String> _fetchPageHtml(String slug) async {
   return res.body;
 }
 
+Future<Map<String, DocsPropsSpec>> _fetchProps() async {
+  final res = await http.get(Uri.parse("/assets/docs/props.json"));
+  if (res.statusCode < 200 || res.statusCode >= 300) {
+    return const {};
+  }
+  final decoded = jsonDecode(res.body);
+  return parseDocsPropsJson(decoded);
+}
+
 String _escapeHtml(String input) {
   return input
       .replaceAll("&", "&amp;")
@@ -142,6 +151,7 @@ void mountSolidDocs(web.Element mount, String? page) {
 
     final manifest = createResource(_fetchManifest);
     final pageHtml = createResourceWithSource(() => slug, _fetchPageHtml);
+    final propsData = createResource(_fetchProps);
 
     final title = web.HTMLHeadingElement.h1()
       ..id = "docs-title"
@@ -254,14 +264,15 @@ void mountSolidDocs(web.Element mount, String? page) {
         }
 
         final props = content.querySelectorAll("[data-doc-props]");
+        final propsMap = propsData.value ?? const <String, DocsPropsSpec>{};
         for (var i = 0; i < props.length; i++) {
           final node = props.item(i);
           if (node is! web.Element) continue;
           final name = node.getAttribute("data-doc-props");
           if (name == null || name.isEmpty) continue;
-          final spec = docsProps[name];
+          final spec = propsMap[name];
           if (spec == null) {
-            node.textContent = "Unknown props: $name";
+            node.textContent = propsData.loading ? "Loading…" : "Unknown props: $name";
             continue;
           }
           node.textContent = "";

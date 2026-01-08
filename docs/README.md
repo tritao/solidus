@@ -59,3 +59,7 @@ The builder extracts a region between:
 ```
 
 Also supports `:::warning` and `:::tip`.
+
+## Props data
+
+Props tables are driven by `docs/api/props.json`, copied to `assets/docs/props.json` at build time.

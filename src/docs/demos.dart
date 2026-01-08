@@ -28,6 +28,7 @@ import "./examples/runtime_resources_basic.dart";
 import "./examples/runtime_context_basic.dart";
 import "./examples/button_basic.dart";
 import "./examples/radio_group_basic.dart";
+import "./examples/toggle_group_basic.dart";
 
 typedef DocsDemoMount = Dispose Function(web.Element mount);
 
@@ -35,6 +36,7 @@ final Map<String, DocsDemoMount> docsDemos = {
   "button-basic": mountDocsButtonBasic,
   "checkbox-basic": mountDocsCheckboxBasic,
   "radio-group-basic": mountDocsRadioGroupBasic,
+  "toggle-group-basic": mountDocsToggleGroupBasic,
   "dialog-basic": mountDocsDialogBasic,
   "overlay-basic": mountDocsOverlayBasic,
   "focus-scope-basic": mountDocsFocusScopeBasic,

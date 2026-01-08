@@ -151,6 +151,85 @@
       }
     ]
   },
+  "ToggleGroup": {
+    "title": "ToggleGroup",
+    "rows": [
+      {
+        "name": "type",
+        "type": "ToggleGroupType Function()",
+        "required": true,
+        "notes": "Single or multiple selection."
+      },
+      {
+        "name": "items",
+        "type": "Iterable<ToggleGroupItem>",
+        "required": true,
+        "notes": "Items to render. Each item provides a key + an interactive element (typically a <button>)."
+      },
+      {
+        "name": "value",
+        "type": "String? Function()?",
+        "notes": "Single mode only: controlled selected key (nullable for deselect)."
+      },
+      {
+        "name": "setValue",
+        "type": "void Function(String? next)?",
+        "notes": "Single mode only: called on toggles/activation."
+      },
+      {
+        "name": "values",
+        "type": "Set<String> Function()?",
+        "notes": "Multiple mode only: controlled set of pressed keys."
+      },
+      {
+        "name": "setValues",
+        "type": "void Function(Set<String> next)?",
+        "notes": "Multiple mode only: called on toggles/activation."
+      },
+      {
+        "name": "disallowEmptySelection",
+        "type": "bool Function()?",
+        "notes": "Prevents clearing the last pressed item."
+      },
+      {
+        "name": "disabled",
+        "type": "bool Function()?",
+        "notes": "Disables the whole group (all items)."
+      },
+      {
+        "name": "orientation",
+        "type": "Orientation Function()?",
+        "notes": "Keyboard orientation: horizontal (default) or vertical."
+      },
+      {
+        "name": "shouldFocusWrap",
+        "type": "bool Function()?",
+        "notes": "Whether Arrow navigation wraps from last↔first."
+      },
+      {
+        "name": "ariaLabel",
+        "type": "String?",
+        "notes": "Accessible label for the group when there is no visible label."
+      },
+      {
+        "name": "id",
+        "type": "String?",
+        "notes": "Optional root id."
+      },
+      {
+        "name": "rootClassName",
+        "type": "String",
+        "default": "\"toggleGroup\"",
+        "notes": "CSS class for the root."
+      },
+      {
+        "name": "itemClassName",
+        "type": "String",
+        "default": "\"toggleItem\"",
+        "notes": "CSS class added to each item element."
+      }
+    ]
+  },
   "Dialog": {
     "title": "Dialog",
     "rows": [

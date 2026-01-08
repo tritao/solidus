@@ -40,6 +40,7 @@ Components:
 - [Toast](?docs=toast)
 - [Checkbox](?docs=checkbox)
 - [RadioGroup](?docs=radio-group)
+- [ToggleGroup](?docs=toggle-group)
 - [Select](?docs=select)
 - [Combobox](?docs=combobox)
 - [Listbox](?docs=listbox)

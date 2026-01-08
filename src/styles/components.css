@@ -317,6 +317,59 @@
     box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
   }
 
+  .toggleGroup {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    background: hsl(var(--card));
+    overflow: hidden;
+  }
+
+  .toggleGroup[aria-orientation="vertical"] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toggleItem {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .toggleItem + .toggleItem {
+    border-left: 1px solid hsl(var(--border));
+  }
+
+  .toggleGroup[aria-orientation="vertical"] .toggleItem + .toggleItem {
+    border-left: 0;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .toggleItem[data-state="on"] {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .toggleItem:hover {
+    background: hsl(var(--accent) / 0.6);
+  }
+
+  .toggleItem[data-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .toggleItem:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
   .menu {
     display: inline-flex;
     flex-direction: column;

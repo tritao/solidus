@@ -14,7 +14,6 @@ Dispose mountDocsAccordionBasic(web.Element mount) {
         ..textContent = label;
       final panel = web.HTMLDivElement()
         ..className = "muted"
-        ..style.padding = "10px 0"
         ..textContent = body;
       return AccordionItem(key: key, trigger: trigger, content: panel);
     }
@@ -35,4 +34,3 @@ Dispose mountDocsAccordionBasic(web.Element mount) {
   });
   // #doc:endregion snippet
 }
-

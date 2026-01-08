@@ -201,6 +201,10 @@ web.HTMLElement Tabs({
     final tab = it.trigger;
     final panel = it.panel;
 
+    // Provide a stable hook for default styling (selected highlight, focus ring)
+    // without requiring callers to add classes manually.
+    tab.classList.add("tabsTrigger");
+
     final tabId = tab.id.isEmpty ? "$resolvedId-tab-$k" : tab.id;
     tab.id = tabId;
 

@@ -397,6 +397,50 @@ a.btn {
   margin-top: 12px;
 }
 
+.docPopperExample {
+  position: relative;
+  min-height: 140px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.docSelectList {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 360px;
+}
+
+.docSelectList:focus {
+  outline: 2px solid rgba(124, 92, 255, 0.35);
+  outline-offset: 3px;
+}
+
+.docSelectItem {
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.docSelectItem.isFocused {
+  border-color: rgba(124, 92, 255, 0.5);
+  box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12);
+}
+
+.docSelectItem.isSelected {
+  background: rgba(124, 92, 255, 0.12);
+}
+
+.docSelectItem.isDisabled {
+  opacity: 0.55;
+}
+
 .docCallout {
   border-radius: 14px;
   border: 1px solid var(--border);

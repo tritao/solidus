@@ -15,6 +15,8 @@ Welcome to the docs.
 Start with:
 
 - [Overlay](/?docs=overlay)
+- [FocusScope](/?docs=focus-scope)
+- [InteractOutside](/?docs=interact-outside)
+- [Popper / Positioning](/?docs=popper)
 - [Dialog](/?docs=dialog)
 - [Selection core](/?docs=selection-core)
-

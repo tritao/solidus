@@ -20,10 +20,10 @@ This is a styling + tiny helper (`Button`) that returns an `HTMLButtonElement` w
 
 ## Props
 
-::::props name=Button
+:::props name=Button
+:::
 
 ## Code
 
 :::code file=src/docs/examples/button_basic.dart region=snippet lang=dart
 :::
-

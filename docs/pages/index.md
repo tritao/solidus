@@ -39,6 +39,7 @@ Components:
 - [ContextMenu](?docs=context-menu)
 - [Toast](?docs=toast)
 - [Checkbox](?docs=checkbox)
+- [RadioGroup](?docs=radio-group)
 - [Select](?docs=select)
 - [Combobox](?docs=combobox)
 - [Listbox](?docs=listbox)

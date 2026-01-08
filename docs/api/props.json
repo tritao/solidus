@@ -91,6 +91,66 @@
       }
     ]
   },
+  "RadioGroup": {
+    "title": "RadioGroup",
+    "rows": [
+      {
+        "name": "items",
+        "type": "Iterable<RadioGroupItem>",
+        "required": true,
+        "notes": "Items to render. Each item provides a key + an interactive element (typically a <button>)."
+      },
+      {
+        "name": "value",
+        "type": "String? Function()",
+        "required": true,
+        "notes": "Controlled selected key."
+      },
+      {
+        "name": "setValue",
+        "type": "void Function(String next)",
+        "required": true,
+        "notes": "Called when selection changes (click/Space/Enter/Arrow keys)."
+      },
+      {
+        "name": "orientation",
+        "type": "Orientation Function()?",
+        "notes": "Keyboard orientation: vertical (default) or horizontal."
+      },
+      {
+        "name": "shouldFocusWrap",
+        "type": "bool Function()?",
+        "notes": "Whether Arrow navigation wraps from last↔first."
+      },
+      {
+        "name": "disabled",
+        "type": "bool Function()?",
+        "notes": "Disables the whole group (all items)."
+      },
+      {
+        "name": "ariaLabel",
+        "type": "String?",
+        "notes": "Accessible label for the radiogroup when there is no visible group label."
+      },
+      {
+        "name": "id",
+        "type": "String?",
+        "notes": "Optional root id."
+      },
+      {
+        "name": "rootClassName",
+        "type": "String",
+        "default": "\"radioGroup\"",
+        "notes": "CSS class for the root."
+      },
+      {
+        "name": "itemClassName",
+        "type": "String",
+        "default": "\"radioItem\"",
+        "notes": "CSS class added to each item element."
+      }
+    ]
+  },
   "Dialog": {
     "title": "Dialog",
     "rows": [

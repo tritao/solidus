@@ -15,6 +15,7 @@ export "solid_dom/popover.dart";
 export "solid_dom/presence.dart";
 export "solid_dom/solid_dom.dart";
 export "solid_dom/switch.dart";
+export "solid_dom/radio_group.dart";
 export "solid_dom/toast.dart";
 export "solid_dom/tooltip.dart";
 export "solid_dom/select.dart";

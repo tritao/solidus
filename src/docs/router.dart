@@ -102,7 +102,25 @@ Future<DocsManifest> _fetchManifest() async {
     }
   }
 
-  groups.sort((a, b) => a.label.compareTo(b.label));
+  const orderedGroups = <String>[
+    "Runtime",
+    "Overlays & Menus",
+    "Selection",
+    "Navigation",
+    "Forms",
+    "Foundations",
+    "Docs",
+  ];
+  final rank = <String, int>{
+    for (var i = 0; i < orderedGroups.length; i++) orderedGroups[i]: i,
+  };
+  groups.sort((a, b) {
+    final ra = rank[a.label] ?? 999;
+    final rb = rank[b.label] ?? 999;
+    final r = ra.compareTo(rb);
+    if (r != 0) return r;
+    return a.label.compareTo(b.label);
+  });
   return DocsManifest(groups: groups, bySlug: bySlug);
 }
 

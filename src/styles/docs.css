@@ -19,15 +19,22 @@
     flex-direction: column;
     gap: 8px;
     padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    scrollbar-width: none; /* Firefox: hide scrollbar, keep scrolling */
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--card));
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.45) transparent;
   }
 
   .docsSidebar::-webkit-scrollbar {
-    width: 0;
-    height: 0;
+    width: 10px;
+  }
+
+  .docsSidebar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.32);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
   .docsGroupTitle {
@@ -45,7 +52,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: calc(var(--radius) - 4px);
     text-decoration: none;
     color: inherit;
     font-size: 14px;
@@ -53,12 +60,12 @@
   }
 
   .docsNavLink:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: hsl(var(--accent));
   }
 
   .docsNavLink[data-active="true"] {
-    background: rgba(124, 92, 255, 0.12);
-    box-shadow: inset 3px 0 0 rgba(124, 92, 255, 0.6);
+    background: hsl(var(--accent));
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
   }
 
   .docsMain {
@@ -89,7 +96,7 @@
     width: 120px;
     height: auto;
     opacity: 0.92;
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.35));
+    filter: drop-shadow(0 10px 30px hsl(0 0% 0% / 0.25));
   }
 
   .docsContent h1,
@@ -99,7 +106,7 @@
   }
 
   .docsContent h2 {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid hsl(var(--border));
     padding-top: 14px;
   }
 
@@ -133,9 +140,9 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
     font-size: 0.95em;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 6px);
     padding: 2px 6px;
   }
 
@@ -169,11 +176,11 @@
     align-items: center;
     padding: 3px 8px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
     font-size: 12px;
     letter-spacing: 0.02em;
-    color: var(--muted);
+    color: hsl(var(--muted-foreground));
   }
 
   .docDemoDesc p {
@@ -204,9 +211,9 @@
   }
 
   .docSelectList {
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
+    background: hsl(var(--popover));
     padding: 6px;
     display: flex;
     flex-direction: column;
@@ -214,25 +221,26 @@
     max-width: 360px;
   }
 
-  .docSelectList:focus {
-    outline: 2px solid rgba(124, 92, 255, 0.35);
-    outline-offset: 3px;
+  .docSelectList:focus-visible {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
   }
 
   .docSelectItem {
     padding: 9px 10px;
-    border-radius: 12px;
+    border-radius: calc(var(--radius) - 4px);
     border: 1px solid transparent;
     user-select: none;
   }
 
   .docSelectItem.isFocused {
-    border-color: rgba(124, 92, 255, 0.5);
-    box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12);
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
   }
 
   .docSelectItem.isSelected {
-    background: rgba(124, 92, 255, 0.12);
+    background: hsl(var(--accent));
   }
 
   .docSelectItem.isDisabled {
@@ -240,10 +248,10 @@
   }
 
   .docCallout {
-    border-radius: 14px;
-    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.02);
+    background: hsl(var(--card));
   }
 
   .docCalloutTitle {
@@ -255,22 +263,22 @@
   }
 
   .docCallout-note {
-    border-color: rgba(124, 92, 255, 0.35);
+    border-color: hsl(var(--primary) / 0.45);
   }
 
   .docCallout-warning {
-    border-color: rgba(255, 77, 77, 0.35);
+    border-color: hsl(var(--destructive) / 0.45);
   }
 
   .docCallout-tip {
-    border-color: rgba(0, 193, 255, 0.28);
+    border-color: hsl(199 89% 48% / 0.4);
   }
 
   .docCodeBlock {
     margin: 12px 0 0;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
     overflow: hidden;
   }
 
@@ -280,8 +288,8 @@
     padding: 10px 12px;
     user-select: none;
     font-weight: 600;
-    color: var(--muted);
-    background: rgba(255, 255, 255, 0.03);
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--card));
   }
 
   .docCodeBlock summary::-webkit-details-marker {
@@ -321,26 +329,26 @@
     table-layout: fixed;
     border-collapse: collapse;
     overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
     font-size: 13px;
     line-height: 1.35;
   }
 
   .docTable th,
   .docTable td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid hsl(var(--border));
     padding: 10px 12px;
     vertical-align: top;
   }
 
   .docTable th {
     text-align: left;
-    color: var(--muted);
+    color: hsl(var(--muted-foreground));
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.03);
+    background: hsl(var(--muted));
   }
 
   .docTable tr:last-child td {
@@ -348,7 +356,7 @@
   }
 
   .docReq {
-    color: rgba(255, 77, 77, 0.9);
+    color: hsl(var(--destructive));
     font-weight: 700;
   }
 

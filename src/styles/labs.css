@@ -11,7 +11,7 @@
   }
 
   .solid-demo-nav [aria-current="page"] {
-    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline: 2px solid hsl(var(--ring) / 0.35);
     outline-offset: 2px;
   }
 
@@ -45,8 +45,8 @@
   }
 
   .catalogItem[data-active="true"] {
-    border-color: rgba(124, 92, 255, 0.6);
-    box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12);
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
   }
 
   .catalogMain {
@@ -77,9 +77,9 @@
   .catalogCmd {
     margin: 0;
     padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.02);
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
     max-width: min(520px, 100%);
     overflow: auto;
   }
@@ -88,9 +88,9 @@
     display: block;
     width: 100%;
     height: min(72vh, 820px);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
   }
 
   @media (max-width: 980px) {
@@ -124,7 +124,7 @@
 
   .demoHelp li {
     margin: 6px 0;
-    color: var(--muted);
+    color: hsl(var(--muted-foreground));
   }
 
   /* Overlay demo */
@@ -199,9 +199,9 @@
   .wordproc-layout {
     display: flex;
     align-items: stretch;
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 16px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    border-radius: var(--radius);
     overflow: hidden;
     height: min(70vh, 760px);
   }
@@ -221,14 +221,14 @@
     flex: 0 0 471px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid hsl(var(--border));
   }
 
   .wordproc-panel.agent {
     flex: 0 0 472px;
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--border);
+    border-left: 1px solid hsl(var(--border));
   }
 
   .wordproc-panel.editor {
@@ -250,16 +250,16 @@
     width: 100%;
     text-align: left;
     padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.03);
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
     color: inherit;
     cursor: pointer;
   }
 
   .wordproc-outline-item.active {
-    border-color: rgba(124, 92, 255, 0.6);
-    box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.12);
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
   }
 
   .wordproc-panel-header {
@@ -272,8 +272,8 @@
   }
 
   .wordproc-editor-mount {
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
+    border: 1px dashed hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
     padding: 14px;
     min-height: 360px;
   }
@@ -295,26 +295,26 @@
     margin: 14px 0 8px;
   }
 
-  .wordproc-editor-host .ProseMirror:focus {
-    outline: 2px solid rgba(124, 92, 255, 0.35);
+  .wordproc-editor-host .ProseMirror:focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.35);
     outline-offset: 6px;
-    border-radius: 10px;
+    border-radius: calc(var(--radius) - 4px);
   }
 
   .wordproc-agent-log {
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) - 2px);
     padding: 10px 12px;
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.02);
+    background: hsl(var(--card));
     margin-bottom: 10px;
   }
 
   .wordproc-agent-msg {
     padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid hsl(var(--border));
   }
 
   .wordproc-agent-msg:last-child {
@@ -343,11 +343,11 @@
       flex: 0 0 auto;
       width: 100%;
       border: 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid hsl(var(--border));
     }
     .wordproc-panel.agent {
       border-bottom: 0;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid hsl(var(--border));
     }
     .wordproc-outline-list {
       height: 320px;
@@ -358,4 +358,3 @@
     }
   }
 }
-

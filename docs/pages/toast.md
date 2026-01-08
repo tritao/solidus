@@ -4,7 +4,7 @@ slug: toast
 group: Overlays & Menus
 order: 70
 description: Non-blocking notifications with stacking and timeouts.
-labHref: "/?solid=toast"
+labHref: "?solid=toast"
 status: beta
 tags: [overlay]
 ---
@@ -32,4 +32,3 @@ Creates a toaster and pushes a toast on button press.
 
 :::props name=Toast
 :::
-

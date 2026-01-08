@@ -4,7 +4,7 @@ slug: listbox
 group: Selection
 order: 30
 description: A selectable list with keyboard navigation and virtual focus.
-labHref: "/?solid=listbox"
+labHref: "?solid=listbox"
 status: beta
 tags: [selection, a11y]
 ---
@@ -31,4 +31,3 @@ Arrow keys move highlight; Enter selects.
 
 :::props name=Listbox
 :::
-

@@ -4,7 +4,7 @@ slug: interact-outside
 group: Foundations
 order: 30
 description: Outside interaction detection (pointer + focus) for dismissable overlays.
-labHref: "/?solid=popover"
+labHref: "?solid=popover"
 status: beta
 tags: [overlay]
 ---
@@ -23,4 +23,3 @@ Clicking “Outside action” should **not** activate on the same click that dis
 
 :::code file=src/docs/examples/interact_outside_basic.dart region=snippet lang=dart
 :::
-

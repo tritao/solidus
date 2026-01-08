@@ -4,7 +4,7 @@ slug: focus-scope
 group: Foundations
 order: 20
 description: Focus containment and trapping used by modal overlays.
-labHref: "/?solid=dialog"
+labHref: "?solid=dialog"
 status: beta
 tags: [focus, a11y]
 ---
@@ -23,4 +23,3 @@ Tab should cycle within the box while it’s open; Escape closes it.
 
 :::code file=src/docs/examples/focus_scope_basic.dart region=snippet lang=dart
 :::
-

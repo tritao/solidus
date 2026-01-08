@@ -4,7 +4,7 @@ slug: switch
 group: Forms
 order: 10
 description: Accessible boolean toggle.
-labHref: "/?solid=switch"
+labHref: "?solid=switch"
 status: beta
 tags: [forms, a11y]
 ---
@@ -31,4 +31,3 @@ Toggle a boolean value.
 
 :::props name=Switch
 :::
-

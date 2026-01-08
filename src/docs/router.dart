@@ -62,7 +62,7 @@ final class DocsManifest {
 }
 
 Future<DocsManifest> _fetchManifest() async {
-  final res = await http.get(Uri.parse("/assets/docs/manifest.json"));
+  final res = await http.get(Uri.parse("assets/docs/manifest.json"));
   if (res.statusCode < 200 || res.statusCode >= 300) {
     throw StateError("Failed to load docs manifest (${res.statusCode}).");
   }
@@ -125,7 +125,7 @@ Future<DocsManifest> _fetchManifest() async {
 }
 
 Future<String> _fetchPageHtml(String slug) async {
-  final res = await http.get(Uri.parse("/assets/docs/pages/$slug.html"));
+  final res = await http.get(Uri.parse("assets/docs/pages/$slug.html"));
   if (res.statusCode < 200 || res.statusCode >= 300) {
     return "<p class=\"muted\">Missing docs page: <code>${_escapeHtml(slug)}</code></p>";
   }
@@ -133,7 +133,7 @@ Future<String> _fetchPageHtml(String slug) async {
 }
 
 Future<Map<String, DocsPropsSpec>> _fetchProps() async {
-  final res = await http.get(Uri.parse("/assets/docs/props.json"));
+  final res = await http.get(Uri.parse("assets/docs/props.json"));
   if (res.statusCode < 200 || res.statusCode >= 300) {
     return const {};
   }
@@ -197,7 +197,7 @@ void mountSolidDocs(web.Element mount, String? page) {
       sidebar.textContent = "";
 
       final home = web.HTMLAnchorElement()
-        ..href = "/?docs=1"
+        ..href = "?docs=1"
         ..className = "docsNavLink"
         ..textContent = "Docs home";
       if (slug == "index") {
@@ -217,7 +217,7 @@ void mountSolidDocs(web.Element mount, String? page) {
           ..className = "muted"
           ..textContent = "Docs manifest failed to load.");
         sidebar.appendChild(web.HTMLAnchorElement()
-          ..href = "/?solid=catalog"
+          ..href = "?solid=catalog"
           ..className = "docsNavLink"
           ..textContent = "Open labs");
         return;
@@ -235,7 +235,7 @@ void mountSolidDocs(web.Element mount, String? page) {
         for (final p in group.pages) {
           if (p.slug == "index") continue;
           final a = web.HTMLAnchorElement()
-            ..href = "/?docs=${p.slug}"
+            ..href = "?docs=${p.slug}"
             ..className = "docsNavLink"
             ..textContent = p.title;
           if (slug == p.slug) {

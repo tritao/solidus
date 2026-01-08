@@ -4,7 +4,7 @@ slug: overlay
 group: Foundations
 order: 10
 description: Portal + presence + layer stack primitives for building overlays.
-labHref: "/?solid=overlay"
+labHref: "?solid=overlay"
 status: beta
 tags: [overlay, a11y]
 ---
@@ -24,4 +24,3 @@ Opens a floating panel in a Portal. Clicking outside dismisses it (and prevents 
 
 :::code file=src/docs/examples/overlay_basic.dart region=snippet lang=dart
 :::
-

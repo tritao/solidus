@@ -4,7 +4,7 @@ slug: combobox
 group: Selection
 order: 20
 description: Text input with listbox suggestions and selection.
-labHref: "/?solid=combobox"
+labHref: "?solid=combobox"
 status: beta
 tags: [selection, listbox, popper]
 ---
@@ -32,4 +32,3 @@ Type to filter, ArrowDown to navigate, Enter to select.
 
 :::props name=Combobox
 :::
-

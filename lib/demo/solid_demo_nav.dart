@@ -26,56 +26,56 @@ web.HTMLElement solidDemoNav({required String active}) {
   }
 
   final row = web.HTMLDivElement()..className = "solid-demo-nav-row";
-  row.appendChild(link("← Back", "/", current: false));
-  row.appendChild(link("Docs", "/?docs=1", current: false));
-  row.appendChild(link("Catalog", "/?solid=catalog", current: active == "catalog"));
+  row.appendChild(link("← Back", "./", current: false));
+  row.appendChild(link("Docs", "?docs=1", current: false));
+  row.appendChild(link("Catalog", "?solid=catalog", current: active == "catalog"));
   row.appendChild(
     link(
       "DropdownMenu",
-      "/?solid=dropdownmenu",
+      "?solid=dropdownmenu",
       current: active == "dropdownmenu",
     ),
   );
-  row.appendChild(link("Menubar", "/?solid=menubar", current: active == "menubar"));
+  row.appendChild(link("Menubar", "?solid=menubar", current: active == "menubar"));
   row.appendChild(
-    link("ContextMenu", "/?solid=contextmenu", current: active == "contextmenu"),
+    link("ContextMenu", "?solid=contextmenu", current: active == "contextmenu"),
   );
-  row.appendChild(link("Dialog", "/?solid=dialog", current: active == "dialog"));
-  row.appendChild(link("Popover", "/?solid=popover", current: active == "popover"));
-  row.appendChild(link("Tooltip", "/?solid=tooltip", current: active == "tooltip"));
-  row.appendChild(link("Select", "/?solid=select", current: active == "select"));
-  row.appendChild(link("Listbox", "/?solid=listbox", current: active == "listbox"));
+  row.appendChild(link("Dialog", "?solid=dialog", current: active == "dialog"));
+  row.appendChild(link("Popover", "?solid=popover", current: active == "popover"));
+  row.appendChild(link("Tooltip", "?solid=tooltip", current: active == "tooltip"));
+  row.appendChild(link("Select", "?solid=select", current: active == "select"));
+  row.appendChild(link("Listbox", "?solid=listbox", current: active == "listbox"));
   row.appendChild(
-    link("Combobox", "/?solid=combobox", current: active == "combobox"),
+    link("Combobox", "?solid=combobox", current: active == "combobox"),
   );
-  row.appendChild(link("Tabs", "/?solid=tabs", current: active == "tabs"));
+  row.appendChild(link("Tabs", "?solid=tabs", current: active == "tabs"));
   row.appendChild(
-    link("Accordion", "/?solid=accordion", current: active == "accordion"),
+    link("Accordion", "?solid=accordion", current: active == "accordion"),
   );
-  row.appendChild(link("Switch", "/?solid=switch", current: active == "switch"));
+  row.appendChild(link("Switch", "?solid=switch", current: active == "switch"));
   row.appendChild(
-    link("Selection", "/?solid=selection", current: active == "selection"),
+    link("Selection", "?solid=selection", current: active == "selection"),
   );
-  row.appendChild(link("Toast", "/?solid=toast", current: active == "toast"));
+  row.appendChild(link("Toast", "?solid=toast", current: active == "toast"));
   row.appendChild(
-    link("Toast+Modal", "/?solid=toast-modal", current: active == "toast-modal"),
+    link("Toast+Modal", "?solid=toast-modal", current: active == "toast-modal"),
   );
   row.appendChild(
     link(
       "OptionBuilder",
-      "/?solid=optionbuilder",
+      "?solid=optionbuilder",
       current: active == "optionbuilder",
     ),
   );
-  row.appendChild(link("Roving", "/?solid=roving", current: active == "roving"));
-  row.appendChild(link("Overlay", "/?solid=overlay", current: active == "overlay"));
+  row.appendChild(link("Roving", "?solid=roving", current: active == "roving"));
+  row.appendChild(link("Overlay", "?solid=overlay", current: active == "overlay"));
   row.appendChild(
-    link("Nesting", "/?solid=nesting", current: active == "nesting"),
+    link("Nesting", "?solid=nesting", current: active == "nesting"),
   );
   row.appendChild(
-    link("Wordproc", "/wordproc.html", current: active == "wordproc"),
+    link("Wordproc", "wordproc.html", current: active == "wordproc"),
   );
-  row.appendChild(link("Solid DOM", "/?solid=1", current: active == "solid-dom"));
+  row.appendChild(link("Solid DOM", "?solid=1", current: active == "solid-dom"));
 
   nav.appendChild(row);
   return nav;

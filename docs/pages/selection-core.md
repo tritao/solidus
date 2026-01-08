@@ -4,7 +4,7 @@ slug: selection-core
 group: Foundations
 order: 50
 description: SelectionManager + selectable collection/item utilities.
-labHref: "/?solid=selection"
+labHref: "?solid=selection"
 status: beta
 tags: [selection, a11y]
 ---
@@ -23,4 +23,3 @@ Use Arrow keys to move focus (disabled is skipped); press Enter/Space to select.
 
 :::code file=src/docs/examples/selection_core_basic.dart region=snippet lang=dart
 :::
-

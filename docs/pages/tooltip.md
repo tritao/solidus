@@ -4,7 +4,7 @@ slug: tooltip
 group: Overlays & Menus
 order: 30
 description: Small anchored label shown on hover or focus.
-labHref: "/?solid=tooltip"
+labHref: "?solid=tooltip"
 status: beta
 tags: [overlay, popper, a11y]
 ---
@@ -32,4 +32,3 @@ Hover or focus the button to show a tooltip.
 
 :::props name=Tooltip
 :::
-

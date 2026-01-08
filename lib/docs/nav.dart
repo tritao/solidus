@@ -16,10 +16,9 @@ web.HTMLElement solidDocsNav({required String active}) {
   }
 
   final row = web.HTMLDivElement()..className = "solid-demo-nav-row";
-  row.appendChild(link("← Back", "/", current: false));
-  row.appendChild(link("Docs", "/?docs=1", current: active == "docs"));
-  row.appendChild(link("Labs", "/?solid=catalog", current: active == "labs"));
+  row.appendChild(link("← Back", "./", current: false));
+  row.appendChild(link("Docs", "?docs=1", current: active == "docs"));
+  row.appendChild(link("Labs", "?solid=catalog", current: active == "labs"));
   nav.appendChild(row);
   return nav;
 }
-

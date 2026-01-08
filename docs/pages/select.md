@@ -4,7 +4,7 @@ slug: select
 group: Selection
 order: 10
 description: Button-triggered listbox with typeahead and focus management.
-labHref: "/?solid=select"
+labHref: "?solid=select"
 status: beta
 tags: [selection, listbox, popper]
 ---
@@ -32,4 +32,3 @@ Open, navigate with Arrow keys, press Enter to select.
 
 :::props name=Select
 :::
-

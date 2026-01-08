@@ -4,7 +4,7 @@ slug: dropdown-menu
 group: Overlays & Menus
 order: 40
 description: Button-triggered menu with typeahead and submenus.
-labHref: "/?solid=dropdownmenu"
+labHref: "?solid=dropdownmenu"
 status: beta
 tags: [menu, overlay, a11y]
 ---
@@ -32,4 +32,3 @@ Minimal dropdown menu with a few items and typeahead.
 
 :::props name=DropdownMenu
 :::
-

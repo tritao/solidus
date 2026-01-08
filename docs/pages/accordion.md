@@ -4,7 +4,7 @@ slug: accordion
 group: Navigation
 order: 20
 description: Expand/collapse sections with keyboard support.
-labHref: "/?solid=accordion"
+labHref: "?solid=accordion"
 status: beta
 tags: [a11y, navigation]
 ---
@@ -32,4 +32,3 @@ Toggle sections and navigate headers with the keyboard.
 
 :::props name=Accordion
 :::
-

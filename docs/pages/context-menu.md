@@ -4,7 +4,7 @@ slug: context-menu
 group: Overlays & Menus
 order: 60
 description: Right-click / long-press menu anchored to a point.
-labHref: "/?solid=contextmenu"
+labHref: "?solid=contextmenu"
 status: beta
 tags: [menu, overlay]
 ---
@@ -32,4 +32,3 @@ Right-click in the area to open a context menu.
 
 :::props name=ContextMenu
 :::
-

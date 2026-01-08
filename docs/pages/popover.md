@@ -4,7 +4,7 @@ slug: popover
 group: Overlays & Menus
 order: 20
 description: Anchored floating panel for non-modal interactions.
-labHref: "/?solid=popover"
+labHref: "?solid=popover"
 status: beta
 tags: [overlay, popper]
 ---
@@ -33,4 +33,3 @@ Anchored panel with Escape + outside click dismiss.
 
 :::props name=Popover
 :::
-

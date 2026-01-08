@@ -4,7 +4,7 @@ slug: popper
 group: Foundations
 order: 40
 description: Position floating elements relative to anchors (via attachPopper).
-labHref: "/?solid=popover"
+labHref: "?solid=popover"
 status: beta
 tags: [overlay, positioning]
 ---
@@ -27,4 +27,3 @@ Open the popper, then resize the viewport or scroll to see it re-position.
 
 :::code file=src/docs/examples/popper_basic.dart region=snippet lang=dart
 :::
-

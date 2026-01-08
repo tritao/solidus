@@ -73,18 +73,20 @@ function serveRepoAssets() {
 }
 
 function copyRepoAssets() {
+  let resolvedOutDir = null;
   return {
     name: "copy-repo-assets",
     apply: "build",
     configResolved(config) {
-      this._outDir = config.build.outDir;
+      resolvedOutDir = config?.build?.outDir ?? "dist";
     },
     async writeBundle() {
       const root = process.cwd();
       const assetsRoot = path.join(root, "assets");
-      const outDir = path.isAbsolute(this._outDir)
-        ? this._outDir
-        : path.join(root, this._outDir);
+      const outDir =
+        resolvedOutDir && path.isAbsolute(resolvedOutDir)
+          ? resolvedOutDir
+          : path.join(root, resolvedOutDir ?? "dist");
 
       const srcDocs = path.join(assetsRoot, "docs");
       const destAssets = path.join(outDir, "assets");

@@ -88,6 +88,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   Signal<int>? activeIndex,
   int Function()? initialActiveIndex,
   bool shouldUseVirtualFocus = false,
+  bool tabFocusable = false,
   bool shouldFocusOnHover = true,
   bool shouldFocusWrap = true,
   bool disallowTypeAhead = false,
@@ -618,12 +619,13 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 
   // Bind tabIndex (virtual focus omits the attribute).
   createRenderEffect(() {
-    final ti = selectableCollection.tabIndex();
-    if (ti == null) {
-      listbox.removeAttribute("tabindex");
-    } else {
-      listbox.tabIndex = ti;
+    if (shouldUseVirtualFocus && tabFocusable) {
+      listbox.tabIndex = 0;
+      return;
     }
+    final ti = selectableCollection.tabIndex();
+    if (ti == null) listbox.removeAttribute("tabindex");
+    else listbox.tabIndex = ti;
   });
 
   void handleKeyDown(

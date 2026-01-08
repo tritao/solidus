@@ -23,7 +23,7 @@ A listbox is a list of selectable options with robust keyboard interaction.
 - **Options**: elements with `role="option"` and stable ids.
 
 :::demo id=listbox-basic title="Basic listbox"
-Arrow keys move highlight; Enter selects.
+Tab to focus the listbox, then Arrow keys move highlight; Enter selects.
 :::
 
 :::code file=src/docs/examples/listbox_basic.dart region=snippet lang=dart

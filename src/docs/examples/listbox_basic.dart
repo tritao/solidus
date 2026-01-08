@@ -22,16 +22,10 @@ Dispose mountDocsListboxBasic(web.Element mount) {
       options: () => opts.toList(growable: false),
       selected: () => value.value,
       shouldUseVirtualFocus: true,
+      tabFocusable: true,
       onSelect: (opt, _) => value.value = opt.value,
       onClearSelection: () => value.value = null,
     );
-
-    // Keep focus on the listbox itself for keyboard navigation.
-    scheduleMicrotask(() {
-      try {
-        listbox.element.focus(web.FocusOptions(preventScroll: true));
-      } catch (_) {}
-    });
 
     final status = web.HTMLParagraphElement()..className = "muted";
     status.appendChild(text(() => "Value: ${value.value ?? "none"}"));

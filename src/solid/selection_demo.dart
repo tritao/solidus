@@ -24,6 +24,7 @@ void mountSolidSelectionDemo(web.Element mount) {
           "This page is a Kobalte-style port target: createSelectableCollection + createSelectableItem.",
           "Arrow keys move the focused item; Enter/Space selects the focused item.",
           "Shift extends selection in multiple mode; Ctrl/Meta toggles selection; Ctrl+A selects all.",
+          "\"Before\"/\"After\" are focus sentinel buttons to validate Tab navigation into/out of the collection.",
           "Use it as a reference when porting Menu/Listbox/Select/Combobox behavior.",
         ],
       ),

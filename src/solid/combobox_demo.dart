@@ -28,6 +28,7 @@ void mountSolidComboboxDemo(web.Element mount) {
           "Type to filter; Arrow keys change the active option while focus stays on the input.",
           "Enter selects; Escape closes (when open) or clears the input (when closed).",
           "Alt+ArrowDown opens the full list (\"show all\").",
+          "\"After\" is a focus sentinel button: use it to confirm Tab order and focus restoration.",
           "Try the second example: it stays open and shows an empty state when there are no matches.",
         ],
       ),

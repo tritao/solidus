@@ -159,6 +159,14 @@ export default defineConfig(({ mode, command }) => {
 
   return {
     base,
+    build: {
+      rollupOptions: {
+        input: {
+          index: path.resolve(process.cwd(), "index.html"),
+          wordproc: path.resolve(process.cwd(), "wordproc.html"),
+        },
+      },
+    },
     plugins: [
       serveRepoAssets(),
       copyRepoAssets(),

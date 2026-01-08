@@ -23,7 +23,6 @@ import './solid/selection_demo.dart';
 import './solid/tabs_demo.dart';
 import './solid/accordion_demo.dart';
 import './solid/switch_demo.dart';
-import 'package:dart_web_test/wordproc/wordproc.dart';
 import './solid/nesting_demo.dart';
 import './solid/toast_modal_demo.dart';
 import './solid/optionbuilder_demo.dart';
@@ -109,10 +108,6 @@ void main() {
   }
   if (solid == 'switch') {
     mountSolidSwitchDemo(mount);
-    return;
-  }
-  if (solid == 'wordproc') {
-    mountSolidWordprocShellDemo(mount);
     return;
   }
   if (solid == 'nesting') {

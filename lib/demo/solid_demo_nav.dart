@@ -73,7 +73,7 @@ web.HTMLElement solidDemoNav({required String active}) {
     link("Nesting", "/?solid=nesting", current: active == "nesting"),
   );
   row.appendChild(
-    link("Wordproc", "/?solid=wordproc", current: active == "wordproc"),
+    link("Wordproc", "/wordproc.html", current: active == "wordproc"),
   );
   row.appendChild(link("Solid DOM", "/?solid=1", current: active == "solid-dom"));
 

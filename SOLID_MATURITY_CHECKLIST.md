@@ -34,7 +34,7 @@ Use this checklist to validate the Solid layer is “mature enough” for scalin
   - timers/microtasks that keep running
   - computations/effects that continue firing after dispose
 - The new shell demo is a quick sanity check:
-  - `/?solid=wordproc` and toggle “heavy subtree” a few times
+  - `/wordproc.html` and toggle “heavy subtree” a few times
   - or run `npm run debug:solid-wordproc` to assert cleanup happens
 
 ### 2) Reactive dependencies are explicit (no accidental coupling)

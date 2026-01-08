@@ -8,3 +8,4 @@ build/
 .env.local
 dartsdk-*-release.zip
 assets/docs/
+public/assets/docs/

@@ -50,8 +50,8 @@ Future<void> main(List<String> args) async {
     return;
   }
 
-  final outRoot = Directory("assets/docs");
-  final outPages = Directory("assets/docs/pages");
+  final outRoot = Directory("public/assets/docs");
+  final outPages = Directory("public/assets/docs/pages");
 
   if (outRoot.existsSync()) {
     outRoot.deleteSync(recursive: true);
@@ -93,7 +93,7 @@ Future<void> main(List<String> args) async {
       ),
     );
 
-    final outFile = File("assets/docs/pages/$slug.html");
+    final outFile = File("public/assets/docs/pages/$slug.html");
     outFile.createSync(recursive: true);
     await outFile.writeAsString(html);
   }
@@ -122,20 +122,20 @@ Future<void> main(List<String> args) async {
     ],
   };
 
-  final manifestFile = File("assets/docs/manifest.json");
+  final manifestFile = File("public/assets/docs/manifest.json");
   await manifestFile.writeAsString(const JsonEncoder.withIndent("  ").convert(manifest));
 
   _copyOptionalDocsAssets();
-  stdout.writeln("Built ${pages.length} docs page(s) -> assets/docs/");
+  stdout.writeln("Built ${pages.length} docs page(s) -> public/assets/docs/");
 }
 
 void _copyOptionalDocsAssets() {
-  final outDir = Directory("assets/docs");
+  final outDir = Directory("public/assets/docs");
   outDir.createSync(recursive: true);
 
   final props = File("docs/api/props.json");
   if (props.existsSync()) {
-    props.copySync("assets/docs/props.json");
+    props.copySync("public/assets/docs/props.json");
   }
 }
 

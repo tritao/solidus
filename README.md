@@ -4,7 +4,7 @@ Minimal Vite project that imports `.dart` directly via `vite-plugin-dart`, with 
 
 Live demo: https://tritao.github.io/vite-dart-dom-demo/
 
-![Demo screenshot](assets/demo.png)
+![Demo screenshot](public/assets/demo.png)
 
 ## URL State
 

@@ -1,6 +1,6 @@
 # Docs authoring
 
-Docs pages live in `docs/pages/**/*.md` and are compiled into static HTML under `assets/docs/` by `tool/build_docs.dart`.
+Docs pages live in `docs/pages/**/*.md` and are compiled into static HTML under `public/assets/docs/` by `tool/build_docs.dart`.
 
 ## Routes
 
@@ -62,4 +62,4 @@ Also supports `:::warning` and `:::tip`.
 
 ## Props data
 
-Props tables are driven by `docs/api/props.json`, copied to `assets/docs/props.json` at build time.
+Props tables are driven by `docs/api/props.json`, copied to `public/assets/docs/props.json` at build time.

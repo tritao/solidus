@@ -167,10 +167,11 @@ void _copyOptionalDocsAssets() {
 String _renderMarkdownWithDirectives(String raw, {String? labHref}) {
   final normalized = raw.replaceAll("\r\n", "\n");
   final expanded = _expandDirectives(normalized, labHref: labHref);
-  return md.markdownToHtml(
+  final html = md.markdownToHtml(
     expanded,
     extensionSet: md.ExtensionSet.gitHubFlavored,
   );
+  return _wrapMarkedCodeBlocks(html);
 }
 
 String _expandDirectives(String input, {String? labHref}) {
@@ -225,10 +226,13 @@ String _expandDirectives(String input, {String? labHref}) {
       final region = attrs["region"];
       final lang = attrs["lang"] ?? "text";
       final code = file == null ? "" : _readRegion(file, region: region);
-      out.writeln('<details class="docCodeBlock">');
-      out.writeln('  <summary>Code</summary>');
-      out.writeln('  <pre class="docCode"><code class="language-${_escapeHtml(lang)}">${_escapeHtml(code)}</code></pre>');
-      out.writeln("</details>");
+      // Use fenced code blocks (so markdown handles escaping), and add marker
+      // comments so we can wrap the resulting <pre> in a <details> block.
+      out.writeln("<!--DOC_CODE_START-->");
+      out.writeln("```$lang");
+      out.writeln(code);
+      out.writeln("```");
+      out.writeln("<!--DOC_CODE_END-->");
       continue;
     }
 
@@ -251,6 +255,35 @@ String _expandDirectives(String input, {String? labHref}) {
   }
 
   return out.toString();
+}
+
+String _wrapMarkedCodeBlocks(String html) {
+  const start = "<!--DOC_CODE_START-->";
+  const end = "<!--DOC_CODE_END-->";
+  var out = html;
+
+  while (true) {
+    final s = out.indexOf(start);
+    if (s == -1) break;
+    final preStart = out.indexOf("<pre", s);
+    if (preStart == -1) break;
+    final preEnd = out.indexOf("</pre>", preStart);
+    if (preEnd == -1) break;
+    final e = out.indexOf(end, preEnd);
+    if (e == -1) break;
+
+    final block = out.substring(preStart, preEnd + "</pre>".length);
+    final replacement = [
+      '<details class="docCodeBlock">',
+      "<summary>Code</summary>",
+      block,
+      "</details>",
+    ].join("\n");
+
+    out = out.substring(0, s) + replacement + out.substring(e + end.length);
+  }
+
+  return out;
 }
 
 Map<String, String> _parseAttrs(String raw) {

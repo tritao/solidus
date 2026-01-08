@@ -139,16 +139,29 @@ web.HTMLElement renderDocsPropsTable(DocsPropsSpec spec) {
     final tr = web.document.createElement("tr") as web.HTMLTableRowElement;
 
     final prop = web.document.createElement("td") as web.HTMLTableCellElement;
-    final propName = row.required ? "${row.name} *" : row.name;
-    prop.textContent = propName;
+    final propCode = web.document.createElement("code") as web.HTMLElement
+      ..textContent = row.name;
+    prop.appendChild(propCode);
+    if (row.required) {
+      prop.appendChild(web.Text(" "));
+      final req = web.document.createElement("span") as web.HTMLElement
+        ..className = "docReq"
+        ..textContent = "required";
+      prop.appendChild(req);
+    }
     tr.appendChild(prop);
 
     final type = web.document.createElement("td") as web.HTMLTableCellElement;
-    type.textContent = row.type;
+    final typeCode = web.document.createElement("code") as web.HTMLElement
+      ..textContent = row.type;
+    type.appendChild(typeCode);
     tr.appendChild(type);
 
     final def = web.document.createElement("td") as web.HTMLTableCellElement;
-    def.textContent = row.defaultValue ?? (row.required ? "—" : "null");
+    final defaultValue = row.defaultValue ?? (row.required ? "—" : "null");
+    final defCode = web.document.createElement("code") as web.HTMLElement
+      ..textContent = defaultValue;
+    def.appendChild(defCode);
     tr.appendChild(def);
 
     final notes = web.document.createElement("td") as web.HTMLTableCellElement;
@@ -167,4 +180,3 @@ web.HTMLElement renderDocsPropsTable(DocsPropsSpec spec) {
   wrap.appendChild(foot);
   return wrap;
 }
-

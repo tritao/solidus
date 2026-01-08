@@ -476,25 +476,65 @@ a.btn {
 
 .docTable {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   overflow: hidden;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .docTable th,
 .docTable td {
   text-align: left;
-  padding: 10px 12px;
+  padding: 7px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   vertical-align: top;
 }
 
 .docTable thead th {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.docTable tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.docTable td:nth-child(1) {
+  width: 22%;
+}
+.docTable td:nth-child(2) {
+  width: 30%;
+}
+.docTable td:nth-child(3) {
+  width: 12%;
+}
+.docTable td:nth-child(4) {
+  width: 36%;
+}
+
+.docTable code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+  color: inherit;
+}
+
+.docReq {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 92, 255, 0.25);
+  background: rgba(124, 92, 255, 0.1);
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .docTable tr:last-child th,

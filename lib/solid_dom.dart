@@ -1,4 +1,5 @@
 export "solid_dom/dialog.dart";
+export "solid_dom/button.dart";
 export "solid_dom/accordion.dart";
 export "solid_dom/context_menu.dart";
 export "solid_dom/dropdown_menu.dart";

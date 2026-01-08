@@ -106,6 +106,7 @@ Future<DocsManifest> _fetchManifest() async {
 
   const orderedGroups = <String>[
     "Docs",
+    "UI",
     "Runtime",
     "Overlays & Menus",
     "Selection",

@@ -131,16 +131,27 @@
   }
 
   .btn {
-    padding: 10px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
     border-radius: calc(var(--radius) - 2px);
     border: 1px solid hsl(var(--border));
     background: hsl(var(--background));
     color: inherit;
     cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
     transition: background-color 120ms ease, border-color 120ms ease,
       box-shadow 120ms ease, color 120ms ease;
   }
 
+  /* Variants (shadcn-like). */
+  .btn.default,
   .btn.primary {
     background: hsl(var(--primary));
     border-color: transparent;
@@ -153,16 +164,41 @@
     color: hsl(var(--secondary-foreground));
   }
 
+  .btn.outline {
+    background: transparent;
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+
+  .btn.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: hsl(var(--foreground));
+  }
+
+  .btn.link {
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-decoration-color: hsl(var(--muted-foreground) / 0.45);
+    text-underline-offset: 3px;
+  }
+
+  .btn.destructive,
   .btn.danger {
     background: hsl(var(--destructive));
     border-color: transparent;
     color: hsl(var(--destructive-foreground));
   }
 
-  .btn:hover:not(:disabled) {
+  .btn:hover:not(:disabled):not(.link) {
     background: hsl(var(--accent));
   }
 
+  .btn.default:hover:not(:disabled),
   .btn.primary:hover:not(:disabled) {
     background: hsl(var(--primary) / 0.92);
   }
@@ -171,6 +207,19 @@
     background: hsl(var(--secondary) / 0.85);
   }
 
+  .btn.outline:hover:not(:disabled) {
+    background: hsl(var(--accent));
+  }
+
+  .btn.ghost:hover:not(:disabled) {
+    background: hsl(var(--accent));
+  }
+
+  .btn.link:hover:not(:disabled) {
+    text-decoration-color: hsl(var(--primary) / 0.9);
+  }
+
+  .btn.destructive:hover:not(:disabled),
   .btn.danger:hover:not(:disabled) {
     background: hsl(var(--destructive) / 0.92);
   }
@@ -188,6 +237,30 @@
   .btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  /* Sizes (shadcn-like). */
+  .btn.size-default {
+    height: 40px;
+    padding: 0 16px;
+  }
+
+  .btn.size-sm {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  .btn.size-lg {
+    height: 44px;
+    padding: 0 18px;
+    border-radius: calc(var(--radius) - 2px);
+  }
+
+  .btn.size-icon {
+    height: 40px;
+    width: 40px;
+    padding: 0;
   }
 
   .big {

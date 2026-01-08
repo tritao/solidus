@@ -1,4 +1,48 @@
 {
+  "Button": {
+    "title": "Button",
+    "rows": [
+      {
+        "name": "label",
+        "type": "String",
+        "required": true,
+        "notes": "Visible button label (omit for icon-only buttons)."
+      },
+      {
+        "name": "variant",
+        "type": "ButtonVariant",
+        "default": "ButtonVariant.normal",
+        "notes": "default/secondary/outline/ghost/link/destructive."
+      },
+      {
+        "name": "size",
+        "type": "ButtonSize",
+        "default": "ButtonSize.normal",
+        "notes": "default/sm/lg/icon."
+      },
+      {
+        "name": "disabled",
+        "type": "bool",
+        "default": "false",
+        "notes": "Disables the button."
+      },
+      {
+        "name": "ariaLabel",
+        "type": "String?",
+        "notes": "Required for icon-only buttons for accessibility."
+      },
+      {
+        "name": "className",
+        "type": "String?",
+        "notes": "Additional CSS classes (appended)."
+      },
+      {
+        "name": "onClick",
+        "type": "void Function(MouseEvent e)?",
+        "notes": "Optional click handler."
+      }
+    ]
+  },
   "Dialog": {
     "title": "Dialog",
     "rows": [

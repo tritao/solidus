@@ -10,7 +10,6 @@ Dispose mountDocsTabsBasic(web.Element mount) {
     TabsItem item(String key, String label, String content) {
       final trigger = web.HTMLButtonElement()
         ..type = "button"
-        ..className = "tabsTrigger"
         ..textContent = label;
       final panel = web.HTMLDivElement()..textContent = content;
       return TabsItem(key: key, trigger: trigger, panel: panel);

@@ -93,7 +93,6 @@ void mountSolidTabsDemo(web.Element mount) {
       final el = web.HTMLButtonElement()
         ..id = id
         ..type = "button"
-        ..className = "tabsTrigger"
         ..textContent = label;
       if (disabled) {
         el.disabled = true;

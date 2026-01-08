@@ -844,7 +844,7 @@ a.btn {
   width: min(240px, 100%);
 }
 
-.tabsTrigger {
+.tabsList [role="tab"] {
   appearance: none;
   border: 1px solid transparent;
   background: transparent;
@@ -856,18 +856,18 @@ a.btn {
   -webkit-user-select: none;
 }
 
-.tabsTrigger[aria-disabled="true"],
-.tabsTrigger:disabled {
+.tabsList [role="tab"][aria-disabled="true"],
+.tabsList [role="tab"]:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.tabsTrigger[aria-selected="true"] {
+.tabsList [role="tab"][aria-selected="true"] {
   background: rgba(124, 92, 255, 0.08);
   border-color: rgba(124, 92, 255, 0.45);
 }
 
-.tabsTrigger:focus {
+.tabsList [role="tab"]:focus {
   outline: none;
   border-color: rgba(124, 92, 255, 0.6);
   box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.15);
@@ -925,7 +925,7 @@ a.btn {
 }
 
 .accordionPanel {
-  padding: 12px 14px;
+  padding: 12px 18px;
 }
 
 .switchRow {

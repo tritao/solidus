@@ -4,6 +4,8 @@ import "dart:js_interop";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
+void Function()? _dismissableLayerClearGlobalClickBlocker;
+
 final class ScrollLockHandle {
   ScrollLockHandle._(this._restore);
   final void Function() _restore;
@@ -461,9 +463,6 @@ DismissableLayerHandle dismissableLayer(
 
   var disposed = false;
   JSFunction? jsTouchClick;
-  JSFunction? jsClickBlocker;
-  web.Element? clickBlockTarget;
-  Timer? clickBlockTimer;
   var dismissedByPointerDown = false;
 
   void stopEvent(web.Event e) {
@@ -484,39 +483,44 @@ DismissableLayerHandle dismissableLayer(
     } catch (_) {}
   }
 
-  void clearClickBlocker() {
-    clickBlockTimer?.cancel();
-    clickBlockTimer = null;
-    clickBlockTarget = null;
-    if (jsClickBlocker != null) {
-      web.document.removeEventListener("click", jsClickBlocker, true.toJS);
-      jsClickBlocker = null;
-    }
-  }
-
-  void installClickBlocker(web.Element? target) {
-    if (disposed) return;
+  // Global click blocker: prevents the single click that follows an outside
+  // pointerdown-dismiss from "clicking through" onto underlying UI. This must
+  // survive immediate unmount of the layer (e.g. exitMs=0 menus).
+  void installClickBlocker(web.Element? expectedTarget) {
     if (!preventClickThrough) return;
-    clearClickBlocker();
-    clickBlockTarget = target;
+    _dismissableLayerClearGlobalClickBlocker?.call();
+
+    JSFunction? jsFn;
+    Timer? timer;
+
+    void clear() {
+      timer?.cancel();
+      timer = null;
+      final fn = jsFn;
+      jsFn = null;
+      if (fn != null) {
+        web.document.removeEventListener("click", fn, true.toJS);
+      }
+      if (identical(_dismissableLayerClearGlobalClickBlocker, clear)) {
+        _dismissableLayerClearGlobalClickBlocker = null;
+      }
+    }
+
     void onClickBlock(web.Event e) {
-      if (disposed) return;
       final t = e.target;
       if (t is! web.Element) return;
-      // Only block the click that corresponds to the outside interaction that
-      // dismissed the layer. This keeps the behavior predictable while still
-      // preventing accidental "click-through" activation.
-      final expected = clickBlockTarget;
-      if (expected == null || identical(t, expected) || expected.contains(t)) {
+      if (expectedTarget == null ||
+          identical(t, expectedTarget) ||
+          expectedTarget.contains(t)) {
         stopEvent(e);
       }
-      clearClickBlocker();
+      clear();
     }
 
-    jsClickBlocker = (onClickBlock).toJS;
-    web.document.addEventListener("click", jsClickBlocker, true.toJS);
-    clickBlockTimer =
-        Timer(const Duration(milliseconds: 700), clearClickBlocker);
+    jsFn = (onClickBlock).toJS;
+    web.document.addEventListener("click", jsFn!, true.toJS);
+    timer = Timer(const Duration(milliseconds: 700), clear);
+    _dismissableLayerClearGlobalClickBlocker = clear;
   }
 
   bool maybeDismissOutside(web.Event e) {
@@ -596,7 +600,6 @@ DismissableLayerHandle dismissableLayer(
 
   void dispose() {
     disposed = true;
-    clearClickBlocker();
     web.document.removeEventListener("pointerdown", jsPointerDown, true.toJS);
     web.document.removeEventListener("focusin", jsFocusOutside, true.toJS);
     web.document.removeEventListener("keydown", jsEscape, true.toJS);

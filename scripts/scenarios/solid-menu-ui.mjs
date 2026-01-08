@@ -595,9 +595,10 @@ export async function runSolidMenubarScenario(page, { timeoutMs }) {
         { timeout: timeoutMs },
       );
       await page.waitForTimeout(50);
-      const focusedAfterEdit = await page.evaluate(
-        () => document.activeElement?.id ?? "",
-      );
+      const afterEdit = await page.evaluate(() => ({
+        activeId: document.activeElement?.id ?? "",
+        fileOpen: document.querySelector("#menubar-file-content") != null,
+      }));
 
       step = "ArrowRight switches to View";
       await page.keyboard.press("ArrowRight");
@@ -606,9 +607,10 @@ export async function runSolidMenubarScenario(page, { timeoutMs }) {
         { timeout: timeoutMs },
       );
       await page.waitForTimeout(50);
-      const focusedAfterView = await page.evaluate(
-        () => document.activeElement?.id ?? "",
-      );
+      const afterView = await page.evaluate(() => ({
+        activeId: document.activeElement?.id ?? "",
+        editOpen: document.querySelector("#menubar-edit-content") != null,
+      }));
 
       step = "Escape closes and restores trigger focus";
       await page.keyboard.press("Escape");
@@ -675,8 +677,10 @@ export async function runSolidMenubarScenario(page, { timeoutMs }) {
 
       const ok =
         focusedAfterOpen === "menubar-file-new" &&
-        focusedAfterEdit === "menubar-edit-cut" &&
-        focusedAfterView === "menubar-view-theme-light" &&
+        afterEdit.activeId === "menubar-edit-cut" &&
+        afterEdit.fileOpen === false &&
+        afterView.activeId === "menubar-view-theme-light" &&
+        afterView.editOpen === false &&
         focusAfterEscape === "menubar-view-trigger" &&
         /Outside clicks: 0/.test(outsideAfterDismiss) &&
         /Outside clicks: 1/.test(outsideAfterClick) &&
@@ -687,8 +691,8 @@ export async function runSolidMenubarScenario(page, { timeoutMs }) {
         ok,
         details: {
           focusedAfterOpen,
-          focusedAfterEdit,
-          focusedAfterView,
+          afterEdit,
+          afterView,
           focusAfterEscape,
           outsideAfterDismiss,
           outsideAfterClick,

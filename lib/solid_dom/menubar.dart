@@ -214,6 +214,9 @@ web.DocumentFragment Menubar({
         anchor: m.trigger,
         restoreFocusTo: m.trigger,
         additionalExcludedElements: excludedTriggers,
+        // Menubar switching should be instant; exit animations cause the
+        // previous menu to remain visible briefly when switching menus.
+        exitMs: 0,
         placement: m.placement,
         offset: m.offset,
         viewportPadding: m.viewportPadding,

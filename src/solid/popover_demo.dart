@@ -176,23 +176,6 @@ void mountSolidPopoverDemo(web.Element mount) {
     });
     root.appendChild(toggleHideAnchor);
 
-    final bottomTrigger = web.HTMLButtonElement()
-      ..id = "popover-trigger-bottom"
-      ..type = "button"
-      ..className = "btn secondary"
-      ..textContent = "Open bottom popover";
-    on(bottomTrigger, "click", (_) => bottomOpen.value = !bottomOpen.value);
-    final bottomWrap = web.HTMLDivElement()
-      ..style.marginTop = "1600px";
-    bottomWrap.appendChild(bottomTrigger);
-    root.appendChild(bottomWrap);
-
-    on(jump, "click", (_) {
-      try {
-        bottomTrigger.scrollIntoView();
-      } catch (_) {}
-    });
-
     final status = web.HTMLParagraphElement()
       ..id = "popover-status"
       ..className = "muted";
@@ -211,6 +194,23 @@ void mountSolidPopoverDemo(web.Element mount) {
       ..textContent = "Outside action (increments)";
     on(outsideAction, "click", (_) => outsideClicks.value++);
     root.appendChild(outsideAction);
+
+    final bottomTrigger = web.HTMLButtonElement()
+      ..id = "popover-trigger-bottom"
+      ..type = "button"
+      ..className = "btn secondary"
+      ..textContent = "Open bottom popover";
+    on(bottomTrigger, "click", (_) => bottomOpen.value = !bottomOpen.value);
+    final bottomWrap = web.HTMLDivElement()
+      ..style.marginTop = "1600px";
+    bottomWrap.appendChild(bottomTrigger);
+    root.appendChild(bottomWrap);
+
+    on(jump, "click", (_) {
+      try {
+        bottomTrigger.scrollIntoView();
+      } catch (_) {}
+    });
 
     root.appendChild(
       Popover(

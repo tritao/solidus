@@ -6,7 +6,7 @@ web.HTMLElement solidDocsNav({required String active}) {
   final nav = web.HTMLDivElement()
     ..className = "docsTopbar"
     ..setAttribute("role", "navigation")
-    ..setAttribute("aria-label", "Solid UI navigation");
+    ..setAttribute("aria-label", "Solidus navigation");
 
   final inner = web.HTMLDivElement()..className = "docsTopbarInner";
   nav.appendChild(inner);
@@ -19,7 +19,7 @@ web.HTMLElement solidDocsNav({required String active}) {
     ..src = "assets/solidus.png"
     ..alt = "";
   brand.appendChild(brandLogo);
-  brand.appendChild(web.Text("Solid UI"));
+  brand.appendChild(web.Text("Solidus"));
   inner.appendChild(brand);
 
   web.HTMLElement link(String label, String href, {bool current = false}) {

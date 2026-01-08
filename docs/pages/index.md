@@ -1,5 +1,5 @@
 ---
-title: Solid UI Docs
+title: Solidus Docs
 slug: index
 group: Docs
 order: 0
@@ -11,7 +11,7 @@ status: beta
   <img class="docLogo" src="assets/solidus.png" alt="Solidus logo" />
 </p>
 
-Welcome to the docs.
+Welcome to Solidus docs.
 
 - **Docs**: clean examples + API notes (what you’d copy into an app).
 - **Labs**: conformance harness + edge cases + Playwright scenarios.

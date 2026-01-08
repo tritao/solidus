@@ -1,6 +1,6 @@
 import "package:web/web.dart" as web;
 
-const _storageKey = "solidui.theme";
+const _storageKey = "solidus.theme";
 
 /// Allowed values: `system`, `light`, `dark`.
 String getThemePreference() {

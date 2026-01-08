@@ -391,7 +391,7 @@ void mountSolidDocs(web.Element mount, String? page) {
         final currentSlug = slug.value;
         final meta = m?.bySlug[currentSlug];
         title.textContent = meta?.title ??
-            (currentSlug == "index" ? "Solid UI Docs" : currentSlug);
+            (currentSlug == "index" ? "Solidus Docs" : currentSlug);
 
         final mounts = content.querySelectorAll("[data-doc-demo]");
         for (var i = 0; i < mounts.length; i++) {

@@ -165,7 +165,7 @@ void mountSolidCatalogDemo(web.Element mount) {
     final filter = createSignal("");
     final selected = createSignal<String>(initialKey());
 
-    root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solid UI Catalog");
+    root.appendChild(web.HTMLHeadingElement.h1()..textContent = "Solidus Catalog");
     root.appendChild(
       solidDemoHelp(
         title: "What this is",

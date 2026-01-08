@@ -8,7 +8,7 @@ final class IntroComponent extends Component {
   web.Element render() {
     return dom.div(id: "intro-root", className: "container containerWide", children: [
       dom.header(
-        title: "Solid UI (Dart on the web)",
+        title: "Solidus (Dart on the web)",
         subtitle:
             "A Solid-style runtime + robust DOM primitives (focus, overlay, positioning, selection) for building high-quality web apps in Dart.",
         actions: [

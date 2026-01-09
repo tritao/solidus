@@ -32,6 +32,10 @@ import { runDocsThemingScenario } from "./scenarios/docs-theming.mjs";
 import { runDocsInputScenario } from "./scenarios/docs-input.mjs";
 import { runDocsFormFieldScenario } from "./scenarios/docs-form-field.mjs";
 import { runDocsComboboxScenario } from "./scenarios/docs-combobox.mjs";
+import { runDocsInputOtpScenario } from "./scenarios/docs-input-otp.mjs";
+import { runDocsTextareaAutosizeScenario } from "./scenarios/docs-textarea-autosize.mjs";
+import { runDocsSliderScenario } from "./scenarios/docs-slider.mjs";
+import { runDocsScrollAreaScenario } from "./scenarios/docs-scroll-area.mjs";
 import { runDocsFormsSuiteScenario } from "./scenarios/docs-forms-suite.mjs";
 
 const solidScenarioRunners = {
@@ -61,6 +65,10 @@ const solidScenarioRunners = {
   "docs-input": (page, ctx) => runDocsInputScenario(page, ctx),
   "docs-form-field": (page, ctx) => runDocsFormFieldScenario(page, ctx),
   "docs-combobox": (page, ctx) => runDocsComboboxScenario(page, ctx),
+  "docs-input-otp": (page, ctx) => runDocsInputOtpScenario(page, ctx),
+  "docs-textarea-autosize": (page, ctx) => runDocsTextareaAutosizeScenario(page, ctx),
+  "docs-slider": (page, ctx) => runDocsSliderScenario(page, ctx),
+  "docs-scroll-area": (page, ctx) => runDocsScrollAreaScenario(page, ctx),
   "docs-forms-suite": (page, ctx) => runDocsFormsSuiteScenario(page, ctx),
 };
 

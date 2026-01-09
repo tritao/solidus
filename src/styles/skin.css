@@ -161,6 +161,13 @@
   .slider {
     width: min(520px, 100%);
     accent-color: hsl(var(--primary));
+    height: 28px;
+  }
+
+  .slider:focus-visible {
+    outline: none;
+    border-radius: calc(var(--radius) - 2px);
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
   }
 
   .scrollArea {

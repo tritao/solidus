@@ -7,8 +7,6 @@ import './morph_patch.dart';
 import './reactive.dart' as rx;
 import './router.dart' as router;
 
-typedef Cleanup = void Function();
-
 final class _EffectState {
   _EffectState({
     required this.deps,
@@ -18,8 +16,8 @@ final class _EffectState {
   });
 
   List<Object?> deps;
-  Cleanup? Function() effect;
-  Cleanup? cleanup;
+  rx.EffectFn effect;
+  rx.Cleanup? cleanup;
   bool pending;
 }
 
@@ -160,7 +158,7 @@ abstract class Component {
   void useEffect(
     String key,
     List<Object?> deps,
-    Cleanup? Function() effect,
+    rx.EffectFn effect,
   ) {
     final existing = _effects[key];
     if (existing == null) {

@@ -1,0 +1,7 @@
+analyzer:
+  exclude:
+    - node_modules/**
+    - vendor/**
+    - dist/**
+    - public/**
+    - .dart_tool/**

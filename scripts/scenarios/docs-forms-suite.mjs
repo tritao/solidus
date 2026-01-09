@@ -6,6 +6,10 @@ import { runDocsCheckboxScenario } from "./docs-checkbox.mjs";
 import { runDocsRadioGroupScenario } from "./docs-radio-group.mjs";
 import { runDocsToggleGroupScenario } from "./docs-toggle-group.mjs";
 import { runDocsListboxScenario } from "./docs-listbox.mjs";
+import { runDocsInputOtpScenario } from "./docs-input-otp.mjs";
+import { runDocsTextareaAutosizeScenario } from "./docs-textarea-autosize.mjs";
+import { runDocsSliderScenario } from "./docs-slider.mjs";
+import { runDocsScrollAreaScenario } from "./docs-scroll-area.mjs";
 
 async function gotoDocs(page, slug, timeoutMs) {
   const u = new URL(page.url());
@@ -31,6 +35,12 @@ export async function runDocsFormsSuiteScenario(page, ctx) {
   await gotoDocs(page, "combobox", timeoutMs);
   await runDocsComboboxScenario(page, { timeoutMs });
 
+  await gotoDocs(page, "input-otp", timeoutMs);
+  await runDocsInputOtpScenario(page, { timeoutMs });
+
+  await gotoDocs(page, "textarea-autosize", timeoutMs);
+  await runDocsTextareaAutosizeScenario(page, { timeoutMs });
+
   await gotoDocs(page, "checkbox", timeoutMs);
   await runDocsCheckboxScenario(page, { timeoutMs });
 
@@ -40,7 +50,12 @@ export async function runDocsFormsSuiteScenario(page, ctx) {
   await gotoDocs(page, "toggle-group", timeoutMs);
   await runDocsToggleGroupScenario(page, { timeoutMs });
 
+  await gotoDocs(page, "slider", timeoutMs);
+  await runDocsSliderScenario(page, { timeoutMs });
+
   await gotoDocs(page, "listbox", timeoutMs);
   await runDocsListboxScenario(page, { timeoutMs });
-}
 
+  await gotoDocs(page, "scroll-area", timeoutMs);
+  await runDocsScrollAreaScenario(page, { timeoutMs });
+}

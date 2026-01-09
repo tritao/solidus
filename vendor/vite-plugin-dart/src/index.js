@@ -1,7 +1,7 @@
 import { spawnSync } from "child_process";
 import { readFileSync, mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
-import { join, parse } from "path";
+import { isAbsolute, join, parse, resolve } from "path";
 
 const fileRegex = /\.(dart)$/;
 
@@ -195,12 +195,29 @@ export default function dartPlugin(options = defaultConfig) {
           compiledDartMap = JSON.parse(
             readFileSync(compiledDartOutput + ".map", "utf8")
           );
-          compiledDartMap.sources = compiledDartMap.sources.map((x) => {
-            if (!x.startsWith(".")) return x;
-            x = x.replace(/^(?:\.\.(\/|\\))+/, "");
-            x = "file://" + x;
-            return x;
-          });
+          // dart2js doesn't emit `sourcesContent`, which causes Vite/DevTools
+          // to try resolving every source on disk (including SDK/package URIs).
+          // Provide empty `sourcesContent` entries by default, and inline local
+          // project sources when possible to avoid "missing source files" noise.
+          if (!Array.isArray(compiledDartMap.sourcesContent)) {
+            const root = process.cwd();
+            compiledDartMap.sourcesContent = compiledDartMap.sources.map((src) => {
+              try {
+                if (
+                  src.startsWith("org-dartlang-sdk://") ||
+                  src.startsWith("package:")
+                ) {
+                  return "";
+                }
+                let fsPath = src;
+                if (fsPath.startsWith("file://")) fsPath = fsPath.slice("file://".length);
+                if (!isAbsolute(fsPath)) fsPath = resolve(root, fsPath);
+                return readFileSync(fsPath, "utf8");
+              } catch (_) {
+                return "";
+              }
+            });
+          }
           compiledDartMap = JSON.stringify(compiledDartMap);
         }
       } finally {

@@ -234,4 +234,113 @@
     outline: none;
     box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
   }
+
+  .tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(720px, 100%);
+  }
+
+  .tabsList {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 8px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    box-sizing: border-box;
+  }
+
+  .tabsList[aria-orientation="vertical"] {
+    flex-direction: column;
+    align-items: stretch;
+    width: min(240px, 100%);
+  }
+
+  .tabsList [role="tab"] {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    padding: 10px 12px;
+    border-radius: calc(var(--radius) - 4px);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .tabsList [role="tab"][aria-disabled="true"],
+  .tabsList [role="tab"]:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .tabsList [role="tab"][aria-selected="true"] {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--border));
+  }
+
+  .tabsList [role="tab"]:focus-visible {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
+  .tabsPanels {
+    width: min(720px, 100%);
+  }
+
+  .tabsPanel {
+    width: 100%;
+  }
+
+  .accordion {
+    width: min(720px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .accordionItem {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    background: hsl(var(--card));
+    overflow: hidden;
+  }
+
+  .accordionTrigger {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 12px 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: inherit;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .accordionTrigger[aria-expanded="true"] {
+    border-bottom-color: hsl(var(--border));
+  }
+
+  .accordionTrigger:focus-visible {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
+  .accordionTrigger[aria-disabled="true"],
+  .accordionTrigger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .accordionPanel {
+    padding: 12px 18px;
+  }
 }

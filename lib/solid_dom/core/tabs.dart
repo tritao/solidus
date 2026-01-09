@@ -3,12 +3,12 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./solid_dom.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../solid_dom.dart";
 
 enum TabsActivationMode {
   automatic,
@@ -47,12 +47,12 @@ bool _isRtl() {
   }
 }
 
-/// Tabs primitive (Kobalte-style semantics + keyboard behavior).
+/// Tabs primitive (unstyled; Kobalte-style semantics + keyboard behavior).
 ///
 /// - Uses `SelectionManager` + `createSelectableCollection/item` for navigation.
 /// - `activationMode=automatic` selects on focus (arrow keys).
 /// - `activationMode=manual` moves focus with arrows, selection on click/Enter/Space.
-web.HTMLElement Tabs({
+web.HTMLElement createTabs({
   required Iterable<TabsItem> items,
   required String? Function() value,
   required void Function(String next) setValue,
@@ -61,9 +61,10 @@ web.HTMLElement Tabs({
   bool Function()? shouldFocusWrap,
   String? ariaLabel,
   String? id,
-  String tabListClassName = "tabsList",
-  String panelClassName = "tabsPanel",
-  String rootClassName = "tabs",
+  String rootClassName = "",
+  String tabListClassName = "",
+  String panelsClassName = "",
+  String panelClassName = "",
 }) {
   final activationModeAccessor = activationMode ?? () => TabsActivationMode.automatic;
   final orientationAccessor = orientation ?? () => Orientation.horizontal;
@@ -85,13 +86,10 @@ web.HTMLElement Tabs({
 
   createRenderEffect(() {
     final o = orientationAccessor();
-    tabList.setAttribute(
-      "aria-orientation",
-      o == Orientation.vertical ? "vertical" : "horizontal",
-    );
+    tabList.setAttribute("aria-orientation", o == Orientation.vertical ? "vertical" : "horizontal");
   });
 
-  final panels = web.HTMLDivElement()..className = "tabsPanels";
+  final panels = web.HTMLDivElement()..className = panelsClassName;
 
   final itemsList = items.toList(growable: false);
   final keys = <String>[];
@@ -195,6 +193,8 @@ web.HTMLElement Tabs({
     isRtl: _isRtl,
   );
 
+  final panelClass = panelClassName.trim();
+
   // Wire triggers + panels.
   for (final k in keys) {
     final it = byKey[k]!;
@@ -213,10 +213,11 @@ web.HTMLElement Tabs({
     if (tab is web.HTMLButtonElement) {
       tab.disabled = it.disabled;
     }
+
     panel
       ..setAttribute("role", "tabpanel")
-      ..setAttribute("aria-labelledby", tabId)
-      ..classList.add(panelClassName);
+      ..setAttribute("aria-labelledby", tabId);
+    if (panelClass.isNotEmpty) panel.classList.add(panelClass);
 
     createRenderEffect(() {
       final selected = (value() == k);
@@ -244,8 +245,7 @@ web.HTMLElement Tabs({
       allowsDifferentPressOrigin: () => false,
       onAction: () {
         if (it.disabled) return;
-        if (activationModeAccessor() == TabsActivationMode.manual &&
-            selection.focusedKey() != k) {
+        if (activationModeAccessor() == TabsActivationMode.manual && selection.focusedKey() != k) {
           selection.setFocusedKey(k);
         }
         setValue(k);
@@ -257,8 +257,7 @@ web.HTMLElement Tabs({
     on(tab, "keydown", (e) {
       if (e is! web.KeyboardEvent) return;
       if (e.key == " ") e.preventDefault();
-      if (activationModeAccessor() == TabsActivationMode.manual &&
-          (e.key == "Enter" || e.key == " ")) {
+      if (activationModeAccessor() == TabsActivationMode.manual && (e.key == "Enter" || e.key == " ")) {
         e.preventDefault();
         if (!it.disabled) setValue(k);
       }
@@ -293,3 +292,4 @@ web.HTMLElement Tabs({
 
   return root;
 }
+

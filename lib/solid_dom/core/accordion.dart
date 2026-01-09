@@ -3,12 +3,12 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./solid_dom.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../solid_dom.dart";
 
 final class AccordionItem {
   AccordionItem({
@@ -32,11 +32,11 @@ String _nextAccordionId(String prefix) {
   return "$prefix-$_accordionIdCounter";
 }
 
-/// Accordion primitive with WAI-ARIA semantics and Kobalte-like keyboard behavior.
+/// Accordion primitive (unstyled) with WAI-ARIA semantics and Kobalte-like keyboard behavior.
 ///
 /// - Uses selection core for roving focus (Arrow keys + Home/End + typeahead).
 /// - Expansion is controlled via [expandedKeys]/[setExpandedKeys].
-web.HTMLElement Accordion({
+web.HTMLElement createAccordion({
   required Iterable<AccordionItem> items,
   required Set<String> Function() expandedKeys,
   required void Function(Set<String> next) setExpandedKeys,
@@ -46,10 +46,10 @@ web.HTMLElement Accordion({
   Orientation Function()? orientation,
   String? ariaLabel,
   String? id,
-  String rootClassName = "accordion",
-  String itemClassName = "accordionItem",
-  String triggerClassName = "accordionTrigger",
-  String panelClassName = "accordionPanel",
+  String rootClassName = "",
+  String itemClassName = "",
+  String triggerClassName = "",
+  String panelClassName = "",
 }) {
   final multipleAccessor = multiple ?? () => false;
   final collapsibleAccessor = collapsible ?? () => true;
@@ -148,19 +148,24 @@ web.HTMLElement Accordion({
     setExpandedKeys(<String>{k});
   }
 
+  final itemClass = itemClassName.trim();
+  final triggerClass = triggerClassName.trim();
+  final panelClass = panelClassName.trim();
+
   for (var i = 0; i < keys.length; i++) {
     final k = keys[i];
     final it = byKey[k]!;
-    final item = web.HTMLDivElement()..className = itemClassName;
+    final item = web.HTMLDivElement();
+    if (itemClass.isNotEmpty) item.className = itemClass;
 
     final trigger = it.trigger;
-    trigger.classList.add(triggerClassName);
+    if (triggerClass.isNotEmpty) trigger.classList.add(triggerClass);
 
     final headerId = trigger.id.isNotEmpty ? trigger.id : "$resolvedId-header-$k";
     trigger.id = headerId;
 
     final panel = it.content;
-    panel.classList.add(panelClassName);
+    if (panelClass.isNotEmpty) panel.classList.add(panelClass);
     final panelId = panel.id.isNotEmpty ? panel.id : "$resolvedId-panel-$k";
     panel.id = panelId;
 
@@ -229,3 +234,4 @@ web.HTMLElement Accordion({
 
   return root;
 }
+

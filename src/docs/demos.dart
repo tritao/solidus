@@ -42,6 +42,13 @@ import "./examples/label_basic.dart";
 import "./examples/form_field_basic.dart";
 import "./examples/textarea_basic.dart";
 import "./examples/fieldset_basic.dart";
+import "./examples/toggle_basic.dart";
+import "./examples/slider_basic.dart";
+import "./examples/scroll_area_basic.dart";
+import "./examples/card_basic.dart";
+import "./examples/table_basic.dart";
+import "./examples/input_otp_basic.dart";
+import "./examples/textarea_autosize_basic.dart";
 
 typedef DocsDemoMount = Dispose Function(web.Element mount);
 
@@ -55,6 +62,13 @@ final Map<String, DocsDemoMount> docsDemos = {
   "form-field-basic": mountDocsFormFieldBasic,
   "textarea-basic": mountDocsTextareaBasic,
   "fieldset-basic": mountDocsFieldsetBasic,
+  "toggle-basic": mountDocsToggleBasic,
+  "slider-basic": mountDocsSliderBasic,
+  "scroll-area-basic": mountDocsScrollAreaBasic,
+  "card-basic": mountDocsCardBasic,
+  "table-basic": mountDocsTableBasic,
+  "input-otp-basic": mountDocsInputOtpBasic,
+  "textarea-autosize-basic": mountDocsTextareaAutosizeBasic,
   "checkbox-basic": mountDocsCheckboxBasic,
   "spinner-basic": mountDocsSpinnerBasic,
   "radio-group-basic": mountDocsRadioGroupBasic,

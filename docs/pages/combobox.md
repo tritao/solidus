@@ -24,6 +24,12 @@ A combobox is a text input that opens a listbox of suggestions and supports sele
 - **Popup**: positioned surface containing a listbox.
 - **Listbox + options**: suggestion items.
 
+## FormField integration
+
+If you wrap a combobox with `FormField`, pass the composite control as `control` and the input as `a11yTarget`:
+
+- `FormField(control: anchor, a11yTarget: input, ...)`
+
 :::demo id=combobox-basic title="Basic combobox"
 Type to filter, ArrowDown to navigate, Enter/click to select (popup closes by default).
 :::

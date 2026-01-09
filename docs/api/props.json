@@ -1432,5 +1432,82 @@
         "notes": "Disables all descendant controls."
       }
     ]
+  },
+  "Toggle": {
+    "title": "Toggle",
+    "rows": [
+      { "name": "pressed", "type": "bool Function()", "required": true },
+      { "name": "setPressed", "type": "void Function(bool next)", "required": true },
+      { "name": "disabled", "type": "bool Function()?" },
+      { "name": "label", "type": "String?" },
+      { "name": "ariaLabel", "type": "String?" },
+      { "name": "variant", "type": "ToggleVariant", "default": "ToggleVariant.defaultVariant" },
+      { "name": "size", "type": "ToggleSize", "default": "ToggleSize.normal" },
+      { "name": "className", "type": "String", "default": "\"toggle\"" }
+    ]
+  },
+  "Slider": {
+    "title": "Slider",
+    "rows": [
+      { "name": "value", "type": "double Function()", "required": true },
+      { "name": "setValue", "type": "void Function(double next)", "required": true },
+      { "name": "min", "type": "double Function()?" },
+      { "name": "max", "type": "double Function()?" },
+      { "name": "step", "type": "double Function()?" },
+      { "name": "disabled", "type": "bool Function()?" },
+      { "name": "ariaLabel", "type": "String?" },
+      { "name": "className", "type": "String", "default": "\"slider\"" }
+    ]
+  },
+  "ScrollArea": {
+    "title": "ScrollArea",
+    "rows": [
+      { "name": "id", "type": "String?" },
+      { "name": "rootClassName", "type": "String", "default": "\"scrollArea\"" },
+      { "name": "viewportClassName", "type": "String", "default": "\"scrollViewport\"" },
+      { "name": "contentClassName", "type": "String", "default": "\"scrollContent\"" }
+    ]
+  },
+  "Card": {
+    "title": "Card",
+    "rows": [
+      { "name": "className", "type": "String", "default": "\"card\"" },
+      { "name": "children", "type": "Iterable<Node> Function()?" }
+    ]
+  },
+  "Table": {
+    "title": "Table",
+    "rows": [
+      { "name": "wrapperClassName", "type": "String", "default": "\"tableWrap\"" },
+      { "name": "tableClassName", "type": "String", "default": "\"table\"" },
+      { "name": "head", "type": "Iterable<Node> Function()?" },
+      { "name": "body", "type": "Iterable<Node> Function()?" }
+    ]
+  },
+  "InputOTP": {
+    "title": "InputOTP",
+    "rows": [
+      { "name": "length", "type": "int", "required": true },
+      { "name": "value", "type": "String Function()", "required": true },
+      { "name": "setValue", "type": "void Function(String next)", "required": true },
+      { "name": "disabled", "type": "bool Function()?" },
+      { "name": "ariaLabel", "type": "String?" },
+      { "name": "className", "type": "String", "default": "\"otp\"" },
+      { "name": "inputClassName", "type": "String", "default": "\"otpInput\"" }
+    ]
+  },
+  "TextareaAutosize": {
+    "title": "TextareaAutosize",
+    "rows": [
+      { "name": "id", "type": "String?" },
+      { "name": "className", "type": "String", "default": "\"textarea\"" },
+      { "name": "ariaLabel", "type": "String?" },
+      { "name": "placeholder", "type": "String?" },
+      { "name": "rows", "type": "int?" },
+      { "name": "disabled", "type": "bool Function()?" },
+      { "name": "value", "type": "String? Function()?" },
+      { "name": "setValue", "type": "void Function(String next)?" },
+      { "name": "maxHeightPx", "type": "int?" }
+    ]
   }
 }

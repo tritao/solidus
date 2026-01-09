@@ -76,6 +76,189 @@
     color: hsl(var(--muted-foreground));
   }
 
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 120ms ease, border-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  .toggle:focus-visible {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
+  .toggle[data-state="on"] {
+    background: hsl(var(--accent));
+  }
+
+  .toggle[data-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .toggle--outline {
+    background: transparent;
+  }
+
+  .toggle--sm {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .toggle--default {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .toggle--lg {
+    height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .otp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .otpInput {
+    width: 44px;
+    height: 44px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid hsl(var(--input));
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    outline: none;
+  }
+
+  .otpInput:focus-visible {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
+  .otpInput[data-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .slider {
+    width: min(520px, 100%);
+    accent-color: hsl(var(--primary));
+  }
+
+  .scrollArea {
+    width: min(720px, 100%);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    box-sizing: border-box;
+  }
+
+  .scrollViewport {
+    max-height: 240px;
+    overflow: auto;
+    padding: 12px 14px;
+    box-sizing: border-box;
+  }
+
+  .scrollContent {
+    display: block;
+  }
+
+  .cardHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .cardContent {
+    display: block;
+  }
+
+  .cardFooter {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .tableWrap {
+    width: min(720px, 100%);
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: hsl(var(--card));
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .th,
+  .td {
+    padding: 10px 12px;
+    border-bottom: 1px solid hsl(var(--border));
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .th {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    font-weight: 600;
+  }
+
+  .table tr:last-child .td {
+    border-bottom: 0;
+  }
+
+  .dialogHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .dialogTitle {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .dialogDescription {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .dialogFooter {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
   .badge {
     display: inline-flex;
     align-items: center;

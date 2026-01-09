@@ -23,3 +23,23 @@ Then:
 - [`ToggleGroup`](?docs=toggle-group)
 - [`Switch`](?docs=switch)
 
+## Composite controls
+
+Some controls are composite DOM structures (e.g. Combobox uses a wrapper + input + button + popup).
+
+Guidelines:
+
+- Wrap the **visible control UI** with `FormField(control: ...)`.
+- Point accessibility wiring at the **real focusable control** with `a11yTarget` (usually the `<input>` or trigger button).
+
+Example:
+
+- Combobox: `FormField(control: anchor, a11yTarget: input, ...)`
+
+## UI helpers
+
+Use `solid_ui` helpers to keep scaffolding consistent:
+
+- `buildInputGroup(...)`
+- `buildSelectControl(...)`
+- `buildComboboxControl(...)`

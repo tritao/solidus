@@ -23,6 +23,12 @@ A select is a button-triggered listbox popup that lets a user choose one option.
 - **Popup**: positioned surface containing the listbox.
 - **Listbox + options**: options with disabled support.
 
+## FormField integration
+
+Wrap the trigger button directly:
+
+- `FormField(control: trigger, a11yTarget: trigger, ...)`
+
 :::demo id=select-basic title="Basic select"
 Open, navigate with Arrow keys, press Enter to select.
 :::

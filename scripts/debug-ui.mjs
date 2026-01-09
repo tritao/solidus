@@ -32,6 +32,7 @@ import { runDocsThemingScenario } from "./scenarios/docs-theming.mjs";
 import { runDocsInputScenario } from "./scenarios/docs-input.mjs";
 import { runDocsFormFieldScenario } from "./scenarios/docs-form-field.mjs";
 import { runDocsComboboxScenario } from "./scenarios/docs-combobox.mjs";
+import { runDocsFormsSuiteScenario } from "./scenarios/docs-forms-suite.mjs";
 
 const solidScenarioRunners = {
   ...solidBasicUiScenarios,
@@ -60,6 +61,7 @@ const solidScenarioRunners = {
   "docs-input": (page, ctx) => runDocsInputScenario(page, ctx),
   "docs-form-field": (page, ctx) => runDocsFormFieldScenario(page, ctx),
   "docs-combobox": (page, ctx) => runDocsComboboxScenario(page, ctx),
+  "docs-forms-suite": (page, ctx) => runDocsFormsSuiteScenario(page, ctx),
 };
 
 const HOST = "127.0.0.1";

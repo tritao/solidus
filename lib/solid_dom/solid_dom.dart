@@ -269,6 +269,12 @@ web.HTMLElement _ensurePortalRoot() {
   return root;
 }
 
+/// Ensures (and returns) the global portal root element.
+///
+/// This is mostly useful for apps that want to pre-create the portal root early
+/// (to avoid a first-use layout shift) or to inspect/debug portals.
+web.HTMLElement ensurePortalRoot() => _ensurePortalRoot();
+
 void _releasePortalRoot() {
   _portalRootRefCount--;
   if (_portalRootRefCount > 0) return;

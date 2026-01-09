@@ -90,6 +90,16 @@
     gap: 8px;
   }
 
+  .docsTopbarSelect {
+    height: 36px;
+    min-width: 0;
+    width: auto;
+    padding: 0 10px;
+    font-size: 13px;
+    border-radius: calc(var(--radius) - 2px);
+    flex: 0 0 auto;
+  }
+
   .docsTopbarIcon {
     width: 36px;
     height: 36px;

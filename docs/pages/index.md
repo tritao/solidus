@@ -19,6 +19,7 @@ Welcome to Solidus docs.
 Start here:
 
 - [Introduction](?docs=intro)
+- [Theming](?docs=theming)
 
 Start with:
 
@@ -58,5 +59,4 @@ Components:
 
 Navigation:
 
-- [NavigationMenu](?docs=navigation-menu)
 - [NavigationMenu](?docs=navigation-menu)

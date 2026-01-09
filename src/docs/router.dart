@@ -179,6 +179,8 @@ void mountSolidDocs(web.Element mount, String? page) {
 
     final searchQuery = createSignal("");
     final themeMode = createSignal(theme.getThemePreference());
+    final accentMode = createSignal(theme.getAccentPreference());
+    final radiusMode = createSignal(theme.getRadiusPreference());
 
     final searchEl = topbar.querySelector("#docs-search");
     if (searchEl is web.HTMLInputElement) {
@@ -220,6 +222,38 @@ void mountSolidDocs(web.Element mount, String? page) {
         final label = "Theme: $m (click to change)";
         themeBtn.setAttribute("aria-label", label);
         themeBtn.title = label;
+      });
+    }
+
+    final accentSel = topbar.querySelector("#docs-accent");
+    if (accentSel is web.HTMLSelectElement) {
+      void applyAccent(String accent) {
+        theme.setAccentPreference(accent);
+        theme.applyAccentPreference(accent);
+        accentMode.value = accent;
+      }
+
+      applyAccent(accentMode.value);
+      accentSel.value = accentMode.value;
+
+      on(accentSel, "change", (_) {
+        applyAccent(accentSel.value);
+      });
+    }
+
+    final radiusSel = topbar.querySelector("#docs-radius");
+    if (radiusSel is web.HTMLSelectElement) {
+      void applyRadius(String radius) {
+        theme.setRadiusPreference(radius);
+        theme.applyRadiusPreference(radius);
+        radiusMode.value = radius;
+      }
+
+      applyRadius(radiusMode.value);
+      radiusSel.value = radiusMode.value;
+
+      on(radiusSel, "change", (_) {
+        applyRadius(radiusSel.value);
       });
     }
 

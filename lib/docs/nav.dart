@@ -46,6 +46,45 @@ web.HTMLElement solidDocsNav({required String active}) {
   inner.appendChild(search);
 
   final actions = web.HTMLDivElement()..className = "docsTopbarActions";
+
+  final accent = web.HTMLSelectElement()
+    ..id = "docs-accent"
+    ..className = "input docsTopbarSelect"
+    ..setAttribute("aria-label", "Accent color");
+  for (final v in const [
+    ("default", "Neutral"),
+    ("blue", "Blue"),
+    ("violet", "Violet"),
+    ("emerald", "Emerald"),
+    ("rose", "Rose"),
+    ("amber", "Amber"),
+  ]) {
+    final opt = web.HTMLOptionElement()
+      ..value = v.$1
+      ..text = v.$2;
+    accent.appendChild(opt);
+  }
+  actions.appendChild(accent);
+
+  final radius = web.HTMLSelectElement()
+    ..id = "docs-radius"
+    ..className = "input docsTopbarSelect"
+    ..setAttribute("aria-label", "Corner radius");
+  for (final v in const [
+    ("default", "Radius: default"),
+    ("none", "Radius: none"),
+    ("sm", "Radius: sm"),
+    ("md", "Radius: md"),
+    ("lg", "Radius: lg"),
+    ("xl", "Radius: xl"),
+  ]) {
+    final opt = web.HTMLOptionElement()
+      ..value = v.$1
+      ..text = v.$2;
+    radius.appendChild(opt);
+  }
+  actions.appendChild(radius);
+
   final github = web.HTMLAnchorElement()
     ..className = "docsTopbarIcon"
     ..href = "https://github.com/tritao/solidus"

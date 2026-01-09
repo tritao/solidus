@@ -39,6 +39,7 @@ Components:
 - [Spinner](?docs=spinner)
 - [Avatar](?docs=avatar)
 - [Breadcrumbs](?docs=breadcrumbs)
+- [Alert](?docs=alert)
 - [Popover](?docs=popover)
 - [Tooltip](?docs=tooltip)
 - [DropdownMenu](?docs=dropdown-menu)

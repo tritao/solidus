@@ -240,6 +240,34 @@
       }
     ]
   },
+  "Alert": {
+    "title": "Alert",
+    "rows": [
+      {
+        "name": "children",
+        "type": "Iterable<Node>",
+        "required": true,
+        "notes": "Alert contents (commonly AlertTitle + AlertDescription)."
+      },
+      {
+        "name": "variant",
+        "type": "AlertVariant",
+        "default": "AlertVariant.normal",
+        "notes": "default/destructive."
+      },
+      {
+        "name": "className",
+        "type": "String?",
+        "notes": "Additional CSS classes (appended)."
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "default": "\"alert\"",
+        "notes": "ARIA role (\"alert\" by default). Set to \"\" to omit."
+      }
+    ]
+  },
   "Checkbox": {
     "title": "Checkbox",
     "rows": [

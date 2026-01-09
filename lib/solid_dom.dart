@@ -1,6 +1,7 @@
 export "solid_dom/dialog.dart";
 export "solid_dom/button.dart";
 export "solid_dom/accordion.dart";
+export "solid_dom/alert.dart";
 export "solid_dom/badge.dart";
 export "solid_dom/avatar.dart";
 export "solid_dom/breadcrumbs.dart";

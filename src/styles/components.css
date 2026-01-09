@@ -181,6 +181,37 @@
     color: hsl(var(--muted-foreground));
   }
 
+  .alert {
+    position: relative;
+    width: min(720px, 100%);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-sizing: border-box;
+  }
+
+  .alert.default {
+    color: hsl(var(--foreground));
+  }
+
+  .alert.destructive {
+    border-color: hsl(var(--destructive) / 0.45);
+    background: hsl(var(--destructive) / 0.06);
+    color: hsl(var(--foreground));
+  }
+
+  .alertTitle {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .alertDescription {
+    color: hsl(var(--muted-foreground));
+    line-height: 1.35;
+  }
+
   .popperArrow {
     position: absolute;
     width: 10px;

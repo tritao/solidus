@@ -343,4 +343,94 @@
   .accordionPanel {
     padding: 12px 18px;
   }
+
+  .listbox {
+    box-sizing: border-box;
+    padding: 6px;
+    overflow: auto;
+  }
+
+  /* When a popper arrow is used, we render an inner scroll container so the
+     arrow can sit outside the bordered surface. */
+  .listbox[data-inner-scroll="1"] {
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .listboxScroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .listboxGroup {
+    padding: 4px 0;
+  }
+
+  .listboxGroupLabel {
+    font-size: 12px;
+    opacity: 0.7;
+    padding: 4px 8px;
+  }
+
+  .listboxEmpty {
+    padding: 10px 12px;
+    opacity: 0.8;
+  }
+
+  .listboxOption {
+    width: auto;
+    box-sizing: border-box;
+    text-align: left;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .listboxOption:hover:not([aria-disabled="true"]) {
+    background: hsl(var(--accent));
+  }
+
+  .listboxOption[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .listboxOption[aria-disabled="true"]:hover {
+    background: transparent;
+  }
+
+  .listboxOption:focus-visible {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
+  }
+
+  /* Listbox state styling:
+     - data-active=true: current hover/keyboard highlight
+     - aria-selected=true: committed selection
+     - both: selected + active */
+  .listbox [role="option"][data-active="true"]:not([aria-disabled="true"]) {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--border));
+  }
+
+  .listbox [role="option"][aria-selected="true"]:not([aria-disabled="true"]) {
+    background: hsl(var(--primary) / 0.12);
+    border-color: hsl(var(--primary) / 0.25);
+  }
+
+  .listbox
+    [role="option"][aria-selected="true"][data-active="true"]:not(
+      [aria-disabled="true"]
+    ) {
+    background: hsl(var(--primary) / 0.16);
+    border-color: hsl(var(--primary) / 0.35);
+  }
 }

@@ -4,13 +4,13 @@ import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "./listbox_core.dart";
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./selection/utils.dart";
-import "./solid_dom.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../selection/utils.dart";
+import "../solid_dom.dart";
 
 typedef ListboxOptionBuilder<T, O extends ListboxItem<T>> = web.HTMLElement
     Function(
@@ -77,7 +77,7 @@ final class _Entry<T, O extends ListboxItem<T>> {
   final String? sectionLabelId;
 }
 
-ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
+ListboxHandle<T, O> createListboxCore<T, O extends ListboxItem<T>>({
   required String id,
   List<O> Function()? options,
   Iterable<ListboxSection<T, O>> Function()? sections,
@@ -105,6 +105,12 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   ListboxIdRegistry<T, O>? idRegistry,
   web.HTMLElement? Function()? scrollContainer,
   bool useInnerScrollContainer = false,
+  String rootClassName = "",
+  String scrollClassName = "",
+  String optionClassName = "",
+  String sectionGroupClassName = "",
+  String sectionLabelClassName = "",
+  String emptyClassName = "",
   void Function(int index)? scrollToIndex,
   int Function()? pageSize,
   ListboxOptionBuilder<T, O>? optionBuilder,
@@ -112,14 +118,14 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
 }) {
   final eq = equals ?? defaultListboxEquals<T>;
   if (options == null && sections == null) {
-    throw StateError("createListbox: provide options or sections");
+    throw StateError("createListboxCore: provide options or sections");
   }
 
   final listbox = web.HTMLDivElement()
     ..id = id
     ..setAttribute("role", "listbox")
     ..tabIndex = -1
-    ..className = "card listbox";
+    ..className = rootClassName;
 
   final innerScroll = useInnerScrollContainer ? web.HTMLDivElement() : null;
   web.HTMLElement getScrollEl() =>
@@ -127,18 +133,9 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
   web.Element getRenderTarget() => innerScroll ?? listbox;
 
   if (innerScroll != null) {
-    // Allow popper arrows to render outside the border.
-    listbox.style.overflow = "visible";
-    listbox.style.display = "flex";
-    listbox.style.flexDirection = "column";
-
-    innerScroll.className = "listboxScroll";
-    innerScroll.style.flex = "1";
-    innerScroll.style.minHeight = "0";
-    innerScroll.style.overflow = "auto";
+    listbox.setAttribute("data-inner-scroll", "1");
+    innerScroll.className = scrollClassName;
     listbox.appendChild(innerScroll);
-  } else {
-    listbox.style.overflow = "auto";
   }
 
   final ids = idRegistry ??
@@ -447,14 +444,16 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
         final group = web.HTMLDivElement()
           ..setAttribute("role", "group")
           ..setAttribute("aria-labelledby", labelId);
-        group.style.padding = "4px 0";
+        if (sectionGroupClassName.trim().isNotEmpty) {
+          group.className = sectionGroupClassName.trim();
+        }
 
         final label = web.HTMLDivElement()
           ..id = labelId
           ..textContent = section.label;
-        label.style.fontSize = "12px";
-        label.style.opacity = "0.7";
-        label.style.padding = "4px 8px";
+        if (sectionLabelClassName.trim().isNotEmpty) {
+          label.className = sectionLabelClassName.trim();
+        }
         group.appendChild(label);
 
         for (final opt in section.options) {
@@ -473,7 +472,7 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
                       active: selection.focusedKey() == key,
                     )
               : (web.HTMLDivElement()
-                ..className = "menuItem"
+                ..className = optionClassName
                 ..textContent = opt.label);
           el.setAttribute("role", "option");
           el.id = key;
@@ -526,14 +525,14 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
                 selected: () => selection.isSelected(key),
                 active: () => selection.focusedKey() == key,
               )
-            : optionBuilder != null
+          : optionBuilder != null
                 ? optionBuilder(
                     opt,
                     selected: selection.isSelected(key),
                     active: selection.focusedKey() == key,
                   )
             : (web.HTMLDivElement()
-              ..className = "menuItem"
+              ..className = optionClassName
               ..textContent = opt.label);
 
         el.setAttribute("role", "option");
@@ -591,9 +590,8 @@ ListboxHandle<T, O> createListbox<T, O extends ListboxItem<T>>({
       if (showEmptyState) {
         final empty = web.HTMLDivElement()
           ..setAttribute("data-empty", "1")
-          ..textContent = emptyText;
-        empty.style.padding = "10px 12px";
-        empty.style.opacity = "0.8";
+          ..textContent = emptyText
+          ..className = emptyClassName;
         getRenderTarget().appendChild(empty);
       }
       return;

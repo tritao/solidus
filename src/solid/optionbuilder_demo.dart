@@ -1,5 +1,6 @@
 import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
+import "package:dart_web_test/solid_dom/solid_dom.dart";
+import "package:dart_web_test/solid_ui.dart";
 import "package:web/web.dart" as web;
 
 import "./demo_help.dart";
@@ -102,9 +103,7 @@ void mountSolidOptionBuilderDemo(web.Element mount) {
       },
       optionBuilderReactive: _reactiveOptionBuilder,
     );
-    handle.element.style.padding = "6px";
     handle.element.style.maxHeight = "220px";
-    handle.element.style.overflow = "auto";
     root.appendChild(handle.element);
 
     root.appendChild(web.HTMLHRElement());
@@ -140,9 +139,7 @@ void mountSolidOptionBuilderDemo(web.Element mount) {
       },
       optionBuilderReactive: _reactiveOptionBuilder,
     );
-    vfHandle.element.style.padding = "6px";
     vfHandle.element.style.maxHeight = "180px";
-    vfHandle.element.style.overflow = "auto";
     root.appendChild(vfHandle.element);
 
     attr(vfInput, "aria-activedescendant", () => vfHandle.activeId());

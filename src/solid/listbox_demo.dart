@@ -1,5 +1,6 @@
 import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
+import "package:dart_web_test/solid_dom/solid_dom.dart";
+import "package:dart_web_test/solid_ui.dart";
 import "package:web/web.dart" as web;
 
 import "./demo_help.dart";
@@ -91,8 +92,6 @@ void mountSolidListboxDemo(web.Element mount) {
     );
 
     sectionHandle.element.style.maxHeight = "220px";
-    sectionHandle.element.style.overflow = "auto";
-    sectionHandle.element.style.padding = "6px";
 
     root.appendChild(sectionHandle.element);
 
@@ -155,8 +154,6 @@ void mountSolidListboxDemo(web.Element mount) {
     attr(vfInput, "aria-activedescendant", () => vfHandle.activeId());
 
     vfHandle.element.style.maxHeight = "180px";
-    vfHandle.element.style.overflow = "auto";
-    vfHandle.element.style.padding = "6px";
     root.appendChild(vfHandle.element);
 
     createRenderEffect(() {

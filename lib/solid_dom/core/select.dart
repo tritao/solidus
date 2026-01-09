@@ -3,13 +3,13 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./focus_scope.dart";
 import "./listbox_core.dart";
 import "./listbox.dart";
-import "./overlay.dart";
-import "./popper.dart";
-import "./presence.dart";
-import "./solid_dom.dart";
+import "../focus_scope.dart";
+import "../overlay.dart";
+import "../popper.dart";
+import "../presence.dart";
+import "../solid_dom.dart";
 
 final class SelectOption<T> implements ListboxItem<T> {
   const SelectOption({
@@ -44,7 +44,7 @@ String _nextSelectId(String prefix) {
   return "$prefix-$_selectIdCounter";
 }
 
-web.DocumentFragment Select<T>({
+web.DocumentFragment createSelect<T>({
   required bool Function() open,
   required void Function(bool next) setOpen,
   required web.HTMLElement trigger,
@@ -65,6 +65,12 @@ web.DocumentFragment Select<T>({
   int exitMs = 120,
   String? portalId,
   String? listboxId,
+  String listboxClassName = "",
+  String listboxScrollClassName = "",
+  String listboxOptionClassName = "",
+  String listboxSectionGroupClassName = "",
+  String listboxSectionLabelClassName = "",
+  String listboxEmptyClassName = "",
   SelectOptionBuilder<T>? optionBuilder,
 }) {
   bool eq(T a, T b) => equals != null ? equals(a, b) : a == b;
@@ -125,7 +131,7 @@ web.DocumentFragment Select<T>({
     children: () => Portal(
       id: portalId,
       children: () {
-        final handle = createListbox<T, SelectOption<T>>(
+        final handle = createListboxCore<T, SelectOption<T>>(
           id: resolvedListboxId,
           options: () => options().toList(growable: false),
           selected: value,
@@ -134,6 +140,12 @@ web.DocumentFragment Select<T>({
           shouldUseVirtualFocus: true,
           shouldFocusOnHover: true,
           disallowEmptySelection: disallowEmptySelection,
+          rootClassName: listboxClassName,
+          scrollClassName: listboxScrollClassName,
+          optionClassName: listboxOptionClassName,
+          sectionGroupClassName: listboxSectionGroupClassName,
+          sectionLabelClassName: listboxSectionLabelClassName,
+          emptyClassName: listboxEmptyClassName,
           onTabOut: () {
             close("tab");
             try {
@@ -186,9 +198,7 @@ web.DocumentFragment Select<T>({
           preventClickThrough: true,
         );
         // Use the created listbox element as our positioned element.
-        // (createListbox already set id/role/className).
-        // Ensure styles match previous defaults.
-        handle.element.style.padding = "6px";
+        // (createListboxCore already set id/role/className).
 
         // Focus management: focus active option on mount, restore focus unless Tab-close.
         focusScope(

@@ -5,11 +5,11 @@ import "package:web/web.dart" as web;
 
 import "./listbox_core.dart";
 import "./listbox.dart";
-import "./overlay.dart";
-import "./popper.dart";
-import "./presence.dart";
-import "./selection/utils.dart";
-import "./solid_dom.dart";
+import "../overlay.dart";
+import "../popper.dart";
+import "../presence.dart";
+import "../selection/utils.dart";
+import "../solid_dom.dart";
 
 final class ComboboxOption<T> implements ListboxItem<T> {
   const ComboboxOption({
@@ -46,7 +46,7 @@ String _nextComboboxId(String prefix) {
   return "$prefix-$_comboboxIdCounter";
 }
 
-web.DocumentFragment Combobox<T>({
+web.DocumentFragment createCombobox<T>({
   required bool Function() open,
   required void Function(bool next) setOpen,
   required web.HTMLElement anchor,
@@ -74,6 +74,12 @@ web.DocumentFragment Combobox<T>({
   void Function(String reason)? onClose,
   int exitMs = 0,
   String? portalId,
+  String listboxClassName = "",
+  String listboxScrollClassName = "",
+  String listboxOptionClassName = "",
+  String listboxSectionGroupClassName = "",
+  String listboxSectionLabelClassName = "",
+  String listboxEmptyClassName = "",
   ComboboxOptionBuilder<T>? optionBuilder,
 }) {
   bool eq(T a, T b) => equals != null ? equals(a, b) : a == b;
@@ -392,7 +398,7 @@ web.DocumentFragment Combobox<T>({
       id: portalId,
       children: () {
         web.HTMLElement? arrowEl;
-        final listbox = createListbox<T, ComboboxOption<T>>(
+        final listbox = createListboxCore<T, ComboboxOption<T>>(
           id: resolvedListboxId,
           options: displayedOptions,
           selected: value,
@@ -406,6 +412,12 @@ web.DocumentFragment Combobox<T>({
           emptyText: emptyText,
           idRegistry: ids,
           useInnerScrollContainer: showArrow,
+          rootClassName: listboxClassName,
+          scrollClassName: listboxScrollClassName,
+          optionClassName: listboxOptionClassName,
+          sectionGroupClassName: listboxSectionGroupClassName,
+          sectionLabelClassName: listboxSectionLabelClassName,
+          emptyClassName: listboxEmptyClassName,
           initialActiveIndex: () {
             final idx = pendingInitialIndex.value;
             if (idx != null) {
@@ -429,7 +441,6 @@ web.DocumentFragment Combobox<T>({
               : (opt, {required selected, required active}) =>
                   optionBuilder(opt, selected: selected, active: active),
         );
-        listbox.element.style.padding = "6px";
         if (showArrow) {
           arrowEl = web.HTMLDivElement()
             ..className = "popperArrow"

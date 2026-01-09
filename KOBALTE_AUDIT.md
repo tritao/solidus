@@ -35,9 +35,10 @@ Audit in dependency order: **foundations → selection core → composed compone
    - Typeahead: `lib/solid_dom/selection/create_type_select.dart`
 
 3) Reference components (compose the above)
-   - Listbox: `lib/solid_dom/listbox.dart`
-   - Select: `lib/solid_dom/select.dart`
-   - Combobox: `lib/solid_dom/combobox.dart`
+   - Listbox (core): `lib/solid_dom/core/listbox.dart`
+   - Select (core): `lib/solid_dom/core/select.dart`
+   - Combobox (core): `lib/solid_dom/core/combobox.dart`
+   - UI wrappers: `lib/solid_ui/listbox.dart`, `lib/solid_ui/select.dart`, `lib/solid_ui/combobox.dart`
    - Menu core: `lib/solid_dom/menu.dart`
    - DropdownMenu wrapper: `lib/solid_dom/dropdown_menu.dart`
    - Popover/Tooltip: `lib/solid_dom/popover.dart`, `lib/solid_dom/tooltip.dart`
@@ -106,17 +107,17 @@ Use this as the “what file should I read?” index during the audit.
 
 - Listbox
   - Kobalte: `.cache/refs/kobalte/packages/core/src/listbox/*`
-  - Dart: `lib/solid_dom/listbox.dart`
+  - Dart: `lib/solid_dom/core/listbox.dart`
   - Tests: `npm run debug:solid-listbox`
 
 - Select
   - Kobalte: `.cache/refs/kobalte/packages/core/src/select/*`
-  - Dart: `lib/solid_dom/select.dart` (+ `listbox.dart`)
+  - Dart: `lib/solid_dom/core/select.dart` (+ `lib/solid_dom/core/listbox.dart`)
   - Tests: `npm run debug:solid-select`
 
 - Combobox
   - Kobalte: `.cache/refs/kobalte/packages/core/src/combobox/*`
-  - Dart: `lib/solid_dom/combobox.dart` (+ `listbox.dart`)
+  - Dart: `lib/solid_dom/core/combobox.dart` (+ `lib/solid_dom/core/listbox.dart`)
   - Tests: `npm run debug:solid-combobox`
 
 - Toast

@@ -1,12 +1,12 @@
 import "package:web/web.dart" as web;
 
-import "./focus_scope.dart";
+import "../focus_scope.dart";
 import "./menu.dart";
 
 /// Public DropdownMenu wrapper (Kobalte naming).
 ///
 /// This currently forwards to [Menu] with DropdownMenu-friendly defaults.
-web.DocumentFragment DropdownMenu({
+web.DocumentFragment createDropdownMenu({
   required bool Function() open,
   required void Function(bool next) setOpen,
   required web.Element anchor,
@@ -22,7 +22,7 @@ web.DocumentFragment DropdownMenu({
   bool modal = false,
   String? portalId,
 }) {
-  return Menu(
+  return createMenu(
     open: open,
     setOpen: setOpen,
     anchor: anchor,

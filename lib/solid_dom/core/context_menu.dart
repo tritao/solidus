@@ -4,10 +4,10 @@ import "dart:js_util" as js_util;
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./focus_scope.dart";
+import "../focus_scope.dart";
 import "./menu.dart";
-import "./solid_dom.dart";
-import "./selection/utils.dart";
+import "../solid_dom.dart";
+import "../selection/utils.dart";
 
 String _documentDirection() {
   try {
@@ -62,7 +62,7 @@ bool _isTouchOrPen(web.PointerEvent e) =>
 ///
 /// Opens at the pointer location on right click (`contextmenu`) and on touch
 /// long-press (~700ms).
-web.DocumentFragment ContextMenu({
+web.DocumentFragment createContextMenu({
   required bool Function() open,
   required void Function(bool next) setOpen,
   required web.Element target,
@@ -190,7 +190,7 @@ web.DocumentFragment ContextMenu({
   // Default placement mirrors Kobalte: rtl -> left-start, else right-start.
   final placement = _documentDirection() == "rtl" ? "left-start" : "right-start";
 
-  return Menu(
+  return createMenu(
     open: open,
     setOpen: setOpen,
     anchor: anchor,

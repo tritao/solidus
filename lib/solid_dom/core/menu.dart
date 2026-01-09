@@ -4,17 +4,17 @@ import "dart:js_util" as js_util;
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./focus_scope.dart";
-import "./overlay.dart";
-import "./popper.dart";
-import "./presence.dart";
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./selection/utils.dart";
-import "./solid_dom.dart";
+import "../focus_scope.dart";
+import "../overlay.dart";
+import "../popper.dart";
+import "../presence.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../selection/utils.dart";
+import "../solid_dom.dart";
 
 enum MenuItemKind {
   item,
@@ -319,7 +319,7 @@ final class _MenuController {
 }
 
 /// Menu core primitive (used by DropdownMenu/ContextMenu/Menubar-style wrappers).
-web.DocumentFragment Menu({
+web.DocumentFragment createMenu({
   required bool Function() open,
   required void Function(bool next) setOpen,
   required web.Element anchor,

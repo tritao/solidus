@@ -4,8 +4,8 @@ import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
 import "./menu.dart";
-import "./overlay.dart";
-import "./solid_dom.dart";
+import "../overlay.dart";
+import "../solid_dom.dart";
 
 final class MenubarMenu {
   MenubarMenu({
@@ -37,11 +37,11 @@ String _documentDirection() {
   }
 }
 
-web.DocumentFragment Menubar({
+web.DocumentFragment createMenubar({
   required String? Function() openKey,
   required void Function(String? next) setOpenKey,
   required List<MenubarMenu> menus,
-  String className = "menubar",
+  String className = "",
   String? portalId,
   void Function(String reason)? onClose,
 }) {
@@ -201,7 +201,7 @@ web.DocumentFragment Menubar({
     final k = m.key;
 
     fragment.appendChild(
-      Menu(
+      createMenu(
         open: () => openKey() == k,
         setOpen: (next) {
           if (next) {

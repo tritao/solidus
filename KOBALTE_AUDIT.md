@@ -39,8 +39,9 @@ Audit in dependency order: **foundations → selection core → composed compone
    - Select (core): `lib/solid_dom/core/select.dart`
    - Combobox (core): `lib/solid_dom/core/combobox.dart`
    - UI wrappers: `lib/solid_ui/listbox.dart`, `lib/solid_ui/select.dart`, `lib/solid_ui/combobox.dart`
-   - Menu core: `lib/solid_dom/menu.dart`
-   - DropdownMenu wrapper: `lib/solid_dom/dropdown_menu.dart`
+   - Menu core: `lib/solid_dom/core/menu.dart`
+   - DropdownMenu core: `lib/solid_dom/core/dropdown_menu.dart`
+   - UI wrappers: `lib/solid_ui/dropdown_menu.dart`, `lib/solid_ui/menubar.dart`, `lib/solid_ui/context_menu.dart`
    - Popover/Tooltip: `lib/solid_dom/popover.dart`, `lib/solid_dom/tooltip.dart`
    - Dialog: `lib/solid_dom/dialog.dart`
    - Toast: `lib/solid_dom/toast.dart`
@@ -102,7 +103,7 @@ Use this as the “what file should I read?” index during the audit.
 
 - Menu / DropdownMenu
   - Kobalte: `.cache/refs/kobalte/packages/core/src/menu/*` and `.cache/refs/kobalte/packages/core/src/dropdown-menu/*`
-  - Dart: `lib/solid_dom/menu.dart` + `lib/solid_dom/dropdown_menu.dart`
+  - Dart: `lib/solid_dom/core/menu.dart` + `lib/solid_dom/core/dropdown_menu.dart`
   - Tests: `npm run debug:solid-dropdownmenu`
 
 - Listbox

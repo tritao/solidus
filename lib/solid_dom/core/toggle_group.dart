@@ -3,13 +3,13 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./selection/utils.dart";
-import "./solid_dom.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../selection/utils.dart";
+import "../solid_dom.dart";
 
 enum ToggleGroupType {
   single,
@@ -46,13 +46,13 @@ bool _isRtl() {
   }
 }
 
-/// ToggleGroup primitive (Radix/shadcn-like; Kobalte-style roving focus).
+/// ToggleGroup primitive (unstyled; Radix/shadcn-like; Kobalte-style roving focus).
 ///
 /// - Group uses `role="group"`; items use `aria-pressed`.
 /// - Arrow keys move focus (roving tabindex), selection changes via click/Space/Enter.
 /// - `type=single` allows deselect (value can be null) unless `disallowEmptySelection=true`.
 /// - `type=multiple` controls a set of pressed keys.
-web.HTMLElement ToggleGroup({
+web.HTMLElement createToggleGroup({
   required ToggleGroupType Function() type,
   required Iterable<ToggleGroupItem> items,
   // Single
@@ -67,8 +67,8 @@ web.HTMLElement ToggleGroup({
   bool Function()? shouldFocusWrap,
   String? ariaLabel,
   String? id,
-  String rootClassName = "toggleGroup",
-  String itemClassName = "toggleItem",
+  String rootClassName = "",
+  String itemClassName = "",
 }) {
   final typeAccessor = type;
   final orientationAccessor = orientation ?? () => Orientation.horizontal;
@@ -91,17 +91,13 @@ web.HTMLElement ToggleGroup({
     byKey[k] = it;
   }
 
-  bool itemDisabled(String k) =>
-      isDisabled() || (byKey[k]?.disabled ?? false);
+  bool itemDisabled(String k) => isDisabled() || (byKey[k]?.disabled ?? false);
   String textValueForKey(String k) => byKey[k]?.textValue ?? "";
 
   final selection = SelectionManager(
-    selectionMode: typeAccessor() == ToggleGroupType.multiple
-        ? SelectionMode.multiple
-        : SelectionMode.single,
-    selectionBehavior: typeAccessor() == ToggleGroupType.multiple
-        ? SelectionBehavior.toggle
-        : SelectionBehavior.replace,
+    selectionMode: typeAccessor() == ToggleGroupType.multiple ? SelectionMode.multiple : SelectionMode.single,
+    selectionBehavior:
+        typeAccessor() == ToggleGroupType.multiple ? SelectionBehavior.toggle : SelectionBehavior.replace,
     disallowEmptySelection: disallowEmptySelectionAccessor(),
     orderedKeys: () => keys,
     isDisabled: itemDisabled,
@@ -111,9 +107,7 @@ web.HTMLElement ToggleGroup({
   // If the type changes dynamically, keep SelectionManager consistent.
   createEffect(() {
     final t = typeAccessor();
-    selection.setSelectionMode(
-      t == ToggleGroupType.multiple ? SelectionMode.multiple : SelectionMode.single,
-    );
+    selection.setSelectionMode(t == ToggleGroupType.multiple ? SelectionMode.multiple : SelectionMode.single);
     selection.setSelectionBehavior(
       t == ToggleGroupType.multiple ? SelectionBehavior.toggle : SelectionBehavior.replace,
     );
@@ -134,10 +128,7 @@ web.HTMLElement ToggleGroup({
 
   createRenderEffect(() {
     final o = orientationAccessor();
-    root.setAttribute(
-      "aria-orientation",
-      o == Orientation.vertical ? "vertical" : "horizontal",
-    );
+    root.setAttribute("aria-orientation", o == Orientation.vertical ? "vertical" : "horizontal");
     final d = isDisabled();
     if (d) {
       root.setAttribute("aria-disabled", "true");
@@ -247,10 +238,13 @@ web.HTMLElement ToggleGroup({
   );
   selectable.attach(root);
 
+  final itemClass = itemClassName.trim();
+
   for (final k in keys) {
     final it = byKey[k]!;
     final item = it.item;
-    item.classList.add(itemClassName);
+
+    if (itemClass.isNotEmpty) item.classList.add(itemClass);
 
     if (item.id.isEmpty) {
       item.id = "$resolvedId-toggle-$k";

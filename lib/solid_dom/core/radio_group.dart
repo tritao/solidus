@@ -3,13 +3,13 @@ import "dart:async";
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./selection/create_selectable_collection.dart";
-import "./selection/create_selectable_item.dart";
-import "./selection/list_keyboard_delegate.dart";
-import "./selection/selection_manager.dart";
-import "./selection/types.dart";
-import "./selection/utils.dart";
-import "./solid_dom.dart";
+import "../selection/create_selectable_collection.dart";
+import "../selection/create_selectable_item.dart";
+import "../selection/list_keyboard_delegate.dart";
+import "../selection/selection_manager.dart";
+import "../selection/types.dart";
+import "../selection/utils.dart";
+import "../solid_dom.dart";
 
 final class RadioGroupItem {
   RadioGroupItem({
@@ -41,13 +41,13 @@ bool _isRtl() {
   }
 }
 
-/// RadioGroup primitive (Kobalte-style semantics + roving focus).
+/// RadioGroup primitive (unstyled; Kobalte-style semantics + roving focus).
 ///
 /// - Container uses `role="radiogroup"`.
 /// - Items use `role="radio"` + `aria-checked`.
 /// - Arrow keys move selection/focus (skipping disabled).
 /// - Space/Enter selects focused item.
-web.HTMLElement RadioGroup({
+web.HTMLElement createRadioGroup({
   required Iterable<RadioGroupItem> items,
   required String? Function() value,
   required void Function(String next) setValue,
@@ -56,8 +56,8 @@ web.HTMLElement RadioGroup({
   bool Function()? disabled,
   String? ariaLabel,
   String? id,
-  String rootClassName = "radioGroup",
-  String itemClassName = "radioItem",
+  String rootClassName = "",
+  String itemClassName = "",
 }) {
   final orientationAccessor = orientation ?? () => Orientation.vertical;
   final shouldFocusWrapAccessor = shouldFocusWrap ?? () => true;
@@ -78,8 +78,7 @@ web.HTMLElement RadioGroup({
     byKey[k] = it;
   }
 
-  bool itemDisabled(String k) =>
-      isDisabled() || (byKey[k]?.disabled ?? false);
+  bool itemDisabled(String k) => isDisabled() || (byKey[k]?.disabled ?? false);
   String textValueForKey(String k) => byKey[k]?.textValue ?? "";
 
   final selection = SelectionManager(
@@ -182,11 +181,13 @@ web.HTMLElement RadioGroup({
   );
   selectable.attach(root);
 
+  final itemClass = itemClassName.trim();
+
   for (final k in keys) {
     final it = byKey[k]!;
     final item = it.item;
 
-    item.classList.add(itemClassName);
+    if (itemClass.isNotEmpty) item.classList.add(itemClass);
     item.setAttribute("role", "radio");
 
     if (item.id.isEmpty) {
@@ -290,3 +291,4 @@ web.HTMLElement RadioGroup({
 
   return root;
 }
+

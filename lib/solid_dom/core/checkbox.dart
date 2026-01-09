@@ -1,46 +1,55 @@
 import "package:dart_web_test/solid.dart";
 import "package:web/web.dart" as web;
 
-import "./solid_dom.dart";
+import "../solid_dom.dart";
 
-/// Switch primitive (Kobalte-like semantics).
+/// Checkbox primitive (unstyled).
 ///
-/// - Uses `role="switch"` + `aria-checked`.
+/// - Uses `role="checkbox"` + `aria-checked` ("true" | "false" | "mixed").
+/// - Supports indeterminate state (aria-checked="mixed").
 /// - Keyboard: Enter/Space toggles.
 /// - Click toggles.
-web.HTMLElement Switch({
+web.HTMLElement createCheckbox({
   required bool Function() checked,
   required void Function(bool next) setChecked,
+  bool Function()? indeterminate,
+  void Function(bool next)? setIndeterminate,
   bool Function()? disabled,
   String? id,
-  String className = "switch",
-  String thumbClassName = "switchThumb",
+  String className = "",
   String? ariaLabel,
 }) {
   final isDisabled = disabled ?? () => false;
+  final isIndeterminate = indeterminate ?? () => false;
 
   final root = web.HTMLButtonElement()
     ..type = "button"
     ..id = id ?? ""
     ..className = className
-    ..setAttribute("role", "switch");
+    ..setAttribute("role", "checkbox");
 
   if (ariaLabel != null && ariaLabel.isNotEmpty) {
     root.setAttribute("aria-label", ariaLabel);
   }
 
-  final thumb = web.HTMLSpanElement()..className = thumbClassName;
-  root.appendChild(thumb);
-
   void toggle() {
     if (isDisabled()) return;
+    if (isIndeterminate()) {
+      setIndeterminate?.call(false);
+      setChecked(true);
+      return;
+    }
     setChecked(!checked());
   }
 
   createRenderEffect(() {
+    final mixed = isIndeterminate();
     final v = checked();
-    root.setAttribute("aria-checked", v ? "true" : "false");
-    root.setAttribute("data-state", v ? "checked" : "unchecked");
+    root.setAttribute("aria-checked", mixed ? "mixed" : (v ? "true" : "false"));
+    root.setAttribute(
+      "data-state",
+      mixed ? "indeterminate" : (v ? "checked" : "unchecked"),
+    );
   });
 
   createRenderEffect(() {

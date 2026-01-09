@@ -1,6 +1,5 @@
 export "solid_dom/dialog.dart";
 export "solid_dom/accordion.dart";
-export "solid_dom/checkbox.dart";
 export "solid_dom/context_menu.dart";
 export "solid_dom/dropdown_menu.dart";
 export "solid_dom/floating.dart";
@@ -14,7 +13,6 @@ export "solid_dom/tabs.dart";
 export "solid_dom/popover.dart";
 export "solid_dom/presence.dart";
 export "solid_dom/solid_dom.dart";
-export "solid_dom/switch.dart";
 export "solid_dom/radio_group.dart";
 export "solid_dom/toggle_group.dart";
 export "solid_dom/toast.dart";
@@ -32,3 +30,6 @@ export "solid_dom/selection/utils.dart";
 export "solid_dom/selection/create_type_select.dart";
 export "solid_dom/selection/create_selectable_collection.dart";
 export "solid_dom/selection/create_selectable_item.dart";
+
+export "solid_dom/core/checkbox.dart";
+export "solid_dom/core/switch.dart";

@@ -20,6 +20,8 @@ import { runDocsListboxScenario } from "./scenarios/docs-listbox.mjs";
 import { runDocsCheckboxScenario } from "./scenarios/docs-checkbox.mjs";
 import { runDocsRadioGroupScenario } from "./scenarios/docs-radio-group.mjs";
 import { runDocsToggleGroupScenario } from "./scenarios/docs-toggle-group.mjs";
+import { runDocsBadgeScenario } from "./scenarios/docs-badge.mjs";
+import { runDocsSeparatorScenario } from "./scenarios/docs-separator.mjs";
 
 const solidScenarioRunners = {
   ...solidBasicUiScenarios,
@@ -36,6 +38,8 @@ const solidScenarioRunners = {
   "docs-checkbox": (page, ctx) => runDocsCheckboxScenario(page, ctx),
   "docs-radio-group": (page, ctx) => runDocsRadioGroupScenario(page, ctx),
   "docs-toggle-group": (page, ctx) => runDocsToggleGroupScenario(page, ctx),
+  "docs-badge": (page, ctx) => runDocsBadgeScenario(page, ctx),
+  "docs-separator": (page, ctx) => runDocsSeparatorScenario(page, ctx),
 };
 
 const HOST = "127.0.0.1";

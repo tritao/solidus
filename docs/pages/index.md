@@ -32,6 +32,9 @@ Start with:
 
 Components:
 
+- [Button](?docs=button)
+- [Badge](?docs=badge)
+- [Separator](?docs=separator)
 - [Popover](?docs=popover)
 - [Tooltip](?docs=tooltip)
 - [DropdownMenu](?docs=dropdown-menu)

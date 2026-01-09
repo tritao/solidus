@@ -43,6 +43,51 @@
       }
     ]
   },
+  "Badge": {
+    "title": "Badge",
+    "rows": [
+      {
+        "name": "label",
+        "type": "String",
+        "required": true,
+        "notes": "Badge text content."
+      },
+      {
+        "name": "variant",
+        "type": "BadgeVariant",
+        "default": "BadgeVariant.normal",
+        "notes": "default/secondary/outline/destructive."
+      },
+      {
+        "name": "className",
+        "type": "String?",
+        "notes": "Additional CSS classes (appended)."
+      }
+    ]
+  },
+  "Separator": {
+    "title": "Separator",
+    "rows": [
+      {
+        "name": "orientation",
+        "type": "SeparatorOrientation",
+        "default": "SeparatorOrientation.horizontal",
+        "notes": "horizontal or vertical."
+      },
+      {
+        "name": "decorative",
+        "type": "bool",
+        "default": "true",
+        "notes": "When true, uses role=presentation and aria-hidden=true."
+      },
+      {
+        "name": "className",
+        "type": "String",
+        "default": "\"separator\"",
+        "notes": "CSS class for the root."
+      }
+    ]
+  },
   "Checkbox": {
     "title": "Checkbox",
     "rows": [

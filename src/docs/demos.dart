@@ -27,15 +27,19 @@ import "./examples/runtime_dom_basic.dart";
 import "./examples/runtime_resources_basic.dart";
 import "./examples/runtime_context_basic.dart";
 import "./examples/button_basic.dart";
+import "./examples/badge_basic.dart";
 import "./examples/radio_group_basic.dart";
+import "./examples/separator_basic.dart";
 import "./examples/toggle_group_basic.dart";
 
 typedef DocsDemoMount = Dispose Function(web.Element mount);
 
 final Map<String, DocsDemoMount> docsDemos = {
   "button-basic": mountDocsButtonBasic,
+  "badge-basic": mountDocsBadgeBasic,
   "checkbox-basic": mountDocsCheckboxBasic,
   "radio-group-basic": mountDocsRadioGroupBasic,
+  "separator-basic": mountDocsSeparatorBasic,
   "toggle-group-basic": mountDocsToggleGroupBasic,
   "dialog-basic": mountDocsDialogBasic,
   "overlay-basic": mountDocsOverlayBasic,

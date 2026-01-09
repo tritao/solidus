@@ -1,4 +1,56 @@
 @layer components {
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .badge.default {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .badge.secondary {
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .badge.outline {
+    background: transparent;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .badge.destructive {
+    background: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
+  }
+
+  .separator {
+    flex: 0 0 auto;
+    background: hsl(var(--border));
+  }
+
+  .separator[data-orientation="horizontal"] {
+    width: 100%;
+    height: 1px;
+  }
+
+  .separator[data-orientation="vertical"] {
+    width: 1px;
+    height: 100%;
+    align-self: stretch;
+  }
+
   .popperArrow {
     position: absolute;
     width: 10px;

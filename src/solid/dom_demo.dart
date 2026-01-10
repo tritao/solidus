@@ -1,11 +1,11 @@
 import "dart:js_interop";
 
-import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
+import "package:solidus/solidus.dart";
+import "package:solidus/solidus_dom.dart";
 import "package:web/web.dart" as web;
 
 import "./demo_help.dart";
-import "package:dart_web_test/demo/solid_demo_nav.dart";
+import "package:solidus/demo/solid_demo_nav.dart";
 
 void mountSolidDomDemo(web.Element mount) {
   render(mount, () {

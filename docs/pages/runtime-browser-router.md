@@ -20,14 +20,14 @@ If you only need querystring helpers (like `?docs=...`), see: [Routing (URL quer
 - Hooks: `useLocation`, `useNavigate`, `useParams`, `useMatches`
 - `Outlet()`: placeholder for nested route children
 
-All are exported from `package:dart_web_test/solid_router.dart`.
+All are exported from `package:solidus/solidus_router.dart`.
 
 ## Router setup
 
 ```dart
-import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
-import "package:dart_web_test/solid_router.dart";
+import "package:solidus/solidus.dart";
+import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_router.dart";
 import "package:web/web.dart" as web;
 
 Dispose mountApp(web.Element mount) {

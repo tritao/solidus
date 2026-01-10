@@ -1,5 +1,5 @@
-import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_ui.dart";
+import "package:solidus/solidus.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 web.HTMLElement _panel(String title, List<({String label, String desc})> links) {

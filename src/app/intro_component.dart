@@ -1,7 +1,7 @@
 import "package:web/web.dart" as web;
 
-import "package:dart_web_test/dom_ui/component.dart";
-import "package:dart_web_test/dom_ui/dom.dart" as dom;
+import "package:solidus/dom_ui/component.dart";
+import "package:solidus/dom_ui/dom.dart" as dom;
 
 final class IntroComponent extends Component {
   @override

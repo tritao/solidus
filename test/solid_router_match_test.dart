@@ -1,4 +1,4 @@
-import "package:dart_web_test/solid_router/match.dart";
+import "package:solidus/solidus_router/match.dart";
 import "package:test/test.dart";
 
 void main() {

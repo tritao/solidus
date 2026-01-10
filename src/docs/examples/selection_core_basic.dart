@@ -1,12 +1,12 @@
-import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
+import "package:solidus/solidus.dart";
+import "package:solidus/solidus_dom.dart";
 import "package:web/web.dart" as web;
 
-import "package:dart_web_test/solid_dom/selection/create_selectable_collection.dart";
-import "package:dart_web_test/solid_dom/selection/create_selectable_item.dart";
-import "package:dart_web_test/solid_dom/selection/list_keyboard_delegate.dart";
-import "package:dart_web_test/solid_dom/selection/selection_manager.dart";
-import "package:dart_web_test/solid_dom/selection/types.dart";
+import "package:solidus/solidus_dom/selection/create_selectable_collection.dart";
+import "package:solidus/solidus_dom/selection/create_selectable_item.dart";
+import "package:solidus/solidus_dom/selection/list_keyboard_delegate.dart";
+import "package:solidus/solidus_dom/selection/selection_manager.dart";
+import "package:solidus/solidus_dom/selection/types.dart";
 
 Dispose mountDocsSelectionCoreBasic(web.Element mount) {
   // #doc:region snippet

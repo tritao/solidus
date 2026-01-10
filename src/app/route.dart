@@ -1,4 +1,4 @@
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 import './config.dart';
 

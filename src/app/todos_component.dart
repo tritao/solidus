@@ -1,9 +1,9 @@
 import 'package:web/web.dart' as web;
 
-import 'package:dart_web_test/dom_ui/action_dispatch.dart';
-import 'package:dart_web_test/dom_ui/component.dart';
-import 'package:dart_web_test/dom_ui/dom.dart' as dom;
-import 'package:dart_web_test/dom_ui/events.dart' as events;
+import 'package:solidus/dom_ui/action_dispatch.dart';
+import 'package:solidus/dom_ui/component.dart';
+import 'package:solidus/dom_ui/dom.dart' as dom;
+import 'package:solidus/dom_ui/events.dart' as events;
 
 import './todo.dart';
 import './todos_state.dart';

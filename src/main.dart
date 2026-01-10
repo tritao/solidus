@@ -5,7 +5,7 @@ import './app/counter_component.dart';
 import './app/intro_component.dart';
 import './app/todos_component.dart';
 import './app/users_component.dart';
-import 'package:dart_web_test/dom_ui/theme.dart' as theme;
+import 'package:solidus/dom_ui/theme.dart' as theme;
 
 void main() {
   final mount = web.document.querySelector('#app');

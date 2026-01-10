@@ -1,10 +1,10 @@
 import 'package:web/web.dart' as web;
 
-import 'package:dart_web_test/dom_ui/action_dispatch.dart';
-import 'package:dart_web_test/dom_ui/component.dart';
-import 'package:dart_web_test/dom_ui/dom.dart' as dom;
-import 'package:dart_web_test/dom_ui/dom_bindings.dart' as bind;
-import 'package:dart_web_test/dom_ui/reactive.dart' as rx;
+import 'package:solidus/dom_ui/action_dispatch.dart';
+import 'package:solidus/dom_ui/component.dart';
+import 'package:solidus/dom_ui/dom.dart' as dom;
+import 'package:solidus/dom_ui/dom_bindings.dart' as bind;
+import 'package:solidus/dom_ui/reactive.dart' as rx;
 
 abstract final class CounterDomActions {
   static const dec = 'counter-dec';

@@ -51,7 +51,7 @@ The docs historically used `?docs=1` as “home”. `normalizeDocsSlug(slug)` tr
 ### Toggle a feature flag (replaceState)
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 final debug = router.getQueryFlag('debug');
 router.setQueryParam('debug', debug ? null : '1'); // default: replace=true
@@ -60,7 +60,7 @@ router.setQueryParam('debug', debug ? null : '1'); // default: replace=true
 ### Keep URLs clean (omit defaults)
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 // Default is "on"; only persist the non-default case.
 final showUsers = router.getQueryFlag('showUsers', defaultValue: true);
@@ -72,7 +72,7 @@ router.setQueryParam('showUsers', showUsers ? null : '0');
 `setQueryParam` updates a single key while keeping the rest of the querystring intact.
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 // e.g. ?users=limited or ?users=all
 router.setQueryParam('users', 'limited');
@@ -81,7 +81,7 @@ router.setQueryParam('users', 'limited');
 ### Navigate between docs pages (pushState)
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 router.setQueryParam('docs', 'dialog', replace: false);
 ```
@@ -89,7 +89,7 @@ router.setQueryParam('docs', 'dialog', replace: false);
 ### Parse a typed param safely
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 int readPageSize({int fallback = 20}) {
   final raw = router.getQueryParam('pageSize');
@@ -101,7 +101,7 @@ int readPageSize({int fallback = 20}) {
 ### React to back/forward
 
 ```dart
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/dom_ui/router.dart' as router;
 
 final stop = router.listenPopState((_) {
   final docs = router.normalizeDocsSlug(router.getQueryParam('docs'));
@@ -116,8 +116,8 @@ final stop = router.listenPopState((_) {
 This is the pattern used in `src/docs/router.dart`: keep a signal in sync with the URL.
 
 ```dart
-import 'package:dart_web_test/solid.dart';
-import 'package:dart_web_test/dom_ui/router.dart' as router;
+import 'package:solidus/solidus.dart';
+import 'package:solidus/dom_ui/router.dart' as router;
 
 final slug = createSignal(router.normalizeDocsSlug(router.getQueryParam('docs')));
 

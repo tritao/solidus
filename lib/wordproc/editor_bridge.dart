@@ -1,5 +1,5 @@
 @JS()
-library dart_web_test.wordproc.editor_bridge;
+library solidus.wordproc.editor_bridge;
 
 import "dart:js_interop";
 

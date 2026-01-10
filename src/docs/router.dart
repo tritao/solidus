@@ -2,14 +2,14 @@ import "dart:async";
 import "dart:convert";
 import "dart:js_interop";
 
-import "package:dart_web_test/solid.dart";
-import "package:dart_web_test/solid_dom.dart";
-import "package:dart_web_test/dom_ui/router.dart" as router;
-import "package:dart_web_test/dom_ui/theme.dart" as theme;
+import "package:solidus/solidus.dart";
+import "package:solidus/solidus_dom.dart";
+import "package:solidus/dom_ui/router.dart" as router;
+import "package:solidus/dom_ui/theme.dart" as theme;
 import "package:http/http.dart" as http;
 import "package:web/web.dart" as web;
 
-import "package:dart_web_test/docs/nav.dart";
+import "package:solidus/docs/nav.dart";
 import "./demos.dart";
 import "./props.dart";
 

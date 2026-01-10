@@ -1,6 +1,6 @@
 import "dart:async";
 
-import "package:dart_web_test/solid.dart";
+import "package:solidus/solidus.dart";
 import "package:test/test.dart";
 
 Future<void> pump() async {

@@ -1,7 +1,7 @@
 import "package:web/web.dart" as web;
 
 import "./docs/router.dart";
-import "package:dart_web_test/dom_ui/theme.dart" as theme;
+import "package:solidus/dom_ui/theme.dart" as theme;
 
 void main() {
   final mount = web.document.querySelector("#app");

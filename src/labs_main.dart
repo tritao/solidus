@@ -21,7 +21,7 @@ import "./solid/switch_demo.dart";
 import "./solid/nesting_demo.dart";
 import "./solid/toast_modal_demo.dart";
 import "./solid/optionbuilder_demo.dart";
-import "package:dart_web_test/dom_ui/theme.dart" as theme;
+import "package:solidus/dom_ui/theme.dart" as theme;
 
 void main() {
   final mount = web.document.querySelector("#app");

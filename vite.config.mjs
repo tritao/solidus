@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { defineConfig, loadEnv } from "vite";
 import Dart from "vite-plugin-dart";
 
@@ -39,6 +40,23 @@ export default defineConfig(({ mode, command }) => {
     process.env.BUILD_WORDPROC === "1" ||
     process.env.VITE_BUILD_WORDPROC === "1";
 
+  const ensureDartPubGet = () => {
+    const packageConfig = path.join(
+      process.cwd(),
+      ".dart_tool",
+      "package_config.json",
+    );
+    if (fs.existsSync(packageConfig)) return;
+    console.log(
+      `[solidus] Missing .dart_tool/package_config.json; running "${dart} pub get"`,
+    );
+    const result = spawnSync(dart, ["pub", "get"], { stdio: "inherit" });
+    const status = result.status ?? 1;
+    if (status !== 0) {
+      throw new Error(`[solidus] dart pub get failed (exit ${status})`);
+    }
+  };
+
   return {
     base,
     build: {
@@ -54,6 +72,12 @@ export default defineConfig(({ mode, command }) => {
       },
     },
     plugins: [
+      {
+        name: "solidus:ensure-dart-pub-get",
+        configResolved() {
+          ensureDartPubGet();
+        },
+      },
       Dart({
         dart,
         stdio: true,

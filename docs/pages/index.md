@@ -31,6 +31,8 @@ Start with:
 - [Dialog](?docs=dialog)
 - [Selection core](?docs=selection-core)
 - [Reactivity](?docs=runtime-reactivity)
+- [Routing (URL query)](?docs=runtime-router)
+- [Browser router (paths + params)](?docs=runtime-browser-router)
 
 Components:
 

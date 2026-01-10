@@ -75,7 +75,9 @@ web.HTMLElement InputOTP({
     final input = web.HTMLInputElement()
       ..type = "text"
       ..inputMode = "numeric"
-      ..maxLength = 2
+      // Allow multi-char input so mobile OTP autofill can drop the entire code
+      // into a single field; we'll distribute characters in the input handler.
+      ..maxLength = length
       ..className = inputClassName
       ..setAttribute("data-index", i.toString())
       ..setAttribute("autocomplete", "one-time-code");
@@ -121,9 +123,13 @@ web.HTMLElement InputOTP({
         return;
       }
       if (v.length > 1) {
+        // Clamp the visible value immediately (otherwise the last field can
+        // briefly display multiple characters).
+        input.value = v[0];
         commitMany(i, v);
         return;
       }
+      if (raw != v) input.value = v;
       commitAt(i, v);
       if (i < length - 1) scheduleMicrotask(() => inputs[i + 1].focus());
     });

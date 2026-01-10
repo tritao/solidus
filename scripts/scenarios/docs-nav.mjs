@@ -26,7 +26,9 @@ export async function runDocsNavScenario(page, ctx) {
     return window.__docsNavSentinel;
   });
   await sidebar.getByRole("link", { name: "Dialog" }).click();
-  await page.waitForURL(/#\\/dialog/, { timeout: timeoutMs });
+  await page.waitForURL((url) => new URL(url).hash === "#/dialog", {
+    timeout: timeoutMs,
+  });
 
   const stillThere = await page.evaluate(() => window.__docsNavSentinel);
   if (stillThere !== sentinel) {

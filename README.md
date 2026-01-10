@@ -1,87 +1,93 @@
-# Dart + Vite + Dart SDK (vite-plugin-dart)
+# 🛡️ Solidus ✨
 
-Minimal Vite project that imports `.dart` directly via `vite-plugin-dart`, with a small UI written in Dart (plain DOM) to validate compilation + runtime behavior.
+UI primitives + docs + conformance labs for **Dart on the DOM**, built with **Vite** and `vite-plugin-dart`. 🚀🧩
 
-Live demo: https://tritao.github.io/vite-dart-dom-demo/
+<p>
+  <img alt="Solidus logo" src="public/assets/solidus-logo.png" width="520" />
+</p>
+
+## 🌟 What’s in here?
+
+- 📚 **Docs**: component pages + minimal examples → `docs.html?docs=index`
+- 🧪 **Labs**: edge cases + Playwright scenarios → `labs.html`
+- 🧱 **Runtime**: reusable DOM UI primitives → `lib/dom_ui/`
+- 🧰 **Vite + Dart**: import `.dart` directly via `vite-plugin-dart` → `vendor/vite-plugin-dart/`
 
 ![Demo screenshot](public/assets/demo.png)
 
-## URL State
+## ⚡ Quickstart
 
-- Enable debug logs: add `?debug=1`
-- Show/hide users section: `?showUsers=1` / `?showUsers=0`
-- Users endpoint: `?users=all` / `?users=limited`
+### ✅ Prereqs
 
-## Prerequisites
+- 🟢 Node.js `^20.19.0 || >=22.12.0`
+- 🎯 Dart (optional): if you don’t have `dart`, you can provision it locally (Linux x64 / macOS)
 
-- Node.js `^20.19.0 || >=22.12.0` (required by latest Vite)
-- Linux x64 (for the included Dart provisioning script), or install Dart yourself
-
-## Provision Dart (Linux x64)
-
-If you don't have `dart` installed, provision Dart SDK 3.10.7 locally into `.dart-sdk/` (Linux/macOS):
-
-```bash
-npm run provision:dart
-```
-
-## Install
+### 🛠️ Install + Run
 
 ```bash
 npm install
 ```
 
-## Run
+If `dart` isn’t installed:
+
+```bash
+npm run provision:dart
+```
+
+Start dev:
 
 ```bash
 npm run dev
 ```
 
-Open the URL Vite prints and you should see the demo UI rendered from `src/main.dart`.
+Open (pick your adventure ✨🗺️):
 
-## Debug (headless)
+- 📚 Docs: `http://localhost:5173/docs.html?docs=index`
+- 🧪 Labs: `http://localhost:5173/labs.html?solid=1`
+- 🧪 Solid demos: `http://localhost:5173/labs.html?solid=dialog` (or `overlay`, `popover`, …)
+- 🧪 Original “Dart + Vite” demo: `http://localhost:5173/?demos=1`
 
-Runs a reproducible Playwright smoke check (starts the server, captures console/network/page errors, asserts `#app` is non-empty, and writes artifacts to `.cache/`):
+## 🧪 Headless checks (Playwright) 🤖
+
+- 🧫 Smoke UI (basic app): `npm run debug:ui` (CI: `npm run debug:ui:ci`)
+- 📚 Docs suites (CI bundle): `npm run docs:ci`
+
+Artifacts land in `.cache/` 🗂️✨
+
+## 🧱 Build output / Pages-ish behavior 🌍
+
+- 🏗️ `npm run build` defaults to a relative base (`./`) so `dist/index.html` can be served from a subpath.
+- 🧩 Override base with `BASE` (or `VITE_BASE`): `BASE=/my-subpath/ npm run build`
+- 🚫 Don’t open built output via `file://...` (ESM + CORS); use `npm run preview` instead.
+
+## 🔗 URL flags & state 🧠
+
+In the original demo (`/?demos=1`):
+
+- 🐛 Debug logs: `?debug=1`
+- 👥 Users section: `?showUsers=1` / `?showUsers=0`
+- 🌐 Users endpoint: `?users=all` / `?users=limited`
+
+## 🗂️ Repo map 🧭
+
+- 🧱 Runtime primitives: `lib/dom_ui/`
+- 📦 App shell + demo routes: `src/app/`
+- 📚 Docs runtime + demos: `src/docs/` + `docs/pages/` + `tool/build_docs.dart`
+- 🧪 Labs / conformance demos: `src/solid/` + `scripts/scenarios/`
+- ⚙️ Vite integration: `vite.config.mjs` + `vendor/vite-plugin-dart/`
+- 🏛️ Architecture notes: `ARCHITECTURE.md`
+
+## 🧯 Troubleshooting 🧰
+
+- 😵 `dart: not found`: run `npm run provision:dart` (or install Dart, or set `DART=/path/to/dart`)
+- 🟠 Node version warnings: upgrade Node to `^20.19.0 || >=22.12.0`
+
+## 🧁 Docs authoring 🍰
+
+Docs pages live in `docs/pages/**/*.md` and compile to `public/assets/docs/` via:
 
 ```bash
-npm run debug:ui
+npm run docs:build
 ```
 
-Variants:
-
-```bash
-npm run debug:ui:dev
-npm run debug:ui:preview
-```
-
-CI default (preview + longer timeout):
-
-```bash
-npm run debug:ui:ci
-```
-
-## Build output / GitHub Pages
-
-- `npm run build` defaults to a relative `base` (`./`) so `dist/index.html` can be opened from a subpath.
-- To override explicitly, set `BASE` (or `VITE_BASE`), e.g. `BASE=/my-subpath/ npm run build`.
-- Note: the build output is an ES module; open it via a server (e.g. `npm run preview`) instead of `file://...` to avoid browser CORS blocks.
-
-## Troubleshooting
-
-- `npm run dev` says `dart: not found`: run `npm run provision:dart` (Linux x64) or install Dart; you can also set `DART=/path/to/dart`.
-- Vite warns about Node version: upgrade Node to `^20.19.0 || >=22.12.0`.
-
-## Demo UI
-
-The demo app is plain DOM (no framework) using `package:web` and includes:
-
-- Counter (state + re-render)
-- Todos (CRUD + `localStorage`)
-- Fetch (async network call + loading/error states)
-
-## Files
-
-- `vite.config.mjs`: configures `vite-plugin-dart` and discovers the Dart binary
-- `src/main.js`: Vite entry that imports `src/main.dart`
-- `src/main.dart`: demo app
-- `scripts/provision-dart.sh`: downloads/unzips the Dart SDK into `.dart-sdk/`
+For authoring details (frontmatter, directives, props tables): see `docs/README.md`. 📝✨

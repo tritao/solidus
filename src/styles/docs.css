@@ -488,6 +488,52 @@
     line-height: 1.45;
   }
 
+  /* highlight.js token styles (theme-aware). */
+  .docCode code.hljs {
+    background: transparent;
+    padding: 0;
+    color: hsl(var(--foreground));
+  }
+
+  .docCode .hljs-comment,
+  .docCode .hljs-quote {
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+  }
+
+  .docCode .hljs-keyword,
+  .docCode .hljs-literal,
+  .docCode .hljs-selector-tag {
+    color: hsl(var(--primary));
+  }
+
+  .docCode .hljs-string,
+  .docCode .hljs-regexp,
+  .docCode .hljs-template-string {
+    color: hsl(142 70% 42%);
+  }
+
+  .docCode .hljs-number,
+  .docCode .hljs-symbol,
+  .docCode .hljs-bullet {
+    color: hsl(31 90% 45%);
+  }
+
+  .docCode .hljs-title,
+  .docCode .hljs-function,
+  .docCode .hljs-section,
+  .docCode .hljs-type {
+    color: hsl(199 89% 48%);
+  }
+
+  .docCode .hljs-attr,
+  .docCode .hljs-attribute,
+  .docCode .hljs-variable,
+  .docCode .hljs-name,
+  .docCode .hljs-tag {
+    color: hsl(var(--foreground));
+  }
+
   .docProps {
     padding: 14px;
   }

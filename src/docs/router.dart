@@ -12,6 +12,7 @@ import "package:web/web.dart" as web;
 import "package:solidus/docs/nav.dart";
 import "./demos.dart";
 import "./props.dart";
+import "./highlight_bridge.dart";
 
 final class DocsManifestPage {
   DocsManifestPage({
@@ -532,6 +533,10 @@ void mountSolidDocs(web.Element mount) {
       content.innerHTML = html.toJS;
 
       scheduleMicrotask(() {
+        try {
+          docsHighlightWithin(content);
+        } catch (_) {}
+
         final mounts = content.querySelectorAll("[data-doc-demo]");
         for (var i = 0; i < mounts.length; i++) {
           final node = mounts.item(i);

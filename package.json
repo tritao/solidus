@@ -140,6 +140,7 @@
     "@floating-ui/dom": "^1.7.1",
     "@tiptap/core": "^3.15.0",
     "@tiptap/starter-kit": "^3.15.0",
+    "highlight.js": "^11.11.1",
     "morphdom": "^2.7.7"
   }
 }

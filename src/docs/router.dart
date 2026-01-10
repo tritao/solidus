@@ -165,6 +165,53 @@ String _docsSlugFromFragment(String? fragment) {
   return first;
 }
 
+Future<bool> _copyToClipboard(String text) async {
+  try {
+    final clipboard = web.window.navigator.clipboard;
+    if (clipboard != null) {
+      await clipboard.writeText(text).toDart;
+      return true;
+    }
+  } catch (_) {}
+
+  try {
+    final ta = web.HTMLTextAreaElement()
+      ..value = text
+      ..style.position = "fixed"
+      ..style.opacity = "0"
+      ..style.left = "-9999px"
+      ..style.top = "-9999px";
+    web.document.body?.appendChild(ta);
+    ta.focus();
+    ta.select();
+    final ok = web.document.execCommand("copy");
+    ta.remove();
+    return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<void> _handleCopyCode(web.HTMLButtonElement button) async {
+  final details = button.closest(".docCodeBlock");
+  if (details is! web.Element) return;
+  final code = details.querySelector("pre code");
+  final text = code?.textContent ?? "";
+  if (text.trim().isEmpty) return;
+
+  final original = button.textContent ?? "Copy";
+  button.disabled = true;
+  final ok = await _copyToClipboard(text);
+  button.disabled = false;
+
+  button.textContent = ok ? "Copied" : "Copy failed";
+  Timer(const Duration(milliseconds: 1200), () {
+    try {
+      button.textContent = original;
+    } catch (_) {}
+  });
+}
+
 void mountSolidDocs(web.Element mount) {
   render(mount, () {
     final slug = createSignal(_docsSlugFromFragment(Uri.base.fragment));
@@ -281,6 +328,14 @@ void mountSolidDocs(web.Element mount) {
 
       final target = e.target;
       if (target is! web.Element) return;
+
+      final copyBtn = target.closest("button.docCodeCopy");
+      if (copyBtn is web.HTMLButtonElement) {
+        e.preventDefault();
+        e.stopPropagation();
+        unawaited(_handleCopyCode(copyBtn));
+        return;
+      }
 
       final closest = target.closest("a");
       if (closest is! web.HTMLAnchorElement) return;

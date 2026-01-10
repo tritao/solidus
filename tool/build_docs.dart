@@ -272,7 +272,12 @@ String _expandDirectives(String input, {String? labHref}) {
       final code = file == null ? "" : _readRegion(file, region: region);
       // Use fenced code blocks (so markdown handles escaping), and add marker
       // comments so we can wrap the resulting <pre> in a <details> block.
-      out.writeln("<!--DOC_CODE_START-->");
+      final meta = <String>[
+        if (file != null && file.isNotEmpty) "file=$file",
+        if (region != null && region.isNotEmpty) "region=$region",
+        if (lang.isNotEmpty) "lang=$lang",
+      ];
+      out.writeln("<!--DOC_CODE_START${meta.isEmpty ? "" : " ${meta.join(" ")}"}-->");
       out.writeln("```$lang");
       out.writeln(code);
       out.writeln("```");
@@ -302,24 +307,42 @@ String _expandDirectives(String input, {String? labHref}) {
 }
 
 String _wrapMarkedCodeBlocks(String html) {
-  const start = "<!--DOC_CODE_START-->";
+  const startPrefix = "<!--DOC_CODE_START";
   const end = "<!--DOC_CODE_END-->";
   var out = html;
 
   while (true) {
-    final s = out.indexOf(start);
+    final s = out.indexOf(startPrefix);
     if (s == -1) break;
-    final preStart = out.indexOf("<pre", s);
+    final startEnd = out.indexOf("-->", s);
+    if (startEnd == -1) break;
+    final startComment = out.substring(s, startEnd + 3);
+    final rawAttrs =
+        startComment.substring(startPrefix.length, startComment.length - 3).trim();
+    final meta = _parseAttrs(rawAttrs);
+
+    final preStart = out.indexOf("<pre", startEnd);
     if (preStart == -1) break;
     final preEnd = out.indexOf("</pre>", preStart);
     if (preEnd == -1) break;
     final e = out.indexOf(end, preEnd);
     if (e == -1) break;
 
-    final block = out.substring(preStart, preEnd + "</pre>".length);
+    final block = _decorateMarkedPre(
+      out.substring(preStart, preEnd + "</pre>".length),
+      file: meta["file"],
+      region: meta["region"],
+      lang: meta["lang"],
+    );
+
+    final summary = _renderMarkedCodeSummary(
+      file: meta["file"],
+      region: meta["region"],
+      lang: meta["lang"],
+    );
     final replacement = [
       '<details class="docCodeBlock">',
-      "<summary>Code</summary>",
+      summary,
       block,
       "</details>",
     ].join("\n");
@@ -328,6 +351,63 @@ String _wrapMarkedCodeBlocks(String html) {
   }
 
   return out;
+}
+
+String _renderMarkedCodeSummary({String? file, String? region, String? lang}) {
+  final loc = file == null || file.isEmpty
+      ? ""
+      : (region == null || region.isEmpty ? file : "$file#$region");
+
+  final parts = <String>[
+    if (loc.isNotEmpty) loc,
+    if (lang != null && lang.isNotEmpty) lang,
+  ];
+  final meta = parts.join(" · ");
+
+  final metaSpan = meta.isEmpty
+      ? ""
+      : '<span class="docCodeSummaryMeta">${_escapeHtml(meta)}</span>';
+
+  return [
+    '<summary class="docCodeSummary">',
+    '  <span class="docCodeSummaryLeft"><span class="docCodeSummaryTitle">Code</span>$metaSpan</span>',
+    '  <button type="button" class="docCodeCopy" aria-label="Copy code">Copy</button>',
+    "</summary>",
+  ].join("\n");
+}
+
+String _decorateMarkedPre(String block, {String? file, String? region, String? lang}) {
+  final m = RegExp(r"^<pre([^>]*)>").firstMatch(block);
+  if (m == null) return block;
+
+  var attrs = m.group(1) ?? "";
+  final classRe = RegExp("\\sclass=([\"'])([^\"']*)\\1");
+  final classMatch = classRe.firstMatch(attrs);
+  if (classMatch != null) {
+    final quote = classMatch.group(1)!;
+    final existing = classMatch.group(2) ?? "";
+    final next = existing
+        .split(RegExp(r"\s+"))
+        .where((c) => c.isNotEmpty)
+        .toSet()
+      ..add("docCode");
+    final repl = ' class=$quote${next.join(" ")}$quote';
+    attrs = attrs.replaceRange(classMatch.start, classMatch.end, repl);
+  } else {
+    attrs = "$attrs class=\"docCode\"";
+  }
+
+  if (lang != null && lang.isNotEmpty) {
+    attrs = '$attrs data-doc-lang="${_escapeHtml(lang)}"';
+  }
+  if (file != null && file.isNotEmpty) {
+    attrs = '$attrs data-doc-file="${_escapeHtml(file)}"';
+  }
+  if (region != null && region.isNotEmpty) {
+    attrs = '$attrs data-doc-region="${_escapeHtml(region)}"';
+  }
+
+  return "<pre$attrs>" + block.substring(m.end);
 }
 
 Map<String, String> _parseAttrs(String raw) {

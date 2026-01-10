@@ -14,14 +14,10 @@ Dispose mountDocsToggleBasic(web.Element mount) {
       ariaLabel: "Bold toggle",
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "pressed=${onSig.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "pressed=${onSig.value}")]);
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(toggle);
-    root.appendChild(status);
-    return root;
+    return row(children: [toggle, status]);
   });
   // #doc:endregion snippet
 }
-

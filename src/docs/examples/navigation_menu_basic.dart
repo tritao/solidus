@@ -3,8 +3,7 @@ import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 web.HTMLElement _panel(String title, List<({String label, String desc})> links) {
-  final root = web.HTMLDivElement();
-  root.appendChild(web.HTMLHeadingElement.h3()..textContent = title);
+  final root = div(children: [web.HTMLHeadingElement.h3()..textContent = title]);
 
   final grid = web.HTMLDivElement()..className = "navigationMenuGrid";
   for (final l in links) {
@@ -70,14 +69,12 @@ Dispose mountDocsNavigationMenuBasic(web.Element mount) {
       ],
     )..setAttribute("data-test", "nav-menu");
 
-    final note = web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Hover or click triggers to open panels. Escape closes.";
+    final note = p(
+      "Hover or click triggers to open panels. Escape closes.",
+      className: "muted",
+    );
 
-    final root = web.HTMLDivElement()..className = "stack";
-    root.appendChild(menu);
-    root.appendChild(note);
-    return root;
+    return div(className: "stack", children: [menu, note]);
   });
   // #doc:endregion snippet
 }

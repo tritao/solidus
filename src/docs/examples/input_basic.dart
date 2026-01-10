@@ -25,13 +25,13 @@ Dispose mountDocsInputBasic(web.Element mount) {
     ));
     on(toggle, "click", (_) => disabled.value = !disabled.value);
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(input);
-    root.appendChild(toggle);
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..appendChild(text(() => "value=\"${value.value}\"")));
-    return root;
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "value=\"${value.value}\"")],
+    );
+
+    return row(children: [input, toggle, status]);
   });
   // #doc:endregion snippet
 }

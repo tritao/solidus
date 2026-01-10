@@ -36,19 +36,18 @@ Dispose mountDocsCheckboxBasic(web.Element mount) {
       if (indeterminate.value) checked.value = false;
     });
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(
-      text(
-        () =>
-            "checked=${checked.value} • indeterminate=${indeterminate.value}",
-      ),
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(
+          () =>
+              "checked=${checked.value} • indeterminate=${indeterminate.value}",
+        ),
+      ],
     );
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(label);
-    root.appendChild(mixedBtn);
-    root.appendChild(status);
-    return root;
+    return row(children: [label, mixedBtn, status]);
   });
   // #doc:endregion snippet
 }

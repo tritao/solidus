@@ -8,16 +8,14 @@ Dispose mountDocsContextMenuBasic(web.Element mount) {
     final open = createSignal(false);
     final lastAction = createSignal("none");
 
-    final target = web.HTMLDivElement()
-      ..className = "card"
+    final target = div(className: "card", children: [
+      web.Text("Right-click (or long-press) in this area."),
+    ])
       ..style.padding = "14px"
       ..style.maxWidth = "420px";
-    target.appendChild(web.Text("Right-click (or long-press) in this area."));
 
     MenuContent buildMenu(MenuCloseController close) {
-      final menu = web.HTMLDivElement()
-        ..className = "card menu"
-        ..style.minWidth = "220px";
+      final menu = div(className: "card menu")..style.minWidth = "220px";
 
       final copy = web.HTMLButtonElement()
         ..type = "button"
@@ -54,14 +52,12 @@ Dispose mountDocsContextMenuBasic(web.Element mount) {
       );
     }
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Last action: ${lastAction.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "Last action: ${lastAction.value}")]);
 
-    final root = web.HTMLDivElement();
-    root.appendChild(target);
-    root.appendChild(status);
-
-    root.appendChild(
+    return div(children: [
+      target,
+      status,
       ContextMenu(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -69,9 +65,7 @@ Dispose mountDocsContextMenuBasic(web.Element mount) {
         portalId: "docs-contextmenu-basic-portal",
         builder: buildMenu,
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

@@ -1,5 +1,5 @@
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 Dispose mountDocsRuntimeDomBasic(web.Element mount) {
@@ -7,7 +7,6 @@ Dispose mountDocsRuntimeDomBasic(web.Element mount) {
   return render(mount, () {
     final items = createSignal<List<String>>(["Solid", "React"]);
 
-    final row = web.HTMLDivElement()..className = "row";
     final add = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
@@ -17,33 +16,27 @@ Dispose mountDocsRuntimeDomBasic(web.Element mount) {
       next.add("Item ${next.length + 1}");
       items.value = next;
     });
-    row.appendChild(add);
 
     final clear = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Clear";
     on(clear, "click", (_) => items.value = const []);
-    row.appendChild(clear);
 
-    final count = web.HTMLParagraphElement()..className = "muted";
-    count.appendChild(text(() => "count=${items.value.length}"));
-    row.appendChild(count);
+    final countEl =
+        p("", className: "muted", children: [text(() => "count=${items.value.length}")]);
 
-    final list = web.HTMLUListElement()..className = "list";
-    list.appendChild(insert(list, () {
+    final controls = row(children: [add, clear, countEl]);
+
+    final listEl = ul(className: "list");
+    listEl.appendChild(insert(listEl, () {
       return [
         for (final item in items.value)
-          (web.HTMLLIElement()
-            ..className = "item"
-            ..textContent = item),
+          li(className: "item", text: item),
       ];
     }));
 
-    final root = web.HTMLDivElement();
-    root.appendChild(row);
-    root.appendChild(list);
-    return root;
+    return div(children: [controls, listEl]);
   });
   // #doc:endregion snippet
 }

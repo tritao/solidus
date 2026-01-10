@@ -13,12 +13,10 @@ Dispose mountDocsBreadcrumbsBasic(web.Element mount) {
       ],
     );
 
-    final root = web.HTMLDivElement()..className = "stack";
-    root.appendChild(crumbs);
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Use this for hierarchical navigation.");
-    return root;
+    return div(className: "stack", children: [
+      crumbs,
+      p("Use this for hierarchical navigation.", className: "muted"),
+    ]);
   });
   // #doc:endregion snippet
 }

@@ -39,22 +39,24 @@ Dispose mountDocsToggleGroupBasic(web.Element mount) {
       ],
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(
-      text(() => "single=${single.value ?? "none"} • multi=${multi.value.join(",")}"),
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(
+          () =>
+              "single=${single.value ?? "none"} • multi=${multi.value.join(",")}",
+        ),
+      ],
     );
 
-    final root = web.HTMLDivElement()..className = "stack";
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Single (toggleable)");
-    root.appendChild(singleGroup);
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Multiple");
-    root.appendChild(multiGroup);
-    root.appendChild(status);
-    return root;
+    return div(className: "stack", children: [
+      p("Single (toggleable)", className: "muted"),
+      singleGroup,
+      p("Multiple", className: "muted"),
+      multiGroup,
+      status,
+    ]);
   });
   // #doc:endregion snippet
 }

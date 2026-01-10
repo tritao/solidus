@@ -4,6 +4,29 @@ export "solidus_dom/focus_scope.dart";
 export "solidus_dom/overlay.dart";
 export "solidus_dom/presence.dart";
 export "solidus_dom/solid_dom.dart";
+
+// HTML authoring DSL (used by docs/demos).
+export "dom_ui/dom.dart"
+    show
+        div,
+        row,
+        buttonRow,
+        spacer,
+        mountPoint,
+        p,
+        muted,
+        danger,
+        statusText,
+        h1,
+        h2,
+        span,
+        textMuted,
+        textStrong,
+        ul,
+        list,
+        li,
+        mutedLi,
+        item;
 export "solidus_dom/selection/types.dart";
 export "solidus_dom/selection/selection_manager.dart";
 export "solidus_dom/selection/keyboard_delegate.dart";

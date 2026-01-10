@@ -27,13 +27,13 @@ Dispose mountDocsListboxBasic(web.Element mount) {
       onClearSelection: () => value.value = null,
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Value: ${value.value ?? "none"}"));
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "Value: ${value.value ?? "none"}")],
+    );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(status);
-    root.appendChild(listbox.element);
-    return root;
+    return div(children: [status, listbox.element]);
   });
   // #doc:endregion snippet
 }

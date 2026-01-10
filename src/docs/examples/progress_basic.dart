@@ -41,7 +41,6 @@ Dispose mountDocsProgressBasic(web.Element mount) {
       value: () => null,
     );
 
-    final row = web.HTMLDivElement()..className = "row";
     final startBtn = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn secondary"
@@ -60,20 +59,25 @@ Dispose mountDocsProgressBasic(web.Element mount) {
       value.value = value.value == null ? 25 : null;
     });
 
-    row.appendChild(startBtn);
-    row.appendChild(stopBtn);
-    row.appendChild(toggleBtn);
+    final controls = row(children: [startBtn, stopBtn, toggleBtn]);
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "value=${value.value?.toStringAsFixed(0) ?? "indeterminate"}"));
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(
+          () =>
+              "value=${value.value?.toStringAsFixed(0) ?? "indeterminate"}",
+        ),
+      ],
+    );
 
-    final stack = web.HTMLDivElement()
-      ..className = "stack"
-      ..style.maxWidth = "520px";
-    stack.appendChild(row);
-    stack.appendChild(determinate);
-    stack.appendChild(indeterminate);
-    stack.appendChild(status);
+    final stack = div(className: "stack", children: [
+      controls,
+      determinate,
+      indeterminate,
+      status,
+    ])..style.maxWidth = "520px";
     return stack;
   });
   // #doc:endregion snippet

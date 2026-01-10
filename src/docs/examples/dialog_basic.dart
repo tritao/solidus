@@ -11,23 +11,22 @@ Dispose mountDocsDialogBasic(web.Element mount) {
     final titleId = "docs-dialog-basic-title";
     final descId = "docs-dialog-basic-desc";
 
-    final row = web.HTMLDivElement()..className = "row";
     final btn = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Open dialog";
     on(btn, "click", (_) => open.value = true);
-    row.appendChild(btn);
 
-    final status = web.HTMLParagraphElement()
-      ..className = "muted";
-    status.appendChild(text(() => "Last close: ${lastClose.value}"));
-    row.appendChild(status);
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "Last close: ${lastClose.value}")],
+    );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(row);
+    final panelRow = row(children: [btn, status]);
 
-    root.appendChild(
+    return div(children: [
+      panelRow,
       Dialog(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -38,20 +37,17 @@ Dispose mountDocsDialogBasic(web.Element mount) {
         onClose: (reason) => lastClose.value = reason,
         portalId: "docs-dialog-basic-portal",
         builder: (close) {
-          final panel = web.HTMLDivElement()
-            ..className = "card"
-            ..style.maxWidth = "520px";
+          final panel = div(className: "card")..style.maxWidth = "520px";
 
-          panel.appendChild(web.HTMLHeadingElement.h2()
-            ..id = titleId
-            ..textContent = "Dialog title");
-          panel.appendChild(web.HTMLParagraphElement()
-            ..id = descId
-            ..className = "muted"
-            ..textContent =
-                "Tab stays inside. Escape or click outside to dismiss.");
+          panel.appendChild(h2("Dialog title", attrs: {"id": titleId}));
+          panel.appendChild(
+            p(
+              "Tab stays inside. Escape or click outside to dismiss.",
+              className: "muted",
+              attrs: {"id": descId},
+            ),
+          );
 
-          final actions = web.HTMLDivElement()..className = "row";
           final closeBtn = web.HTMLButtonElement()
             ..type = "button"
             ..className = "btn secondary"
@@ -60,14 +56,11 @@ Dispose mountDocsDialogBasic(web.Element mount) {
             lastClose.value = "close";
             close();
           });
-          actions.appendChild(closeBtn);
-          panel.appendChild(actions);
+          panel.appendChild(row(children: [closeBtn]));
           return panel;
         },
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

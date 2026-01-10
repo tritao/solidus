@@ -7,17 +7,19 @@ import "package:web/web.dart" as web;
 Dispose mountDocsButtonBasic(web.Element mount) {
   // #doc:region snippet
   return render(mount, () {
-    final row1 = web.HTMLDivElement()..className = "row";
-    row1.appendChild(Button(label: "Default"));
-    row1.appendChild(Button(label: "Secondary", variant: ButtonVariant.secondary));
-    row1.appendChild(Button(label: "Outline", variant: ButtonVariant.outline));
-    row1.appendChild(Button(label: "Ghost", variant: ButtonVariant.ghost));
-    row1.appendChild(Button(label: "Destructive", variant: ButtonVariant.destructive));
+    final row1 = row(children: [
+      Button(label: "Default"),
+      Button(label: "Secondary", variant: ButtonVariant.secondary),
+      Button(label: "Outline", variant: ButtonVariant.outline),
+      Button(label: "Ghost", variant: ButtonVariant.ghost),
+      Button(label: "Destructive", variant: ButtonVariant.destructive),
+    ]);
 
-    final row2 = web.HTMLDivElement()..className = "row";
-    row2.appendChild(Button(label: "Small", size: ButtonSize.sm));
-    row2.appendChild(Button(label: "Default", size: ButtonSize.normal));
-    row2.appendChild(Button(label: "Large", size: ButtonSize.lg));
+    final row2 = row(children: [
+      Button(label: "Small", size: ButtonSize.sm),
+      Button(label: "Default", size: ButtonSize.normal),
+      Button(label: "Large", size: ButtonSize.lg),
+    ]);
 
     final icon = Button(
       label: "",
@@ -31,18 +33,19 @@ Dispose mountDocsButtonBasic(web.Element mount) {
 </svg>
 """).toJS;
 
-    final row3 = web.HTMLDivElement()..className = "row";
-    row3.appendChild(icon);
-    row3.appendChild(Button(label: "Disabled", disabled: true));
-    row3.appendChild(Button(label: "Link", variant: ButtonVariant.link));
+    final row3 = row(children: [
+      icon,
+      Button(label: "Disabled", disabled: true),
+      Button(label: "Link", variant: ButtonVariant.link),
+    ]);
 
-    final root = web.HTMLDivElement();
-    root.appendChild(row1);
-    root.appendChild(web.HTMLDivElement()..style.height = "10px");
-    root.appendChild(row2);
-    root.appendChild(web.HTMLDivElement()..style.height = "10px");
-    root.appendChild(row3);
-    return root;
+    return div(children: [
+      row1,
+      web.HTMLDivElement()..style.height = "10px",
+      row2,
+      web.HTMLDivElement()..style.height = "10px",
+      row3,
+    ]);
   });
   // #doc:endregion snippet
 }

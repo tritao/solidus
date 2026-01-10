@@ -13,16 +13,14 @@ Dispose mountDocsPopoverBasic(web.Element mount) {
       ..className = "btn primary"
       ..textContent = "Toggle popover";
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Last close: ${lastClose.value}"));
-
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(trigger);
-    root.appendChild(status);
+    final status =
+        p("", className: "muted", children: [text(() => "Last close: ${lastClose.value}")]);
 
     on(trigger, "click", (_) => open.value = !open.value);
 
-    root.appendChild(
+    return row(children: [
+      trigger,
+      status,
       Popover(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -30,11 +28,12 @@ Dispose mountDocsPopoverBasic(web.Element mount) {
         portalId: "docs-popover-basic-portal",
         onClose: (reason) => lastClose.value = reason,
         builder: (close) {
-          final panel = web.HTMLDivElement()
-            ..className = "card"
-            ..style.maxWidth = "360px";
-          panel.appendChild(web.HTMLParagraphElement()
-            ..textContent = "This is a popover panel.");
+          final panel = div(
+            className: "card",
+            children: [
+              p("This is a popover panel."),
+            ],
+          )..style.maxWidth = "360px";
 
           final closeBtn = web.HTMLButtonElement()
             ..type = "button"
@@ -45,9 +44,7 @@ Dispose mountDocsPopoverBasic(web.Element mount) {
           return panel;
         },
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

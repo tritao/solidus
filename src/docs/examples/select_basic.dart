@@ -32,14 +32,12 @@ Dispose mountDocsSelectBasic(web.Element mount) {
     );
     final trigger = control.trigger;
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Close: ${lastClose.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "Close: ${lastClose.value}")]);
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(trigger);
-    root.appendChild(status);
-
-    root.appendChild(
+    return row(children: [
+      trigger,
+      status,
       Select<String>(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -50,9 +48,7 @@ Dispose mountDocsSelectBasic(web.Element mount) {
         setValue: (next) => value.value = next,
         onClose: (reason) => lastClose.value = reason,
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

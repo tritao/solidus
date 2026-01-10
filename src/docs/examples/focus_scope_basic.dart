@@ -14,37 +14,27 @@ Dispose mountDocsFocusScopeBasic(web.Element mount) {
       ..className = "btn secondary"
       ..textContent = "Outside focus target";
 
-    final root = web.HTMLDivElement();
-    final row = web.HTMLDivElement()..className = "row";
     final trigger = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Open focus scope";
     on(trigger, "click", (_) => open.value = true);
-    row.appendChild(trigger);
-    row.appendChild(outside);
-    root.appendChild(row);
 
-    root.appendChild(
+    return div(children: [
+      row(children: [trigger, outside]),
       Presence(
         when: () => open.value,
         exitMs: 120,
         children: () => Portal(
           id: "docs-focus-scope-portal",
           children: () {
-            final panel = web.HTMLDivElement()
-              ..className = "card"
-              ..style.maxWidth = "520px";
-
-            panel.appendChild(
-              web.HTMLHeadingElement.h2()..textContent = "Focus scope",
-            );
-            panel.appendChild(
-              web.HTMLParagraphElement()
-                ..className = "muted"
-                ..textContent =
-                    "Tab/Shift+Tab stays inside this panel. Escape closes it.",
-            );
+            final panel = div(className: "card", children: [
+              h2("Focus scope"),
+              p(
+                "Tab/Shift+Tab stays inside this panel. Escape closes it.",
+                className: "muted",
+              ),
+            ])..style.maxWidth = "520px";
 
             final a = web.HTMLButtonElement()
               ..type = "button"
@@ -68,11 +58,7 @@ Dispose mountDocsFocusScopeBasic(web.Element mount) {
               }
             });
 
-            final actions = web.HTMLDivElement()..className = "row";
-            actions.appendChild(a);
-            actions.appendChild(b);
-            actions.appendChild(close);
-            panel.appendChild(actions);
+            panel.appendChild(row(children: [a, b, close]));
 
             final wrapper = web.HTMLDivElement()
               ..style.position = "fixed"
@@ -96,10 +82,7 @@ Dispose mountDocsFocusScopeBasic(web.Element mount) {
           },
         ),
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }
-

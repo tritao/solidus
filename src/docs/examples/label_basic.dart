@@ -7,17 +7,14 @@ Dispose mountDocsLabelBasic(web.Element mount) {
   return render(mount, () {
     const id = "docs-label-basic";
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(
+    return row(children: [
       FormField(
         id: "docs-label-field",
         label: () => "Name",
         description: () => "A label associated via for/id.",
         control: Input(id: id, placeholder: "Ada Lovelace"),
       ),
-    );
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }
-

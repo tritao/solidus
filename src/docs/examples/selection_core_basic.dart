@@ -1,5 +1,5 @@
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 import "package:solidus/solidus_dom/selection/create_selectable_collection.dart";
@@ -38,14 +38,17 @@ Dispose mountDocsSelectionCoreBasic(web.Element mount) {
       shouldFocusWrap: () => true,
     );
 
-    final root = web.HTMLDivElement();
+    final root = div();
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(
-      text(
-        () => "Focused: ${manager.focusedKey() ?? "none"} • "
-            "Selected: ${manager.firstSelectedKey() ?? "none"}",
-      ),
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(
+          () => "Focused: ${manager.focusedKey() ?? "none"} • "
+              "Selected: ${manager.firstSelectedKey() ?? "none"}",
+        ),
+      ],
     );
     root.appendChild(status);
 
@@ -95,4 +98,3 @@ Dispose mountDocsSelectionCoreBasic(web.Element mount) {
   });
   // #doc:endregion snippet
 }
-

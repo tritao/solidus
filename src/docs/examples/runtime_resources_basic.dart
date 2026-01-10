@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 Dispose mountDocsRuntimeResourcesBasic(web.Element mount) {
@@ -17,24 +17,19 @@ Dispose mountDocsRuntimeResourcesBasic(web.Element mount) {
       },
     );
 
-    final row = web.HTMLDivElement()..className = "row";
     final refetch = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Refetch";
     on(refetch, "click", (_) => version.value++);
-    row.appendChild(refetch);
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() {
+    final status = p("", className: "muted", children: [text(() {
       if (res.loading) return "loading…";
       if (res.error != null) return "error: ${res.error}";
       return "value: ${res.value}";
-    }));
-    row.appendChild(status);
+    })]);
 
-    return row;
+    return row(children: [refetch, status]);
   });
   // #doc:endregion snippet
 }
-

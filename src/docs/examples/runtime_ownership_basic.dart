@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 Dispose mountDocsRuntimeOwnershipBasic(web.Element mount) {
@@ -36,27 +36,25 @@ Dispose mountDocsRuntimeOwnershipBasic(web.Element mount) {
 
     onCleanup(stop);
 
-    final row = web.HTMLDivElement()..className = "row";
     final startBtn = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Start";
     on(startBtn, "click", (_) => start());
-    row.appendChild(startBtn);
 
     final stopBtn = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Stop";
     on(stopBtn, "click", (_) => stop());
-    row.appendChild(stopBtn);
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "${info.value} • ticks=${ticks.value}"));
-    row.appendChild(status);
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "${info.value} • ticks=${ticks.value}")],
+    );
 
-    return row;
+    return row(children: [startBtn, stopBtn, status]);
   });
   // #doc:endregion snippet
 }
-

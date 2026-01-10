@@ -42,6 +42,29 @@ export "solidus_ui/tooltip.dart";
 // Re-export Solid-style DOM helpers so docs/demos can import only `solidus_ui`.
 export "solidus_dom/solid_dom.dart";
 
+// Re-export a small HTML authoring DSL for docs/demos.
+export "dom_ui/dom.dart"
+    show
+        div,
+        row,
+        buttonRow,
+        spacer,
+        mountPoint,
+        p,
+        muted,
+        danger,
+        statusText,
+        h1,
+        h2,
+        span,
+        textMuted,
+        textStrong,
+        ul,
+        list,
+        li,
+        mutedLi,
+        item;
+
 export "solidus_dom/core/accordion.dart" show AccordionItem;
 export "solidus_dom/core/combobox.dart" show ComboboxOption, ComboboxFilter;
 export "solidus_dom/focus_scope.dart" show FocusScopeAutoFocusEvent;

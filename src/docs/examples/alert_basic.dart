@@ -5,8 +5,6 @@ import "package:web/web.dart" as web;
 Dispose mountDocsAlertBasic(web.Element mount) {
   // #doc:region snippet
   return render(mount, () {
-    final stack = web.HTMLDivElement()..className = "stack";
-
     final normal = Alert(
       children: [
         AlertTitle("Heads up!"),
@@ -22,9 +20,7 @@ Dispose mountDocsAlertBasic(web.Element mount) {
       ],
     )..setAttribute("data-test", "destructive");
 
-    stack.appendChild(normal);
-    stack.appendChild(destructive);
-    return stack;
+    return div(className: "stack", children: [normal, destructive]);
   });
   // #doc:endregion snippet
 }

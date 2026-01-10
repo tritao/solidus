@@ -5,10 +5,10 @@ import "package:web/web.dart" as web;
 Dispose mountDocsSpinnerBasic(web.Element mount) {
   // #doc:region snippet
   return render(mount, () {
-    final row = web.HTMLDivElement()..className = "row";
-    row.appendChild(Spinner(ariaLabel: "Loading"));
-    row.appendChild(web.HTMLSpanElement()..className = "muted"..textContent = "Loading…");
-    return row;
+    return row(children: [
+      Spinner(ariaLabel: "Loading"),
+      span("Loading…", className: "muted"),
+    ]);
   });
   // #doc:endregion snippet
 }

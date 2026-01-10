@@ -16,14 +16,13 @@ Dispose mountDocsSliderBasic(web.Element mount) {
       ariaLabel: "Volume",
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "value=${v.value.toStringAsFixed(0)}"));
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "value=${v.value.toStringAsFixed(0)}")],
+    );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(slider);
-    root.appendChild(status);
-    return root;
+    return div(children: [slider, status]);
   });
   // #doc:endregion snippet
 }
-

@@ -21,8 +21,7 @@ Dispose mountDocsFormFieldBasic(web.Element mount) {
       ariaLabel: "Email",
     );
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(
+    return row(children: [
       FormField(
         id: "docs-form-field-basic",
         label: () => "Email",
@@ -30,9 +29,7 @@ Dispose mountDocsFormFieldBasic(web.Element mount) {
         error: error,
         control: control,
       ),
-    );
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }
-

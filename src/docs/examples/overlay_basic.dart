@@ -11,34 +11,34 @@ Dispose mountDocsOverlayBasic(web.Element mount) {
     final lastDismiss = createSignal("none");
     final outsideClicks = createSignal(0);
 
-    final row = web.HTMLDivElement()..className = "row";
     final trigger = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Open overlay";
     on(trigger, "click", (_) => open.value = true);
-    row.appendChild(trigger);
 
     final outside = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Outside action (increments)";
     on(outside, "click", (_) => outsideClicks.value++);
-    row.appendChild(outside);
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(
-      text(
-        () =>
-            "Dismiss: ${lastDismiss.value} • Outside clicks: ${outsideClicks.value}",
-      ),
+    final controls = row(children: [trigger, outside]);
+
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(
+          () =>
+              "Dismiss: ${lastDismiss.value} • Outside clicks: ${outsideClicks.value}",
+        ),
+      ],
     );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(row);
-    root.appendChild(status);
-
-    root.appendChild(
+    return div(children: [
+      controls,
+      status,
       Presence(
         when: () => open.value,
         exitMs: 120,
@@ -50,24 +50,21 @@ Dispose mountDocsOverlayBasic(web.Element mount) {
               open.value = false;
             }
 
-            final panel = web.HTMLDivElement()
-              ..className = "card"
-              ..style.maxWidth = "520px";
-            panel.appendChild(web.HTMLHeadingElement.h2()
-              ..textContent = "Overlay panel");
-            panel.appendChild(web.HTMLParagraphElement()
-              ..className = "muted"
-              ..textContent =
-                  "Escape or click outside to dismiss. Outside clicks won’t click-through.");
+            final panel = div(className: "card")..style.maxWidth = "520px";
+            panel.appendChild(h2("Overlay panel"));
+            panel.appendChild(
+              p(
+                "Escape or click outside to dismiss. Outside clicks won’t click-through.",
+                className: "muted",
+              ),
+            );
 
             final closeBtn = web.HTMLButtonElement()
               ..type = "button"
               ..className = "btn secondary"
               ..textContent = "Close";
             on(closeBtn, "click", (_) => close("close"));
-            final actions = web.HTMLDivElement()..className = "row";
-            actions.appendChild(closeBtn);
-            panel.appendChild(actions);
+            panel.appendChild(row(children: [closeBtn]));
 
             // Center on screen to keep the example easy to see.
             final wrapper = web.HTMLDivElement()
@@ -106,10 +103,7 @@ Dispose mountDocsOverlayBasic(web.Element mount) {
           },
         ),
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }
-

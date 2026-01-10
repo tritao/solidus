@@ -14,18 +14,19 @@ Dispose mountDocsDropdownMenuBasic(web.Element mount) {
       ..className = "btn primary"
       ..textContent = "Open menu";
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(
-      text(() => "Action: ${lastAction.value} • Close: ${lastClose.value}"),
+    final status = p(
+      "",
+      className: "muted",
+      children: [
+        text(() => "Action: ${lastAction.value} • Close: ${lastClose.value}"),
+      ],
     );
-
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(trigger);
-    root.appendChild(status);
 
     on(trigger, "click", (_) => open.value = !open.value);
 
-    root.appendChild(
+    return row(children: [
+      trigger,
+      status,
       DropdownMenu(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -33,9 +34,7 @@ Dispose mountDocsDropdownMenuBasic(web.Element mount) {
         portalId: "docs-dropdownmenu-basic-portal",
         onClose: (reason) => lastClose.value = reason,
         builder: (close) {
-          final menu = web.HTMLDivElement()
-            ..className = "card menu"
-            ..style.minWidth = "220px";
+          final menu = div(className: "card menu")..style.minWidth = "220px";
 
           web.HTMLButtonElement item(String label, {required String key, bool disabled = false}) {
             final el = web.HTMLButtonElement()
@@ -77,9 +76,7 @@ Dispose mountDocsDropdownMenuBasic(web.Element mount) {
           );
         },
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

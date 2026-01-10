@@ -6,7 +6,7 @@ T _apply<T extends web.Element>(
   String? className,
   String? text,
   Map<String, String>? attrs,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) {
   if (id != null) element.setAttribute('id', id);
   if (className != null) element.setAttribute('class', className);
@@ -18,7 +18,7 @@ T _apply<T extends web.Element>(
   }
   if (children != null) {
     for (final child in children) {
-      element.append(child);
+      element.appendChild(child);
     }
   }
   return element;
@@ -28,21 +28,21 @@ web.HTMLDivElement div({
   String? id,
   String? className,
   Map<String, String>? attrs,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     _apply(web.HTMLDivElement(),
         id: id, className: className, attrs: attrs, children: children);
 
 web.HTMLDivElement row({
   String? className,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     div(
         className: className == null ? 'row' : 'row $className',
         children: children);
 
 web.HTMLDivElement buttonRow({
-  List<web.Element> children = const [],
+  List<web.Node> children = const [],
 }) =>
     row(children: children);
 
@@ -56,8 +56,16 @@ web.HTMLDivElement mountPoint(String id) => div(
 web.HTMLParagraphElement p(
   String text, {
   String? className,
+  Map<String, String>? attrs,
+  List<web.Node>? children,
 }) =>
-    _apply(web.HTMLParagraphElement(), className: className, text: text);
+    _apply(
+      web.HTMLParagraphElement(),
+      className: className,
+      text: text,
+      attrs: attrs,
+      children: children,
+    );
 
 web.HTMLParagraphElement muted(String text) => p(text, className: 'muted');
 
@@ -75,20 +83,44 @@ web.HTMLParagraphElement statusText({
 web.HTMLHeadingElement h1(
   String text, {
   String? className,
+  Map<String, String>? attrs,
+  List<web.Node>? children,
 }) =>
-    _apply(web.HTMLHeadingElement.h1(), className: className, text: text);
+    _apply(
+      web.HTMLHeadingElement.h1(),
+      className: className,
+      text: text,
+      attrs: attrs,
+      children: children,
+    );
 
 web.HTMLHeadingElement h2(
   String text, {
   String? className,
+  Map<String, String>? attrs,
+  List<web.Node>? children,
 }) =>
-    _apply(web.HTMLHeadingElement.h2(), className: className, text: text);
+    _apply(
+      web.HTMLHeadingElement.h2(),
+      className: className,
+      text: text,
+      attrs: attrs,
+      children: children,
+    );
 
 web.HTMLSpanElement span(
   String text, {
   String? className,
+  Map<String, String>? attrs,
+  List<web.Node>? children,
 }) =>
-    _apply(web.HTMLSpanElement(), className: className, text: text);
+    _apply(
+      web.HTMLSpanElement(),
+      className: className,
+      text: text,
+      attrs: attrs,
+      children: children,
+    );
 
 web.HTMLSpanElement textMuted(String text) => span(text, className: 'muted');
 
@@ -96,12 +128,12 @@ web.HTMLSpanElement textStrong(String text) => span(text, className: 'user');
 
 web.HTMLUListElement ul({
   String? className,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     _apply(web.HTMLUListElement(), className: className, children: children);
 
 web.HTMLUListElement list({
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     ul(className: 'list', children: children);
 
@@ -109,14 +141,14 @@ web.HTMLLIElement li({
   String? className,
   String? text,
   Map<String, String>? attrs,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     _apply(web.HTMLLIElement(),
         className: className, text: text, attrs: attrs, children: children);
 
 web.HTMLLIElement item({
   Map<String, String>? attrs,
-  List<web.Element>? children,
+  List<web.Node>? children,
 }) =>
     li(className: 'item', attrs: attrs, children: children);
 
@@ -244,12 +276,12 @@ web.HTMLInputElement actionCheckbox({
 
 web.Element card({
   required String title,
-  required List<web.Element> children,
+  required List<web.Node> children,
 }) {
   final cardEl = div(className: 'card');
   cardEl.append(h2(title));
   for (final child in children) {
-    cardEl.append(child);
+    cardEl.appendChild(child);
   }
   return cardEl;
 }
@@ -257,7 +289,7 @@ web.Element card({
 web.Element section({
   required String title,
   String? subtitle,
-  required List<web.Element> children,
+  required List<web.Node> children,
 }) {
   final cardEl = div(className: 'card');
   cardEl.append(h2(title));
@@ -265,7 +297,7 @@ web.Element section({
     cardEl.append(p(subtitle, className: 'muted'));
   }
   for (final child in children) {
-    cardEl.append(child);
+    cardEl.appendChild(child);
   }
   return cardEl;
 }
@@ -273,7 +305,7 @@ web.Element section({
 web.Element header({
   required String title,
   required String subtitle,
-  List<web.Element> actions = const [],
+  List<web.Node> actions = const [],
 }) {
   return div(className: 'header', children: [
     h1(title),

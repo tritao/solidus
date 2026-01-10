@@ -1,5 +1,5 @@
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 Dispose mountDocsRuntimeReactivityBasic(web.Element mount) {
@@ -8,27 +8,25 @@ Dispose mountDocsRuntimeReactivityBasic(web.Element mount) {
     final count = createSignal(0);
     final doubled = createMemo(() => count.value * 2);
 
-    final row = web.HTMLDivElement()..className = "row";
     final inc = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Increment";
     on(inc, "click", (_) => count.value++);
-    row.appendChild(inc);
 
     final dec = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn secondary"
       ..textContent = "Decrement";
     on(dec, "click", (_) => count.value--);
-    row.appendChild(dec);
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "count=${count.value} • doubled=${doubled.value}"));
-    row.appendChild(status);
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "count=${count.value} • doubled=${doubled.value}")],
+    );
 
-    return row;
+    return row(children: [inc, dec, status]);
   });
   // #doc:endregion snippet
 }
-

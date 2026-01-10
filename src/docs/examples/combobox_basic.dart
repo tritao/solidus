@@ -29,11 +29,13 @@ Dispose mountDocsComboboxBasic(web.Element mount) {
     final anchor = control.anchor;
     final trigger = control.triggerButton!;
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Value: ${value.value ?? "none"}"));
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "Value: ${value.value ?? "none"}")],
+    );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(
+    return div(children: [
       FormField(
         id: "docs-combobox-basic-field",
         label: () => "Pick one",
@@ -41,10 +43,7 @@ Dispose mountDocsComboboxBasic(web.Element mount) {
         control: anchor,
         a11yTarget: input,
       ),
-    );
-    root.appendChild(status);
-
-    root.appendChild(
+      status,
       Combobox<String>(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -57,9 +56,7 @@ Dispose mountDocsComboboxBasic(web.Element mount) {
         setValue: (next) => value.value = next,
         closeOnSelection: true,
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

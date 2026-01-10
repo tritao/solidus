@@ -17,15 +17,13 @@ Dispose mountDocsToastBasic(web.Element mount) {
       toaster.show("Toast #$counter");
     });
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(btn);
-    root.appendChild(
+    return row(children: [
+      btn,
       toaster.view(
         portalId: "docs-toast-basic-portal",
         viewportId: "docs-toast-basic-viewport",
       ),
-    );
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

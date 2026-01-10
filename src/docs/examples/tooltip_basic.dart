@@ -13,14 +13,12 @@ Dispose mountDocsTooltipBasic(web.Element mount) {
       ..className = "btn primary"
       ..textContent = "Hover or focus me";
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Last close: ${lastClose.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "Last close: ${lastClose.value}")]);
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(trigger);
-    root.appendChild(status);
-
-    root.appendChild(
+    return row(children: [
+      trigger,
+      status,
       Tooltip(
         open: () => open.value,
         setOpen: (next) => open.value = next,
@@ -28,17 +26,13 @@ Dispose mountDocsTooltipBasic(web.Element mount) {
         portalId: "docs-tooltip-basic-portal",
         onClose: (reason) => lastClose.value = reason,
         builder: (close) {
-          final tip = web.HTMLDivElement()
-            ..className = "card"
+          final tip = div(className: "card", children: [web.Text("Tooltip text")])
             ..style.padding = "8px 10px"
             ..style.fontSize = "12px";
-          tip.appendChild(web.Text("Tooltip text"));
           return tip;
         },
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }

@@ -13,13 +13,10 @@ Dispose mountDocsSwitchBasic(web.Element mount) {
       ariaLabel: "Enable feature",
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Checked: ${checked.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "Checked: ${checked.value}")]);
 
-    final root = web.HTMLDivElement()..className = "row";
-    root.appendChild(sw);
-    root.appendChild(status);
-    return root;
+    return row(children: [sw, status]);
   });
   // #doc:endregion snippet
 }

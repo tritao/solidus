@@ -30,16 +30,15 @@ Dispose mountDocsFieldsetBasic(web.Element mount) {
       ],
     );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(toggle);
-    root.appendChild(web.HTMLDivElement()..style.height = "10px");
-    root.appendChild(fieldset);
-
     createRenderEffect(() {
       fieldset.disabled = disabled.value;
     });
 
-    return root;
+    return div(children: [
+      toggle,
+      web.HTMLDivElement()..style.height = "10px",
+      fieldset,
+    ]);
   });
   // #doc:endregion snippet
 }

@@ -7,9 +7,7 @@ Dispose mountDocsRadioGroupBasic(web.Element mount) {
   return render(mount, () {
     final value = createSignal("email");
 
-    final label = web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Delivery method";
+    final label = p("Delivery method", className: "muted");
 
     web.HTMLButtonElement item(String text) =>
         web.HTMLButtonElement()..type = "button"..textContent = text;
@@ -29,14 +27,10 @@ Dispose mountDocsRadioGroupBasic(web.Element mount) {
       ],
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "value=${value.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "value=${value.value}")]);
 
-    final root = web.HTMLDivElement()..className = "stack";
-    root.appendChild(label);
-    root.appendChild(group);
-    root.appendChild(status);
-    return root;
+    return div(className: "stack", children: [label, group, status]);
   });
   // #doc:endregion snippet
 }

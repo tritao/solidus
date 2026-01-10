@@ -14,14 +14,13 @@ Dispose mountDocsInputOtpBasic(web.Element mount) {
       ariaLabel: "Verification code",
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "value=\"${code.value}\""));
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "value=\"${code.value}\"")],
+    );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(otp);
-    root.appendChild(status);
-    return root;
+    return div(children: [otp, status]);
   });
   // #doc:endregion snippet
 }
-

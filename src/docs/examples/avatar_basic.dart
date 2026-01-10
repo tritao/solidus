@@ -5,8 +5,6 @@ import "package:web/web.dart" as web;
 Dispose mountDocsAvatarBasic(web.Element mount) {
   // #doc:region snippet
   return render(mount, () {
-    final row = web.HTMLDivElement()..className = "row";
-
     final ok = Avatar(
       src: () => "assets/solidus-small-logo.png",
       alt: "Solidus",
@@ -28,18 +26,14 @@ Dispose mountDocsAvatarBasic(web.Element mount) {
       size: 40,
     )..setAttribute("data-test", "initials");
 
-    row.appendChild(ok);
-    row.appendChild(broken);
-    row.appendChild(initials);
+    final avatarsRow = row(children: [ok, broken, initials]);
 
-    final label = web.HTMLParagraphElement()
-      ..className = "muted"
-      ..textContent = "Image, broken image (fallback), and initials.";
+    final label = p(
+      "Image, broken image (fallback), and initials.",
+      className: "muted",
+    );
 
-    final root = web.HTMLDivElement()..className = "stack";
-    root.appendChild(row);
-    root.appendChild(label);
-    return root;
+    return div(className: "stack", children: [avatarsRow, label]);
   });
   // #doc:endregion snippet
 }

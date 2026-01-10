@@ -15,13 +15,13 @@ Dispose mountDocsTextareaBasic(web.Element mount) {
       ariaLabel: "Message",
     );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(el);
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..appendChild(text(() => "${value.value.length} chars")));
-    return root;
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "${value.value.length} chars")],
+    );
+
+    return div(children: [el, status]);
   });
   // #doc:endregion snippet
 }
-

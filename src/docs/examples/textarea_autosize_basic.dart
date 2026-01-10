@@ -15,12 +15,13 @@ Dispose mountDocsTextareaAutosizeBasic(web.Element mount) {
       ariaLabel: "Autosize textarea",
     );
 
-    final root = web.HTMLDivElement();
-    root.appendChild(el);
-    root.appendChild(web.HTMLParagraphElement()
-      ..className = "muted"
-      ..appendChild(text(() => "${v.value.length} chars")));
-    return root;
+    final status = p(
+      "",
+      className: "muted",
+      children: [text(() => "${v.value.length} chars")],
+    );
+
+    return div(children: [el, status]);
   });
   // #doc:endregion snippet
 }

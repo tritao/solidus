@@ -76,13 +76,10 @@ Dispose mountDocsMenubarBasic(web.Element mount) {
       ],
     );
 
-    final status = web.HTMLParagraphElement()..className = "muted";
-    status.appendChild(text(() => "Last action: ${lastAction.value}"));
+    final status =
+        p("", className: "muted", children: [text(() => "Last action: ${lastAction.value}")]);
 
-    final root = web.HTMLDivElement();
-    root.appendChild(bar);
-    root.appendChild(status);
-    return root;
+    return div(children: [bar, status]);
   });
   // #doc:endregion snippet
 }

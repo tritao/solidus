@@ -1,5 +1,5 @@
 import "package:solidus/solidus.dart";
-import "package:solidus/solidus_dom.dart";
+import "package:solidus/solidus_ui.dart";
 import "package:web/web.dart" as web;
 
 final _NameContext = createContext<String>("(default)");
@@ -8,22 +8,21 @@ Dispose mountDocsRuntimeContextBasic(web.Element mount) {
   // #doc:region snippet
   return render(mount, () {
     web.HTMLElement renderReader(String label) {
-      final p = web.HTMLParagraphElement()..className = "muted";
-      p.appendChild(text(() => "$label: ${useContext(_NameContext)}"));
-      return p;
+      return p(
+        "",
+        className: "muted",
+        children: [text(() => "$label: ${useContext(_NameContext)}")],
+      );
     }
 
-    final root = web.HTMLDivElement();
-    root.appendChild(renderReader("Outside provider"));
+    final outside = renderReader("Outside provider");
 
-    final card = web.HTMLDivElement()..className = "card";
+    final card = div(className: "card");
     provideContext<String, void>(_NameContext, "provided", () {
       card.appendChild(renderReader("Inside provider"));
     });
-    root.appendChild(card);
 
-    return root;
+    return div(children: [outside, card]);
   });
   // #doc:endregion snippet
 }
-

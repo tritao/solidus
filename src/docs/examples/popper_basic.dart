@@ -9,37 +9,32 @@ Dispose mountDocsPopperBasic(web.Element mount) {
   return render(mount, () {
     final open = createSignal(false);
 
-    final root = web.HTMLDivElement();
-
-    final wrap = web.HTMLDivElement()
-      ..className = "docPopperExample";
-    root.appendChild(wrap);
-
     final anchor = web.HTMLButtonElement()
       ..type = "button"
       ..className = "btn primary"
       ..textContent = "Toggle popper";
     on(anchor, "click", (_) => open.value = !open.value);
-    wrap.appendChild(anchor);
 
-    wrap.appendChild(
+    return div(className: "docPopperExample", children: [
+      anchor,
       Presence(
         when: () => open.value,
         exitMs: 120,
         children: () => Portal(
           id: "docs-popper-portal",
           children: () {
-            final panel = web.HTMLDivElement()
-              ..className = "card"
-              ..id = "docs-popper-panel"
-              ..style.maxWidth = "360px";
-            panel.appendChild(
-              web.HTMLParagraphElement()
-                ..className = "muted"
-                ..textContent = "I’m positioned with attachPopper().",
-            );
-            final arrow = web.HTMLDivElement()
-              ..className = "popperArrow"
+            final panel = div(
+              className: "card",
+              attrs: {"id": "docs-popper-panel"},
+              children: [
+                p(
+                  "I’m positioned with attachPopper().",
+                  className: "muted",
+                ),
+              ],
+            )..style.maxWidth = "360px";
+
+            final arrow = div(className: "popperArrow")
               ..setAttribute("data-solidus-popper-arrow", "1");
             panel.appendChild(arrow);
 
@@ -78,10 +73,7 @@ Dispose mountDocsPopperBasic(web.Element mount) {
           },
         ),
       ),
-    );
-
-    return root;
+    ]);
   });
   // #doc:endregion snippet
 }
-

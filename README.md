@@ -1,6 +1,6 @@
 # 🛡️ Solidus ✨
 
-UI primitives + docs + conformance labs for **Dart on the DOM**, built with **Vite** and `vite-plugin-dart`. 🚀🧩
+UI primitives + a SolidJS-ish reactive runtime for **Dart on the DOM**, with docs + conformance labs, built with **Vite** and `vite-plugin-dart`. 🚀🧩⚡
 
 <p>
   <img alt="Solidus logo" src="public/assets/solidus-logo.png" width="520" />
@@ -10,10 +10,44 @@ UI primitives + docs + conformance labs for **Dart on the DOM**, built with **Vi
 
 - 📚 **Docs**: component pages + minimal examples → `docs.html?docs=index`
 - 🧪 **Labs**: edge cases + Playwright scenarios → `labs.html`
-- 🧱 **Runtime**: reusable DOM UI primitives → `lib/dom_ui/`
+- 🧱 **Runtime**: SolidJS-ish reactivity + component base → `lib/dom_ui/`
+- 🧩 **Components**: accessible primitives (overlays, forms, nav, etc.) → `docs.html?docs=index`
 - 🧰 **Vite + Dart**: import `.dart` directly via `vite-plugin-dart` → `vendor/vite-plugin-dart/`
 
 ![Demo screenshot](public/assets/demo.png)
+
+## 🧠 What this provides (in plain terms) 🧑‍🍳
+
+- ⚡ **Fine-grained reactivity**: signals + computed values + effects (SolidJS style)
+- 🧩 **Component model**: a `Component` base class with “hooks”-like helpers (`useSignal`, `useComputed`, `useEffect`, `useReducer`, `useMemo`, `useRef`, `provide`/`useContext`)
+- 🧬 **DOM-first rendering**: components build real DOM nodes and patch updates via `morphdom` (no VDOM)
+- 🎛️ **A11y-focused primitives**: dialogs, popovers, menus, comboboxes, roving focus, etc. with docs + runnable demos
+- 🧪 **Conformance harness**: Playwright scenarios that exercise tricky interaction/overlay edge cases
+
+### ⚡ SolidJS-ish reactivity (Dart)
+
+The runtime includes `Signal`, `Computed`, and `effect`, and components can keep reactive state via `useSignal`/`useComputed`:
+
+```dart
+final count = useSignal<int>('count', 0);
+final doubleCount = useComputed<int>('double', () => count.value * 2);
+
+useEffect('log', [doubleCount.value], () {
+  debugLog('double=${doubleCount.value}');
+  return null;
+});
+```
+
+## 🧩 Component library (what’s included) 🧱
+
+This repo ships a growing set of DOM UI primitives with docs + examples, including:
+
+- 🪟 Overlays: Dialog, Popover, Tooltip, Toast
+- 🧭 Menus: DropdownMenu, Menubar, ContextMenu
+- 🧾 Forms: Input, InputOTP, FormField, Textarea, Checkbox, RadioGroup, Slider, Select, Combobox, Listbox, ToggleGroup
+- 🧠 Focus/interaction: FocusScope, InteractOutside, Roving focus
+
+Browse: `docs.html?docs=index` 📚✨
 
 ## ⚡ Quickstart
 

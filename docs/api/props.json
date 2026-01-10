@@ -1686,60 +1686,6 @@
       }
     ]
   },
-  "TextareaAutosize": {
-    "title": "TextareaAutosize",
-    "rows": [
-      {
-        "name": "id",
-        "type": "String?"
-      },
-      {
-        "name": "className",
-        "type": "String",
-        "default": "\"textarea\""
-      },
-      {
-        "name": "ariaLabel",
-        "type": "String?"
-      },
-      {
-        "name": "placeholder",
-        "type": "String?"
-      },
-      {
-        "name": "rows",
-        "type": "int?"
-      },
-      {
-        "name": "cols",
-        "type": "int?"
-      },
-      {
-        "name": "disabled",
-        "type": "bool Function()?"
-      },
-      {
-        "name": "value",
-        "type": "String? Function()?"
-      },
-      {
-        "name": "setValue",
-        "type": "void Function(String next)?"
-      },
-      {
-        "name": "onInput",
-        "type": "void Function(web.Event e, String currentValue)?"
-      },
-      {
-        "name": "onChange",
-        "type": "void Function(web.Event e, String currentValue)?"
-      },
-      {
-        "name": "maxHeightPx",
-        "type": "int?"
-      }
-    ]
-  },
   "Toast": {
     "title": "Toast",
     "rows": [

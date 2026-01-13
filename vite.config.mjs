@@ -83,9 +83,15 @@ export default defineConfig(({ mode, command }) => {
           // Backend/dev tooling writes sqlite + caches inside the repo; don't let
           // those trigger full page reloads while developing.
           "**/.cache/**",
+          "**/.dart_tool/**",
           "**/*.sqlite",
           "**/*.sqlite-wal",
           "**/*.sqlite-shm",
+          "**/*.sqlite-journal",
+          "**/*.db",
+          "**/*.db-wal",
+          "**/*.db-shm",
+          "**/*.db-journal",
         ],
       },
     },

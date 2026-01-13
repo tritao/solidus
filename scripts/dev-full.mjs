@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
 
 function parseEnvFile(filePath) {
@@ -151,9 +152,13 @@ const backendEnv = {
   SOLIDUS_EMAIL_TRANSPORT: env.SOLIDUS_EMAIL_TRANSPORT ?? "log",
   SOLIDUS_EMAIL_FROM: env.SOLIDUS_EMAIL_FROM ?? "Solidus <no-reply@localhost>",
   SOLIDUS_PUBLIC_BASE_URL: env.SOLIDUS_PUBLIC_BASE_URL ?? "http://localhost:5173",
-  SOLIDUS_BACKEND_DB:
-    env.SOLIDUS_BACKEND_DB ||
-    path.join(backendDir, ".cache", "dev_full", "solidus.sqlite"),
+  SOLIDUS_BACKEND_DB: env.SOLIDUS_BACKEND_DB || (() => {
+    // Put the sqlite DB in the OS temp dir by default so Vite's file watcher
+    // doesn't trigger full-reloads on each request.
+    const dbPath = path.join(os.tmpdir(), "solidus_backend", "dev_full", "solidus.sqlite");
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    return dbPath;
+  })(),
 };
 
 console.log(`[dev:full] backend: ${backendUrl}`);

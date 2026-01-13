@@ -35,7 +35,7 @@ If `dart` isn't on your PATH, this repo usually has a provisioned SDK at `../../
 - Tenants: `GET /tenants`, `POST /tenants`, `POST /tenants/select`
 - Sessions: `GET /sessions`, `POST /sessions/<id>/revoke`, `POST /sessions/revoke_others`
 - 2FA: `POST /mfa/enroll/start`, `POST /mfa/enroll/confirm`, `POST /mfa/verify`, `POST /mfa/disable`, `POST /mfa/recovery/regenerate`
-- Tenant admin: `POST /t/<slug>/admin/invites`, `POST /t/<slug>/admin/members/<userId>/role`, `POST /t/<slug>/admin/settings/mfa`
+- Tenant admin: `POST /t/<slug>/admin/invites`, `GET /t/<slug>/admin/members`, `POST /t/<slug>/admin/members/<userId>/role`, `POST /t/<slug>/admin/settings/mfa`
 
 ## Config
 
@@ -51,14 +51,14 @@ Env vars (most useful):
 Email delivery:
 
 - `SOLIDUS_EMAIL_TRANSPORT=disabled|log|smtp|resend` (default `disabled`)
-- `SOLIDUS_EMAIL_DELIVERY_MODE=async|sync` (default `async`): `async` queues in-process so requests don’t block
+- `SOLIDUS_EMAIL_DELIVERY_MODE=async|sync` (default `async`): `async` writes to `email_outbox` (SQLite) and retries delivery in the background
 - `SOLIDUS_EMAIL_FROM` (required for `smtp`, recommended for `log`)
 - `SOLIDUS_PUBLIC_BASE_URL` (recommended): used to build links, e.g. `https://app.example.com`
 - `SOLIDUS_FRONTEND_RESET_PATH` (default `/reset-password`)
 - `SOLIDUS_FRONTEND_VERIFY_EMAIL_PATH` (default `/verify-email`)
 - `SOLIDUS_FRONTEND_INVITE_PATH` (default `/accept-invite`)
 - `SOLIDUS_URL_TOKEN_PLACEMENT=query|fragment` (default `query`)
-- Outbox: `SOLIDUS_EMAIL_OUTBOX_POLL_MS` (default `500`), `SOLIDUS_EMAIL_MAX_ATTEMPTS` (default `5`)
+- Outbox: `SOLIDUS_EMAIL_OUTBOX_POLL_MS` (default `500`), `SOLIDUS_EMAIL_MAX_ATTEMPTS` (default `5`), status `pending|sent|failed`
 - SMTP: `SOLIDUS_SMTP_HOST`, `SOLIDUS_SMTP_PORT`, `SOLIDUS_SMTP_USERNAME`, `SOLIDUS_SMTP_PASSWORD`, `SOLIDUS_SMTP_SSL=1`, `SOLIDUS_SMTP_ALLOW_INSECURE=0`
 - Resend: `SOLIDUS_RESEND_API_KEY`, `SOLIDUS_RESEND_ENDPOINT` (default `https://api.resend.com/emails`)
 
@@ -66,6 +66,12 @@ Password + lockout:
 
 - `SOLIDUS_PASSWORD_MIN_LENGTH` (default `12`)
 - Backoff: `SOLIDUS_AUTH_BACKOFF_BASE_SECONDS` (default `2`), `SOLIDUS_AUTH_BACKOFF_MAX_SECONDS` (default `300`)
+
+## Production notes
+
+- Prefer `SOLIDUS_URL_TOKEN_PLACEMENT=fragment` to reduce token leakage via `Referer` headers.
+- Set `SOLIDUS_PUBLIC_BASE_URL` so reset/verify/invite links point to the frontend (not the backend host/port).
+- `SOLIDUS_EMAIL_DELIVERY_MODE=async` is durable (DB-backed), but still runs in-process; if the process is down, delivery pauses until it restarts.
 
 Bootstrap the first user (only works when there are no users yet):
 

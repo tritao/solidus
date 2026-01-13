@@ -112,6 +112,7 @@ In the original demo (`/?demos=1`):
 - 🧱 DOM UI runtime helpers: `lib/dom_ui/`
 - 🧩 UI primitives: `lib/solidus_dom/` + `lib/solidus_ui/`
 - 🧭 Router: `lib/solidus_router/`
+- 🛠️ Backend package: `packages/solidus_backend/`
 - 📦 App shell + demo routes: `src/app/`
 - 📚 Docs runtime + demos: `src/docs/` + `docs/pages/` + `tool/build_docs.dart`
 - 🧪 Labs / conformance demos: `src/labs/` + `scripts/scenarios/`

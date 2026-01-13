@@ -10,6 +10,7 @@ import './backend_api.dart';
 
 abstract final class BackendDomActions {
   static const bootstrap = 'backend-bootstrap';
+  static const demoBootstrap = 'backend-demo-bootstrap';
   static const login = 'backend-login';
   static const logout = 'backend-logout';
   static const refreshMe = 'backend-me';
@@ -176,6 +177,9 @@ final class BackendPlaygroundComponent extends Component {
   static const _idPasswordResetToken = 'backend-password-reset-token';
   static const _idPasswordResetNewPassword = 'backend-password-reset-new-password';
 
+  static const _demoEmail = 'demo@solidus.local';
+  static const _demoPassword = 'demo-password-123456';
+
   SolidusBackendApi get _api {
     final ref = useRef<SolidusBackendApi?>('api', null);
     ref.value ??= SolidusBackendApi(baseUrl: '/api');
@@ -264,13 +268,18 @@ final class BackendPlaygroundComponent extends Component {
       dom.spacer(),
       dom.section(
         title: 'Auth',
-        subtitle: 'Bootstrap (first user), login, logout, /me.',
+        subtitle: 'Bootstrap (first user), demo bootstrap, login, logout, /me.',
         children: [
           dom.spacer(),
           dom.row(children: [
             inputText(id: _idEmail, placeholder: 'email'),
             inputPassword(id: _idPassword, placeholder: 'password'),
             dom.primaryButton('Bootstrap', action: BackendDomActions.bootstrap, disabled: state.busy),
+            dom.secondaryButton(
+              'Demo bootstrap + login',
+              action: BackendDomActions.demoBootstrap,
+              disabled: state.busy,
+            ),
             dom.primaryButton('Login', action: BackendDomActions.login, disabled: state.busy),
             dom.secondaryButton('Logout', action: BackendDomActions.logout, disabled: state.busy),
             dom.secondaryButton('GET /me', action: BackendDomActions.refreshMe, disabled: state.busy),
@@ -395,6 +404,7 @@ final class BackendPlaygroundComponent extends Component {
     dispatchAction(event, {
       'backend-set-base': (_) => _setBaseUrl(),
       BackendDomActions.bootstrap: (_) => _run(_bootstrap),
+      BackendDomActions.demoBootstrap: (_) => _run(_demoBootstrapAndLogin),
       BackendDomActions.login: (_) => _run(_login),
       BackendDomActions.logout: (_) => _run(_logout),
       BackendDomActions.refreshMe: (_) => _run(_me),
@@ -452,12 +462,74 @@ final class BackendPlaygroundComponent extends Component {
 
   String _value(String id) => query<web.HTMLInputElement>('#$id')?.value.trim() ?? '';
 
+  void _setValue(String id, String value) {
+    final input = query<web.HTMLInputElement>('#$id');
+    if (input == null) return;
+    input.value = value;
+  }
+
   Future<void> _bootstrap() async {
     final email = _value(_idEmail);
     final password = _value(_idPassword);
     final res = await _api.postJson('/bootstrap', {'email': email, 'password': password});
     _setLastJson(res);
     _store.dispatch(const BackendSetStatus('Bootstrapped.'));
+  }
+
+  Future<void> _demoBootstrapAndLogin() async {
+    _setValue(_idEmail, _demoEmail);
+    _setValue(_idPassword, _demoPassword);
+
+    Object? bootstrapRes;
+    try {
+      bootstrapRes = await _api.postJson(
+        '/bootstrap',
+        {'email': _demoEmail, 'password': _demoPassword},
+      );
+    } on BackendApiException catch (e) {
+      bootstrapRes = {
+        'error': e.toString(),
+        'statusCode': e.statusCode,
+        'body': e.body,
+      };
+    }
+
+    Map<String, dynamic> loginRes;
+    try {
+      loginRes = await _api.postJson(
+        '/login',
+        {'email': _demoEmail, 'password': _demoPassword},
+      );
+    } on BackendApiException catch (e) {
+      _store.dispatch(BackendSetStatus('Error: ${e.toString()}'));
+      _setLastJson({
+        'bootstrap': bootstrapRes,
+        'login': {
+          'error': e.toString(),
+          'statusCode': e.statusCode,
+          'body': e.body,
+        },
+      });
+      return;
+    }
+
+    final csrfToken = loginRes['csrfToken'];
+    _store.dispatch(BackendSetCsrf(csrfToken is String ? csrfToken : null));
+
+    Object? selectTenantRes;
+    try {
+      selectTenantRes = await _api.postJson('/tenants/select', {'slug': 'default'}, csrf: true);
+      _store.dispatch(const BackendSetActiveTenant('default'));
+    } catch (e) {
+      selectTenantRes = {'error': '$e'};
+    }
+
+    _setLastJson({
+      'bootstrap': bootstrapRes,
+      'login': loginRes,
+      'selectTenant(default)': selectTenantRes,
+    });
+    _store.dispatch(const BackendSetStatus('Demo user ready (logged in).'));
   }
 
   Future<void> _login() async {

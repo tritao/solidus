@@ -78,7 +78,15 @@ export default defineConfig(({ mode, command }) => {
       watch: {
         // `tool/build_docs.dart` writes into `public/assets/docs/**`; we trigger
         // a targeted refresh ourselves to avoid feedback loops.
-        ignored: ["**/public/assets/docs/**"],
+        ignored: [
+          "**/public/assets/docs/**",
+          // Backend/dev tooling writes sqlite + caches inside the repo; don't let
+          // those trigger full page reloads while developing.
+          "**/.cache/**",
+          "**/*.sqlite",
+          "**/*.sqlite-wal",
+          "**/*.sqlite-shm",
+        ],
       },
     },
     build: {

@@ -56,6 +56,7 @@ This repo includes a small Solidus web page to exercise the backend:
 It defaults to `Base URL = /api` and uses the Vite dev-server proxy:
 
 - `vite.config.mjs` proxies `/api/*` → `http://127.0.0.1:8080/*` (override via `SOLIDUS_BACKEND_PROXY`)
+- Or start both together: `npm run dev:full`
 
 ## Email links and token leakage
 

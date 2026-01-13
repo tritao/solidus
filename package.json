@@ -9,6 +9,7 @@
     "docs:build": "node scripts/dart-run.mjs run tool/build_docs.dart",
     "predev": "npm run dart:get && npm run docs:build",
     "dev": "vite",
+    "dev:full": "node scripts/dev-full.mjs",
     "prebuild": "npm run dart:get && npm run docs:build",
     "build": "vite build",
     "prebuild:all": "npm run dart:get && npm run docs:build",

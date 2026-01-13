@@ -149,3 +149,34 @@ class EmailVerificationTokens extends Table {
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
+
+class EmailOutbox extends Table {
+  TextColumn get id => text()();
+  TextColumn get to => text()();
+  TextColumn get from => text()();
+  TextColumn get subject => text()();
+  TextColumn get textBody => text()();
+  TextColumn get htmlBody => text().nullable()();
+
+  TextColumn get status => text()(); // pending|sent|failed
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextAttemptAt => dateTime()();
+  DateTimeColumn get sentAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class AuthThrottles extends Table {
+  TextColumn get key => text()();
+  IntColumn get failures => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lockedUntil => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}

@@ -56,8 +56,16 @@ Email delivery:
 - `SOLIDUS_PUBLIC_BASE_URL` (recommended): used to build links, e.g. `https://app.example.com`
 - `SOLIDUS_FRONTEND_RESET_PATH` (default `/reset-password`)
 - `SOLIDUS_FRONTEND_VERIFY_EMAIL_PATH` (default `/verify-email`)
+- `SOLIDUS_FRONTEND_INVITE_PATH` (default `/accept-invite`)
+- `SOLIDUS_URL_TOKEN_PLACEMENT=query|fragment` (default `query`)
+- Outbox: `SOLIDUS_EMAIL_OUTBOX_POLL_MS` (default `500`), `SOLIDUS_EMAIL_MAX_ATTEMPTS` (default `5`)
 - SMTP: `SOLIDUS_SMTP_HOST`, `SOLIDUS_SMTP_PORT`, `SOLIDUS_SMTP_USERNAME`, `SOLIDUS_SMTP_PASSWORD`, `SOLIDUS_SMTP_SSL=1`, `SOLIDUS_SMTP_ALLOW_INSECURE=0`
 - Resend: `SOLIDUS_RESEND_API_KEY`, `SOLIDUS_RESEND_ENDPOINT` (default `https://api.resend.com/emails`)
+
+Password + lockout:
+
+- `SOLIDUS_PASSWORD_MIN_LENGTH` (default `12`)
+- Backoff: `SOLIDUS_AUTH_BACKOFF_BASE_SECONDS` (default `2`), `SOLIDUS_AUTH_BACKOFF_MAX_SECONDS` (default `300`)
 
 Bootstrap the first user (only works when there are no users yet):
 

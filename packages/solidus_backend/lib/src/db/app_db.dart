@@ -20,6 +20,8 @@ part 'app_db.g.dart';
     AuditLogs,
     PasswordResetTokens,
     EmailVerificationTokens,
+    EmailOutbox,
+    AuthThrottles,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -29,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
   }) : super(_openConnection(sqliteFilePath, logStatements: logStatements));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +46,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await migrator.createTable(passwordResetTokens);
             await migrator.createTable(emailVerificationTokens);
+          }
+          if (from < 4) {
+            await migrator.createTable(emailOutbox);
+            await migrator.createTable(authThrottles);
           }
         },
         beforeOpen: (details) async {

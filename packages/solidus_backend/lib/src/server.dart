@@ -10,11 +10,13 @@ import 'package:uuid/uuid.dart';
 
 import 'auth/crypto_primitives.dart';
 import 'auth/password_hasher.dart';
+import 'auth/password_policy.dart';
+import 'auth/throttle.dart';
 import 'auth/totp.dart';
 import 'config.dart';
 import 'db/app_db.dart';
-import 'email/email_dispatcher.dart';
 import 'email/email_sender.dart';
+import 'email/outbox_worker.dart';
 import 'email/resend_email_sender.dart';
 import 'email/templates.dart';
 import 'http/cookies.dart';
@@ -30,21 +32,21 @@ class SolidusBackendServer {
     required this.config,
     required this.db,
     required HttpServer httpServer,
-    required EmailDispatcher emailDispatcher,
+    required EmailOutboxWorker emailWorker,
   })  : _httpServer = httpServer,
-        _emailDispatcher = emailDispatcher;
+        _emailWorker = emailWorker;
 
   final SolidusBackendConfig config;
   final AppDatabase db;
   final HttpServer _httpServer;
-  final EmailDispatcher _emailDispatcher;
+  final EmailOutboxWorker _emailWorker;
 
   String get host => _httpServer.address.host;
   int get port => _httpServer.port;
 
   Future<void> stop() async {
     await _httpServer.close(force: true);
-    await _emailDispatcher.close();
+    await _emailWorker.close();
     await db.close();
   }
 
@@ -63,12 +65,18 @@ class SolidusBackendServer {
     }
 
     final emailSender = _buildEmailSender(config: config, logger: logger);
-    final dispatcher = EmailDispatcher(sender: emailSender, logger: logger);
+    final emailWorker = EmailOutboxWorker(
+      db: db,
+      sender: emailSender,
+      logger: logger,
+      pollInterval: config.emailOutboxPollInterval,
+      maxAttempts: config.emailMaxAttempts,
+    )..start();
     final handler = _buildHandler(
       db: db,
       config: config,
       logger: logger,
-      emailDispatcher: dispatcher,
+      emailWorker: emailWorker,
     );
     final server = await shelf_io.serve(
       handler,
@@ -80,7 +88,7 @@ class SolidusBackendServer {
       config: config,
       db: db,
       httpServer: server,
-      emailDispatcher: dispatcher,
+      emailWorker: emailWorker,
     );
   }
 }
@@ -104,11 +112,17 @@ Handler _buildHandler({
   required AppDatabase db,
   required SolidusBackendConfig config,
   required Logger logger,
-  required EmailDispatcher emailDispatcher,
+  required EmailOutboxWorker emailWorker,
 }) {
   final router = Router();
 
   final passwordHasher = PasswordHasher(iterations: 210000, bits: 256);
+  final passwordPolicy = PasswordPolicy(minLength: config.passwordMinLength);
+  final throttle = AuthThrottleService(
+    db: db,
+    baseBackoff: config.authBackoffBase,
+    maxBackoff: config.authBackoffMax,
+  );
   final encryptor = AesGcmEncryptor(config.authMasterKey);
   final totp = Totp();
   final rateLimiter = InMemoryRateLimiter();
@@ -174,7 +188,7 @@ Handler _buildHandler({
       expiresIn: const Duration(minutes: 30),
     );
     final delivery = await _deliverEmail(
-      emailDispatcher: emailDispatcher,
+      emailWorker: emailWorker,
       config: config,
       to: user.email,
       subject: tpl.subject,
@@ -206,6 +220,8 @@ Handler _buildHandler({
     if (token.isEmpty || password.isEmpty) {
       return jsonError(400, 'token and password required');
     }
+    final pwErr = passwordPolicy.validate(password);
+    if (pwErr != null) return jsonError(400, pwErr);
 
     final tokenHash = _hashRecoveryOrInviteToken(config, token);
     final row = await (db.select(db.passwordResetTokens)
@@ -259,24 +275,35 @@ Handler _buildHandler({
       return jsonError(400, 'email and password required');
     }
 
+    final ip = remoteIp(request) ?? 'unknown';
+    final throttleKey = 'login:$email:$ip';
+    final locked = await throttle.lockedUntil(throttleKey);
+    final now = DateTime.now().toUtc();
+    if (locked != null && locked.isAfter(now)) {
+      final retry = locked.difference(now).inSeconds;
+      return jsonError(429, 'too many attempts', details: {'retryAfterSeconds': retry});
+    }
+
     final user = await db.getUserByEmail(email);
     if (user == null) {
+      await throttle.registerFailure(throttleKey, now: now);
       await _audit(
         db,
         action: 'auth.login_failed',
         metadata: {'email': email, 'reason': 'not_found'},
-        ip: remoteIp(request),
+        ip: ip,
         userAgent: request.headers['user-agent'],
       );
       return jsonError(401, 'invalid credentials');
     }
     if (user.disabledAt != null) {
+      await throttle.registerFailure(throttleKey, now: now);
       await _audit(
         db,
         action: 'auth.login_failed',
         actorUserId: user.id,
         metadata: {'email': email, 'reason': 'disabled'},
-        ip: remoteIp(request),
+        ip: ip,
         userAgent: request.headers['user-agent'],
       );
       return jsonError(403, 'account disabled');
@@ -284,23 +311,24 @@ Handler _buildHandler({
 
     final ok = await passwordHasher.verify(password, user.passwordHash);
     if (!ok) {
+      await throttle.registerFailure(throttleKey, now: now);
       await _audit(
         db,
         action: 'auth.login_failed',
         actorUserId: user.id,
         metadata: {'reason': 'bad_password'},
-        ip: remoteIp(request),
+        ip: ip,
         userAgent: request.headers['user-agent'],
       );
       return jsonError(401, 'invalid credentials');
     }
+    await throttle.reset(throttleKey);
 
     // Best-effort rehash if params changed.
     // ignore: unawaited_futures
     _maybeUpgradePasswordHash(db, passwordHasher: passwordHasher, user: user, password: password);
 
     final has2fa = await _isTotpEnabled(db, userId: user.id);
-    final now = DateTime.now().toUtc();
     final session = await _createSession(
       db: db,
       config: config,
@@ -308,7 +336,7 @@ Handler _buildHandler({
       activeTenantId: null,
       mfaVerified: !has2fa,
       recentAuthAt: now,
-      ip: remoteIp(request),
+      ip: ip,
       userAgent: request.headers['user-agent'],
       now: now,
     );
@@ -319,7 +347,7 @@ Handler _buildHandler({
       action: 'auth.login_ok',
       actorUserId: user.id,
       metadata: {'mfaRequired': has2fa},
-      ip: remoteIp(request),
+      ip: ip,
       userAgent: request.headers['user-agent'],
     );
     return jsonResponse(
@@ -367,6 +395,8 @@ Handler _buildHandler({
     if (email.isEmpty || password.isEmpty) {
       return jsonError(400, 'email and password required');
     }
+    final pwErr = passwordPolicy.validate(password);
+    if (pwErr != null) return jsonError(400, pwErr);
 
     final now = DateTime.now().toUtc();
     final userId = const Uuid().v4();
@@ -739,6 +769,15 @@ Handler _buildHandler({
     final enabled = await _isTotpEnabled(db, userId: auth.user.id);
     if (!enabled) return jsonError(409, '2fa not enabled');
 
+    final ip = remoteIp(request) ?? 'unknown';
+    final throttleKey = 'mfa:${auth.user.id}:$ip';
+    final locked = await throttle.lockedUntil(throttleKey);
+    final now = DateTime.now().toUtc();
+    if (locked != null && locked.isAfter(now)) {
+      final retry = locked.difference(now).inSeconds;
+      return jsonError(429, 'too many attempts', details: {'retryAfterSeconds': retry});
+    }
+
     final json = await readJsonObject(request);
     final code = (getString(json, 'code') ?? '').trim();
     final recovery = (getString(json, 'recoveryCode') ?? '').trim();
@@ -752,9 +791,12 @@ Handler _buildHandler({
     } else {
       ok = await _verifyTotp(db, encryptor: encryptor, totp: totp, userId: auth.user.id, code: code);
     }
-    if (!ok) return jsonError(401, 'invalid code');
+    if (!ok) {
+      await throttle.registerFailure(throttleKey, now: now);
+      return jsonError(401, 'invalid code');
+    }
+    await throttle.reset(throttleKey);
 
-    final now = DateTime.now().toUtc();
     final rotated = await _rotateSession(
       db: db,
       config: config,
@@ -880,6 +922,8 @@ Handler _buildHandler({
     if (email.isEmpty || password.isEmpty) {
       return jsonError(400, 'email and password required');
     }
+    final pwErr = passwordPolicy.validate(password);
+    if (pwErr != null) return jsonError(400, pwErr);
 
     final tenant = await db.maybeGetTenantBySlug(slug);
     if (tenant == null) return jsonError(404, 'tenant not found');
@@ -920,11 +964,13 @@ Handler _buildHandler({
 
   router.post('/t/<slug>/invites/accept', (Request request, String slug) async {
     final json = await readJsonObject(request);
-    final token = (getString(json, 'token') ?? '').trim();
+    final token = ((getString(json, 'token') ?? getString(json, 'code')) ?? '').trim();
     final password = (getString(json, 'password') ?? '').trim();
     if (token.isEmpty || password.isEmpty) {
       return jsonError(400, 'token and password required');
     }
+    final pwErr = passwordPolicy.validate(password);
+    if (pwErr != null) return jsonError(400, pwErr);
 
     final tenant = await db.maybeGetTenantBySlug(slug);
     if (tenant == null) return jsonError(404, 'tenant not found');
@@ -1054,7 +1100,7 @@ Handler _buildHandler({
       expiresIn: const Duration(hours: 24),
     );
     final delivery = await _deliverEmail(
-      emailDispatcher: emailDispatcher,
+      emailWorker: emailWorker,
       config: config,
       to: auth.user.email,
       subject: tpl.subject,
@@ -1121,7 +1167,7 @@ Handler _buildHandler({
     if (auth == null) return jsonError(401, 'not authenticated');
 
     final json = await readJsonObject(request);
-    final token = (getString(json, 'token') ?? '').trim();
+    final token = ((getString(json, 'token') ?? getString(json, 'code')) ?? '').trim();
     if (token.isEmpty) return jsonError(400, 'token required');
 
     final tenant = await db.maybeGetTenantBySlug(slug);
@@ -1221,10 +1267,45 @@ Handler _buildHandler({
       userAgent: request.headers['user-agent'],
     );
 
+    final inviteUrl = _buildFrontendUrl(
+      config: config,
+      request: request,
+      path: config.frontendInvitePath,
+      query: {
+        'tenant': tenant.slug,
+        'token': token,
+      },
+    );
+    final tpl = EmailTemplates.invite(
+      appName: config.issuer,
+      tenantSlug: tenant.slug,
+      acceptUrl: inviteUrl.toString(),
+      expiresIn: const Duration(days: 7),
+    );
+    final delivery = await _deliverEmail(
+      emailWorker: emailWorker,
+      config: config,
+      to: email,
+      subject: tpl.subject,
+      text: tpl.text,
+      html: tpl.html,
+    );
+    await _audit(
+      db,
+      action: 'tenant.invite_email_delivery',
+      actorUserId: auth.user.id,
+      tenantId: tenant.id,
+      metadata: {'delivery': delivery},
+      ip: remoteIp(request),
+      userAgent: request.headers['user-agent'],
+    );
+
     return jsonResponse(
       {
         'ok': true,
         if (config.exposeInviteTokens) 'token': token,
+        if (config.exposeDevTokens) 'inviteUrl': inviteUrl.toString(),
+        if (config.exposeDevTokens) 'delivery': delivery,
         'expiresAt': expiresAt.toIso8601String(),
       },
       statusCode: 201,
@@ -1739,12 +1820,17 @@ Uri _buildFrontendUrl({
   required String path,
   required Map<String, String> query,
 }) {
+  final tokenPlacement = config.urlTokenPlacement;
+  final qp = tokenPlacement == 'query' ? query : null;
+  final fragment = tokenPlacement == 'fragment' ? Uri(queryParameters: query).query : null;
+
   final base = config.publicBaseUrl;
   if (base != null && base.isNotEmpty) {
     final baseUri = Uri.parse(base);
     return baseUri.replace(
       path: _joinPath(baseUri.path, path),
-      queryParameters: query,
+      queryParameters: qp,
+      fragment: fragment,
     );
   }
 
@@ -1755,7 +1841,8 @@ Uri _buildFrontendUrl({
       host: host.contains(':') ? host.split(':').first : host,
       port: host.contains(':') ? int.tryParse(host.split(':').last) : null,
       path: path.startsWith('/') ? path : '/$path',
-      queryParameters: query,
+      queryParameters: qp,
+      fragment: fragment,
     );
   }
 
@@ -1764,7 +1851,8 @@ Uri _buildFrontendUrl({
     host: config.host,
     port: config.port,
     path: path.startsWith('/') ? path : '/$path',
-    queryParameters: query,
+    queryParameters: qp,
+    fragment: fragment,
   );
 }
 
@@ -1776,7 +1864,7 @@ String _joinPath(String basePath, String add) {
 }
 
 Future<String> _deliverEmail({
-  required EmailDispatcher emailDispatcher,
+  required EmailOutboxWorker emailWorker,
   required SolidusBackendConfig config,
   required String to,
   required String subject,
@@ -1787,26 +1875,30 @@ Future<String> _deliverEmail({
   final from = config.emailFrom;
   if (from == null || from.isEmpty) return 'skipped_no_from';
 
-  final email = OutboundEmail(
-    to: to,
-    from: from,
-    subject: subject,
-    text: text,
-    html: html,
-  );
-
   if (config.emailDeliveryMode == 'sync') {
     // Synchronous delivery is only recommended for dev; it makes requests slower.
     try {
-      await emailDispatcher.sendNow(email);
+      await emailWorker.sendNow(
+        to: to,
+        from: from,
+        subject: subject,
+        text: text,
+        html: html,
+      );
       return 'sent';
     } catch (_) {
       return 'failed';
     }
   }
 
-  emailDispatcher.enqueue(email);
-  return 'queued';
+  await emailWorker.enqueue(
+    to: to,
+    from: from,
+    subject: subject,
+    text: text,
+    html: html,
+  );
+  return 'queued_db';
 }
 
 Future<bool> _useRecoveryCode(

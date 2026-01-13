@@ -4108,6 +4108,900 @@ class EmailVerificationTokensCompanion
   }
 }
 
+class $EmailOutboxTable extends EmailOutbox
+    with TableInfo<$EmailOutboxTable, EmailOutboxData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EmailOutboxTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toMeta = const VerificationMeta('to');
+  @override
+  late final GeneratedColumn<String> to = GeneratedColumn<String>(
+      'to', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fromMeta = const VerificationMeta('from');
+  @override
+  late final GeneratedColumn<String> from = GeneratedColumn<String>(
+      'from', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subjectMeta =
+      const VerificationMeta('subject');
+  @override
+  late final GeneratedColumn<String> subject = GeneratedColumn<String>(
+      'subject', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _textBodyMeta =
+      const VerificationMeta('textBody');
+  @override
+  late final GeneratedColumn<String> textBody = GeneratedColumn<String>(
+      'text_body', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _htmlBodyMeta =
+      const VerificationMeta('htmlBody');
+  @override
+  late final GeneratedColumn<String> htmlBody = GeneratedColumn<String>(
+      'html_body', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _attemptsMeta =
+      const VerificationMeta('attempts');
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+      'attempts', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _nextAttemptAtMeta =
+      const VerificationMeta('nextAttemptAt');
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>('next_attempt_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _sentAtMeta = const VerificationMeta('sentAt');
+  @override
+  late final GeneratedColumn<DateTime> sentAt = GeneratedColumn<DateTime>(
+      'sent_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastErrorMeta =
+      const VerificationMeta('lastError');
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+      'last_error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        to,
+        from,
+        subject,
+        textBody,
+        htmlBody,
+        status,
+        attempts,
+        nextAttemptAt,
+        sentAt,
+        lastError,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'email_outbox';
+  @override
+  VerificationContext validateIntegrity(Insertable<EmailOutboxData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('to')) {
+      context.handle(_toMeta, to.isAcceptableOrUnknown(data['to']!, _toMeta));
+    } else if (isInserting) {
+      context.missing(_toMeta);
+    }
+    if (data.containsKey('from')) {
+      context.handle(
+          _fromMeta, from.isAcceptableOrUnknown(data['from']!, _fromMeta));
+    } else if (isInserting) {
+      context.missing(_fromMeta);
+    }
+    if (data.containsKey('subject')) {
+      context.handle(_subjectMeta,
+          subject.isAcceptableOrUnknown(data['subject']!, _subjectMeta));
+    } else if (isInserting) {
+      context.missing(_subjectMeta);
+    }
+    if (data.containsKey('text_body')) {
+      context.handle(_textBodyMeta,
+          textBody.isAcceptableOrUnknown(data['text_body']!, _textBodyMeta));
+    } else if (isInserting) {
+      context.missing(_textBodyMeta);
+    }
+    if (data.containsKey('html_body')) {
+      context.handle(_htmlBodyMeta,
+          htmlBody.isAcceptableOrUnknown(data['html_body']!, _htmlBodyMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(_attemptsMeta,
+          attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
+    }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+          _nextAttemptAtMeta,
+          nextAttemptAt.isAcceptableOrUnknown(
+              data['next_attempt_at']!, _nextAttemptAtMeta));
+    } else if (isInserting) {
+      context.missing(_nextAttemptAtMeta);
+    }
+    if (data.containsKey('sent_at')) {
+      context.handle(_sentAtMeta,
+          sentAt.isAcceptableOrUnknown(data['sent_at']!, _sentAtMeta));
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(_lastErrorMeta,
+          lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EmailOutboxData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EmailOutboxData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      to: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to'])!,
+      from: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}from'])!,
+      subject: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject'])!,
+      textBody: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}text_body'])!,
+      htmlBody: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}html_body']),
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      attempts: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}next_attempt_at'])!,
+      sentAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}sent_at']),
+      lastError: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_error']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $EmailOutboxTable createAlias(String alias) {
+    return $EmailOutboxTable(attachedDatabase, alias);
+  }
+}
+
+class EmailOutboxData extends DataClass implements Insertable<EmailOutboxData> {
+  final String id;
+  final String to;
+  final String from;
+  final String subject;
+  final String textBody;
+  final String? htmlBody;
+  final String status;
+  final int attempts;
+  final DateTime nextAttemptAt;
+  final DateTime? sentAt;
+  final String? lastError;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const EmailOutboxData(
+      {required this.id,
+      required this.to,
+      required this.from,
+      required this.subject,
+      required this.textBody,
+      this.htmlBody,
+      required this.status,
+      required this.attempts,
+      required this.nextAttemptAt,
+      this.sentAt,
+      this.lastError,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['to'] = Variable<String>(to);
+    map['from'] = Variable<String>(from);
+    map['subject'] = Variable<String>(subject);
+    map['text_body'] = Variable<String>(textBody);
+    if (!nullToAbsent || htmlBody != null) {
+      map['html_body'] = Variable<String>(htmlBody);
+    }
+    map['status'] = Variable<String>(status);
+    map['attempts'] = Variable<int>(attempts);
+    map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
+    if (!nullToAbsent || sentAt != null) {
+      map['sent_at'] = Variable<DateTime>(sentAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  EmailOutboxCompanion toCompanion(bool nullToAbsent) {
+    return EmailOutboxCompanion(
+      id: Value(id),
+      to: Value(to),
+      from: Value(from),
+      subject: Value(subject),
+      textBody: Value(textBody),
+      htmlBody: htmlBody == null && nullToAbsent
+          ? const Value.absent()
+          : Value(htmlBody),
+      status: Value(status),
+      attempts: Value(attempts),
+      nextAttemptAt: Value(nextAttemptAt),
+      sentAt:
+          sentAt == null && nullToAbsent ? const Value.absent() : Value(sentAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory EmailOutboxData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EmailOutboxData(
+      id: serializer.fromJson<String>(json['id']),
+      to: serializer.fromJson<String>(json['to']),
+      from: serializer.fromJson<String>(json['from']),
+      subject: serializer.fromJson<String>(json['subject']),
+      textBody: serializer.fromJson<String>(json['textBody']),
+      htmlBody: serializer.fromJson<String?>(json['htmlBody']),
+      status: serializer.fromJson<String>(json['status']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      nextAttemptAt: serializer.fromJson<DateTime>(json['nextAttemptAt']),
+      sentAt: serializer.fromJson<DateTime?>(json['sentAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'to': serializer.toJson<String>(to),
+      'from': serializer.toJson<String>(from),
+      'subject': serializer.toJson<String>(subject),
+      'textBody': serializer.toJson<String>(textBody),
+      'htmlBody': serializer.toJson<String?>(htmlBody),
+      'status': serializer.toJson<String>(status),
+      'attempts': serializer.toJson<int>(attempts),
+      'nextAttemptAt': serializer.toJson<DateTime>(nextAttemptAt),
+      'sentAt': serializer.toJson<DateTime?>(sentAt),
+      'lastError': serializer.toJson<String?>(lastError),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  EmailOutboxData copyWith(
+          {String? id,
+          String? to,
+          String? from,
+          String? subject,
+          String? textBody,
+          Value<String?> htmlBody = const Value.absent(),
+          String? status,
+          int? attempts,
+          DateTime? nextAttemptAt,
+          Value<DateTime?> sentAt = const Value.absent(),
+          Value<String?> lastError = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      EmailOutboxData(
+        id: id ?? this.id,
+        to: to ?? this.to,
+        from: from ?? this.from,
+        subject: subject ?? this.subject,
+        textBody: textBody ?? this.textBody,
+        htmlBody: htmlBody.present ? htmlBody.value : this.htmlBody,
+        status: status ?? this.status,
+        attempts: attempts ?? this.attempts,
+        nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
+        sentAt: sentAt.present ? sentAt.value : this.sentAt,
+        lastError: lastError.present ? lastError.value : this.lastError,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  EmailOutboxData copyWithCompanion(EmailOutboxCompanion data) {
+    return EmailOutboxData(
+      id: data.id.present ? data.id.value : this.id,
+      to: data.to.present ? data.to.value : this.to,
+      from: data.from.present ? data.from.value : this.from,
+      subject: data.subject.present ? data.subject.value : this.subject,
+      textBody: data.textBody.present ? data.textBody.value : this.textBody,
+      htmlBody: data.htmlBody.present ? data.htmlBody.value : this.htmlBody,
+      status: data.status.present ? data.status.value : this.status,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
+      sentAt: data.sentAt.present ? data.sentAt.value : this.sentAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmailOutboxData(')
+          ..write('id: $id, ')
+          ..write('to: $to, ')
+          ..write('from: $from, ')
+          ..write('subject: $subject, ')
+          ..write('textBody: $textBody, ')
+          ..write('htmlBody: $htmlBody, ')
+          ..write('status: $status, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, to, from, subject, textBody, htmlBody,
+      status, attempts, nextAttemptAt, sentAt, lastError, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EmailOutboxData &&
+          other.id == this.id &&
+          other.to == this.to &&
+          other.from == this.from &&
+          other.subject == this.subject &&
+          other.textBody == this.textBody &&
+          other.htmlBody == this.htmlBody &&
+          other.status == this.status &&
+          other.attempts == this.attempts &&
+          other.nextAttemptAt == this.nextAttemptAt &&
+          other.sentAt == this.sentAt &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class EmailOutboxCompanion extends UpdateCompanion<EmailOutboxData> {
+  final Value<String> id;
+  final Value<String> to;
+  final Value<String> from;
+  final Value<String> subject;
+  final Value<String> textBody;
+  final Value<String?> htmlBody;
+  final Value<String> status;
+  final Value<int> attempts;
+  final Value<DateTime> nextAttemptAt;
+  final Value<DateTime?> sentAt;
+  final Value<String?> lastError;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const EmailOutboxCompanion({
+    this.id = const Value.absent(),
+    this.to = const Value.absent(),
+    this.from = const Value.absent(),
+    this.subject = const Value.absent(),
+    this.textBody = const Value.absent(),
+    this.htmlBody = const Value.absent(),
+    this.status = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EmailOutboxCompanion.insert({
+    required String id,
+    required String to,
+    required String from,
+    required String subject,
+    required String textBody,
+    this.htmlBody = const Value.absent(),
+    required String status,
+    this.attempts = const Value.absent(),
+    required DateTime nextAttemptAt,
+    this.sentAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        to = Value(to),
+        from = Value(from),
+        subject = Value(subject),
+        textBody = Value(textBody),
+        status = Value(status),
+        nextAttemptAt = Value(nextAttemptAt),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<EmailOutboxData> custom({
+    Expression<String>? id,
+    Expression<String>? to,
+    Expression<String>? from,
+    Expression<String>? subject,
+    Expression<String>? textBody,
+    Expression<String>? htmlBody,
+    Expression<String>? status,
+    Expression<int>? attempts,
+    Expression<DateTime>? nextAttemptAt,
+    Expression<DateTime>? sentAt,
+    Expression<String>? lastError,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (to != null) 'to': to,
+      if (from != null) 'from': from,
+      if (subject != null) 'subject': subject,
+      if (textBody != null) 'text_body': textBody,
+      if (htmlBody != null) 'html_body': htmlBody,
+      if (status != null) 'status': status,
+      if (attempts != null) 'attempts': attempts,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
+      if (sentAt != null) 'sent_at': sentAt,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EmailOutboxCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? to,
+      Value<String>? from,
+      Value<String>? subject,
+      Value<String>? textBody,
+      Value<String?>? htmlBody,
+      Value<String>? status,
+      Value<int>? attempts,
+      Value<DateTime>? nextAttemptAt,
+      Value<DateTime?>? sentAt,
+      Value<String?>? lastError,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return EmailOutboxCompanion(
+      id: id ?? this.id,
+      to: to ?? this.to,
+      from: from ?? this.from,
+      subject: subject ?? this.subject,
+      textBody: textBody ?? this.textBody,
+      htmlBody: htmlBody ?? this.htmlBody,
+      status: status ?? this.status,
+      attempts: attempts ?? this.attempts,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
+      sentAt: sentAt ?? this.sentAt,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (to.present) {
+      map['to'] = Variable<String>(to.value);
+    }
+    if (from.present) {
+      map['from'] = Variable<String>(from.value);
+    }
+    if (subject.present) {
+      map['subject'] = Variable<String>(subject.value);
+    }
+    if (textBody.present) {
+      map['text_body'] = Variable<String>(textBody.value);
+    }
+    if (htmlBody.present) {
+      map['html_body'] = Variable<String>(htmlBody.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
+    if (sentAt.present) {
+      map['sent_at'] = Variable<DateTime>(sentAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EmailOutboxCompanion(')
+          ..write('id: $id, ')
+          ..write('to: $to, ')
+          ..write('from: $from, ')
+          ..write('subject: $subject, ')
+          ..write('textBody: $textBody, ')
+          ..write('htmlBody: $htmlBody, ')
+          ..write('status: $status, ')
+          ..write('attempts: $attempts, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AuthThrottlesTable extends AuthThrottles
+    with TableInfo<$AuthThrottlesTable, AuthThrottle> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AuthThrottlesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+      'key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _failuresMeta =
+      const VerificationMeta('failures');
+  @override
+  late final GeneratedColumn<int> failures = GeneratedColumn<int>(
+      'failures', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lockedUntilMeta =
+      const VerificationMeta('lockedUntil');
+  @override
+  late final GeneratedColumn<DateTime> lockedUntil = GeneratedColumn<DateTime>(
+      'locked_until', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [key, failures, lockedUntil, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'auth_throttles';
+  @override
+  VerificationContext validateIntegrity(Insertable<AuthThrottle> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('failures')) {
+      context.handle(_failuresMeta,
+          failures.isAcceptableOrUnknown(data['failures']!, _failuresMeta));
+    }
+    if (data.containsKey('locked_until')) {
+      context.handle(
+          _lockedUntilMeta,
+          lockedUntil.isAcceptableOrUnknown(
+              data['locked_until']!, _lockedUntilMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  AuthThrottle map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AuthThrottle(
+      key: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      failures: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}failures'])!,
+      lockedUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}locked_until']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $AuthThrottlesTable createAlias(String alias) {
+    return $AuthThrottlesTable(attachedDatabase, alias);
+  }
+}
+
+class AuthThrottle extends DataClass implements Insertable<AuthThrottle> {
+  final String key;
+  final int failures;
+  final DateTime? lockedUntil;
+  final DateTime updatedAt;
+  const AuthThrottle(
+      {required this.key,
+      required this.failures,
+      this.lockedUntil,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['failures'] = Variable<int>(failures);
+    if (!nullToAbsent || lockedUntil != null) {
+      map['locked_until'] = Variable<DateTime>(lockedUntil);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AuthThrottlesCompanion toCompanion(bool nullToAbsent) {
+    return AuthThrottlesCompanion(
+      key: Value(key),
+      failures: Value(failures),
+      lockedUntil: lockedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lockedUntil),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AuthThrottle.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AuthThrottle(
+      key: serializer.fromJson<String>(json['key']),
+      failures: serializer.fromJson<int>(json['failures']),
+      lockedUntil: serializer.fromJson<DateTime?>(json['lockedUntil']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'failures': serializer.toJson<int>(failures),
+      'lockedUntil': serializer.toJson<DateTime?>(lockedUntil),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AuthThrottle copyWith(
+          {String? key,
+          int? failures,
+          Value<DateTime?> lockedUntil = const Value.absent(),
+          DateTime? updatedAt}) =>
+      AuthThrottle(
+        key: key ?? this.key,
+        failures: failures ?? this.failures,
+        lockedUntil: lockedUntil.present ? lockedUntil.value : this.lockedUntil,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  AuthThrottle copyWithCompanion(AuthThrottlesCompanion data) {
+    return AuthThrottle(
+      key: data.key.present ? data.key.value : this.key,
+      failures: data.failures.present ? data.failures.value : this.failures,
+      lockedUntil:
+          data.lockedUntil.present ? data.lockedUntil.value : this.lockedUntil,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuthThrottle(')
+          ..write('key: $key, ')
+          ..write('failures: $failures, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, failures, lockedUntil, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AuthThrottle &&
+          other.key == this.key &&
+          other.failures == this.failures &&
+          other.lockedUntil == this.lockedUntil &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AuthThrottlesCompanion extends UpdateCompanion<AuthThrottle> {
+  final Value<String> key;
+  final Value<int> failures;
+  final Value<DateTime?> lockedUntil;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AuthThrottlesCompanion({
+    this.key = const Value.absent(),
+    this.failures = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AuthThrottlesCompanion.insert({
+    required String key,
+    this.failures = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : key = Value(key),
+        updatedAt = Value(updatedAt);
+  static Insertable<AuthThrottle> custom({
+    Expression<String>? key,
+    Expression<int>? failures,
+    Expression<DateTime>? lockedUntil,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (failures != null) 'failures': failures,
+      if (lockedUntil != null) 'locked_until': lockedUntil,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AuthThrottlesCompanion copyWith(
+      {Value<String>? key,
+      Value<int>? failures,
+      Value<DateTime?>? lockedUntil,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return AuthThrottlesCompanion(
+      key: key ?? this.key,
+      failures: failures ?? this.failures,
+      lockedUntil: lockedUntil ?? this.lockedUntil,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (failures.present) {
+      map['failures'] = Variable<int>(failures.value);
+    }
+    if (lockedUntil.present) {
+      map['locked_until'] = Variable<DateTime>(lockedUntil.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AuthThrottlesCompanion(')
+          ..write('key: $key, ')
+          ..write('failures: $failures, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4125,6 +5019,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PasswordResetTokensTable(this);
   late final $EmailVerificationTokensTable emailVerificationTokens =
       $EmailVerificationTokensTable(this);
+  late final $EmailOutboxTable emailOutbox = $EmailOutboxTable(this);
+  late final $AuthThrottlesTable authThrottles = $AuthThrottlesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4140,7 +5036,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         invites,
         auditLogs,
         passwordResetTokens,
-        emailVerificationTokens
+        emailVerificationTokens,
+        emailOutbox,
+        authThrottles
       ];
 }
 
@@ -6265,6 +7163,458 @@ typedef $$EmailVerificationTokensTableProcessedTableManager
         ),
         EmailVerificationToken,
         PrefetchHooks Function()>;
+typedef $$EmailOutboxTableCreateCompanionBuilder = EmailOutboxCompanion
+    Function({
+  required String id,
+  required String to,
+  required String from,
+  required String subject,
+  required String textBody,
+  Value<String?> htmlBody,
+  required String status,
+  Value<int> attempts,
+  required DateTime nextAttemptAt,
+  Value<DateTime?> sentAt,
+  Value<String?> lastError,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$EmailOutboxTableUpdateCompanionBuilder = EmailOutboxCompanion
+    Function({
+  Value<String> id,
+  Value<String> to,
+  Value<String> from,
+  Value<String> subject,
+  Value<String> textBody,
+  Value<String?> htmlBody,
+  Value<String> status,
+  Value<int> attempts,
+  Value<DateTime> nextAttemptAt,
+  Value<DateTime?> sentAt,
+  Value<String?> lastError,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$EmailOutboxTableFilterComposer
+    extends Composer<_$AppDatabase, $EmailOutboxTable> {
+  $$EmailOutboxTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get to => $composableBuilder(
+      column: $table.to, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get from => $composableBuilder(
+      column: $table.from, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subject => $composableBuilder(
+      column: $table.subject, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get textBody => $composableBuilder(
+      column: $table.textBody, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get htmlBody => $composableBuilder(
+      column: $table.htmlBody, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+      column: $table.nextAttemptAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get sentAt => $composableBuilder(
+      column: $table.sentAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+      column: $table.lastError, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$EmailOutboxTableOrderingComposer
+    extends Composer<_$AppDatabase, $EmailOutboxTable> {
+  $$EmailOutboxTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get to => $composableBuilder(
+      column: $table.to, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get from => $composableBuilder(
+      column: $table.from, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subject => $composableBuilder(
+      column: $table.subject, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get textBody => $composableBuilder(
+      column: $table.textBody, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get htmlBody => $composableBuilder(
+      column: $table.htmlBody, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+      column: $table.nextAttemptAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get sentAt => $composableBuilder(
+      column: $table.sentAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+      column: $table.lastError, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$EmailOutboxTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EmailOutboxTable> {
+  $$EmailOutboxTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get to =>
+      $composableBuilder(column: $table.to, builder: (column) => column);
+
+  GeneratedColumn<String> get from =>
+      $composableBuilder(column: $table.from, builder: (column) => column);
+
+  GeneratedColumn<String> get subject =>
+      $composableBuilder(column: $table.subject, builder: (column) => column);
+
+  GeneratedColumn<String> get textBody =>
+      $composableBuilder(column: $table.textBody, builder: (column) => column);
+
+  GeneratedColumn<String> get htmlBody =>
+      $composableBuilder(column: $table.htmlBody, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+      column: $table.nextAttemptAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get sentAt =>
+      $composableBuilder(column: $table.sentAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$EmailOutboxTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $EmailOutboxTable,
+    EmailOutboxData,
+    $$EmailOutboxTableFilterComposer,
+    $$EmailOutboxTableOrderingComposer,
+    $$EmailOutboxTableAnnotationComposer,
+    $$EmailOutboxTableCreateCompanionBuilder,
+    $$EmailOutboxTableUpdateCompanionBuilder,
+    (
+      EmailOutboxData,
+      BaseReferences<_$AppDatabase, $EmailOutboxTable, EmailOutboxData>
+    ),
+    EmailOutboxData,
+    PrefetchHooks Function()> {
+  $$EmailOutboxTableTableManager(_$AppDatabase db, $EmailOutboxTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EmailOutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EmailOutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EmailOutboxTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> to = const Value.absent(),
+            Value<String> from = const Value.absent(),
+            Value<String> subject = const Value.absent(),
+            Value<String> textBody = const Value.absent(),
+            Value<String?> htmlBody = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> attempts = const Value.absent(),
+            Value<DateTime> nextAttemptAt = const Value.absent(),
+            Value<DateTime?> sentAt = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              EmailOutboxCompanion(
+            id: id,
+            to: to,
+            from: from,
+            subject: subject,
+            textBody: textBody,
+            htmlBody: htmlBody,
+            status: status,
+            attempts: attempts,
+            nextAttemptAt: nextAttemptAt,
+            sentAt: sentAt,
+            lastError: lastError,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String to,
+            required String from,
+            required String subject,
+            required String textBody,
+            Value<String?> htmlBody = const Value.absent(),
+            required String status,
+            Value<int> attempts = const Value.absent(),
+            required DateTime nextAttemptAt,
+            Value<DateTime?> sentAt = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              EmailOutboxCompanion.insert(
+            id: id,
+            to: to,
+            from: from,
+            subject: subject,
+            textBody: textBody,
+            htmlBody: htmlBody,
+            status: status,
+            attempts: attempts,
+            nextAttemptAt: nextAttemptAt,
+            sentAt: sentAt,
+            lastError: lastError,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$EmailOutboxTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $EmailOutboxTable,
+    EmailOutboxData,
+    $$EmailOutboxTableFilterComposer,
+    $$EmailOutboxTableOrderingComposer,
+    $$EmailOutboxTableAnnotationComposer,
+    $$EmailOutboxTableCreateCompanionBuilder,
+    $$EmailOutboxTableUpdateCompanionBuilder,
+    (
+      EmailOutboxData,
+      BaseReferences<_$AppDatabase, $EmailOutboxTable, EmailOutboxData>
+    ),
+    EmailOutboxData,
+    PrefetchHooks Function()>;
+typedef $$AuthThrottlesTableCreateCompanionBuilder = AuthThrottlesCompanion
+    Function({
+  required String key,
+  Value<int> failures,
+  Value<DateTime?> lockedUntil,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$AuthThrottlesTableUpdateCompanionBuilder = AuthThrottlesCompanion
+    Function({
+  Value<String> key,
+  Value<int> failures,
+  Value<DateTime?> lockedUntil,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$AuthThrottlesTableFilterComposer
+    extends Composer<_$AppDatabase, $AuthThrottlesTable> {
+  $$AuthThrottlesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get failures => $composableBuilder(
+      column: $table.failures, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$AuthThrottlesTableOrderingComposer
+    extends Composer<_$AppDatabase, $AuthThrottlesTable> {
+  $$AuthThrottlesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get failures => $composableBuilder(
+      column: $table.failures, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AuthThrottlesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AuthThrottlesTable> {
+  $$AuthThrottlesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<int> get failures =>
+      $composableBuilder(column: $table.failures, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AuthThrottlesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AuthThrottlesTable,
+    AuthThrottle,
+    $$AuthThrottlesTableFilterComposer,
+    $$AuthThrottlesTableOrderingComposer,
+    $$AuthThrottlesTableAnnotationComposer,
+    $$AuthThrottlesTableCreateCompanionBuilder,
+    $$AuthThrottlesTableUpdateCompanionBuilder,
+    (
+      AuthThrottle,
+      BaseReferences<_$AppDatabase, $AuthThrottlesTable, AuthThrottle>
+    ),
+    AuthThrottle,
+    PrefetchHooks Function()> {
+  $$AuthThrottlesTableTableManager(_$AppDatabase db, $AuthThrottlesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AuthThrottlesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AuthThrottlesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AuthThrottlesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<int> failures = const Value.absent(),
+            Value<DateTime?> lockedUntil = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AuthThrottlesCompanion(
+            key: key,
+            failures: failures,
+            lockedUntil: lockedUntil,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String key,
+            Value<int> failures = const Value.absent(),
+            Value<DateTime?> lockedUntil = const Value.absent(),
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AuthThrottlesCompanion.insert(
+            key: key,
+            failures: failures,
+            lockedUntil: lockedUntil,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AuthThrottlesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AuthThrottlesTable,
+    AuthThrottle,
+    $$AuthThrottlesTableFilterComposer,
+    $$AuthThrottlesTableOrderingComposer,
+    $$AuthThrottlesTableAnnotationComposer,
+    $$AuthThrottlesTableCreateCompanionBuilder,
+    $$AuthThrottlesTableUpdateCompanionBuilder,
+    (
+      AuthThrottle,
+      BaseReferences<_$AppDatabase, $AuthThrottlesTable, AuthThrottle>
+    ),
+    AuthThrottle,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6292,4 +7642,8 @@ class $AppDatabaseManager {
   $$EmailVerificationTokensTableTableManager get emailVerificationTokens =>
       $$EmailVerificationTokensTableTableManager(
           _db, _db.emailVerificationTokens);
+  $$EmailOutboxTableTableManager get emailOutbox =>
+      $$EmailOutboxTableTableManager(_db, _db.emailOutbox);
+  $$AuthThrottlesTableTableManager get authThrottles =>
+      $$AuthThrottlesTableTableManager(_db, _db.authThrottles);
 }

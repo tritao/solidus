@@ -41,6 +41,26 @@ If you didn’t request this, you can ignore this email.
     return (subject: subject, text: text, html: html);
   }
 
+  static ({String subject, String text, String html}) invite({
+    required String appName,
+    required String tenantSlug,
+    required String acceptUrl,
+    required Duration expiresIn,
+  }) {
+    final subject = 'You have been invited to $appName';
+    final text = '''
+You have been invited to join $appName (tenant: $tenantSlug).
+
+Accept invite (expires in ${_formatDuration(expiresIn)}):
+$acceptUrl
+''';
+    final html = '''
+<p>You have been invited to join <strong>${_escape(appName)}</strong> (tenant: <code>${_escape(tenantSlug)}</code>).</p>
+<p><a href="${_escape(acceptUrl)}">Accept invite</a> (expires in ${_escape(_formatDuration(expiresIn))}).</p>
+''';
+    return (subject: subject, text: text, html: html);
+  }
+
   static String _formatDuration(Duration d) {
     if (d.inHours >= 24) return '${d.inDays} day(s)';
     if (d.inMinutes >= 60) return '${d.inHours} hour(s)';

@@ -35,6 +35,13 @@ class SolidusBackendConfig {
     required this.emailDeliveryMode,
     required this.resendApiKey,
     required this.resendEndpoint,
+    required this.emailOutboxPollInterval,
+    required this.emailMaxAttempts,
+    required this.passwordMinLength,
+    required this.authBackoffBase,
+    required this.authBackoffMax,
+    required this.urlTokenPlacement,
+    required this.frontendInvitePath,
   });
 
   final String host;
@@ -78,6 +85,16 @@ class SolidusBackendConfig {
   final String emailDeliveryMode; // async|sync
   final String? resendApiKey;
   final String resendEndpoint;
+
+  final Duration emailOutboxPollInterval;
+  final int emailMaxAttempts;
+
+  final int passwordMinLength;
+  final Duration authBackoffBase;
+  final Duration authBackoffMax;
+
+  final String urlTokenPlacement; // query|fragment
+  final String frontendInvitePath; // /accept-invite
 
   static SolidusBackendConfig fromEnv({Map<String, String>? env}) {
     final e = env ?? Platform.environment;
@@ -152,6 +169,22 @@ class SolidusBackendConfig {
     final resendEndpoint =
         (e['SOLIDUS_RESEND_ENDPOINT'] ?? 'https://api.resend.com/emails').trim();
 
+    final emailOutboxPollMs =
+        int.tryParse((e['SOLIDUS_EMAIL_OUTBOX_POLL_MS'] ?? '').trim()) ?? 500;
+    final emailMaxAttempts =
+        int.tryParse((e['SOLIDUS_EMAIL_MAX_ATTEMPTS'] ?? '').trim()) ?? 5;
+
+    final passwordMinLength =
+        int.tryParse((e['SOLIDUS_PASSWORD_MIN_LENGTH'] ?? '').trim()) ?? 12;
+    final authBackoffBaseSeconds =
+        int.tryParse((e['SOLIDUS_AUTH_BACKOFF_BASE_SECONDS'] ?? '').trim()) ?? 2;
+    final authBackoffMaxSeconds =
+        int.tryParse((e['SOLIDUS_AUTH_BACKOFF_MAX_SECONDS'] ?? '').trim()) ?? 300;
+
+    final urlTokenPlacement = (e['SOLIDUS_URL_TOKEN_PLACEMENT'] ?? 'query').trim();
+    final frontendInvitePath =
+        (e['SOLIDUS_FRONTEND_INVITE_PATH'] ?? '/accept-invite').trim();
+
     return SolidusBackendConfig(
       host: host,
       port: port,
@@ -186,6 +219,13 @@ class SolidusBackendConfig {
       emailDeliveryMode: emailDeliveryMode.isEmpty ? 'async' : emailDeliveryMode,
       resendApiKey: resendApiKey.isEmpty ? null : resendApiKey,
       resendEndpoint: resendEndpoint.isEmpty ? 'https://api.resend.com/emails' : resendEndpoint,
+      emailOutboxPollInterval: Duration(milliseconds: emailOutboxPollMs),
+      emailMaxAttempts: emailMaxAttempts,
+      passwordMinLength: passwordMinLength,
+      authBackoffBase: Duration(seconds: authBackoffBaseSeconds),
+      authBackoffMax: Duration(seconds: authBackoffMaxSeconds),
+      urlTokenPlacement: urlTokenPlacement.isEmpty ? 'query' : urlTokenPlacement,
+      frontendInvitePath: frontendInvitePath.isEmpty ? '/accept-invite' : frontendInvitePath,
     );
   }
 }

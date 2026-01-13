@@ -36,6 +36,7 @@ export SOLIDUS_DEFAULT_TENANT_NAME="${SOLIDUS_DEFAULT_TENANT_NAME:-Default}"
 export SOLIDUS_DEFAULT_SIGNUP_MODE="${SOLIDUS_DEFAULT_SIGNUP_MODE:-invite_only}"
 export SOLIDUS_EXPOSE_INVITE_TOKENS="${SOLIDUS_EXPOSE_INVITE_TOKENS:-1}"
 export SOLIDUS_EXPOSE_DEV_TOKENS="${SOLIDUS_EXPOSE_DEV_TOKENS:-1}"
+export SOLIDUS_PASSWORD_MIN_LENGTH="${SOLIDUS_PASSWORD_MIN_LENGTH:-12}"
 
 mkdir -p "$(dirname "$SOLIDUS_BACKEND_DB")"
 rm -f "$SOLIDUS_BACKEND_DB" "$SOLIDUS_BACKEND_DB-wal" "$SOLIDUS_BACKEND_DB-shm"
@@ -87,12 +88,12 @@ print(cur)
 echo "[smoke] bootstrap first user"
 curl -fsS -X POST "$BASE/bootstrap" \
   -H 'content-type: application/json' \
-  -d '{"email":"owner@example.com","password":"passw0rd!"}' >/dev/null
+  -d '{"email":"owner@example.com","password":"passw0rd!pass"}' >/dev/null
 
 echo "[smoke] login (expect mfaRequired=false)"
 LOGIN_JSON="$(curl -fsS -c "$JAR1" -X POST "$BASE/login" \
   -H 'content-type: application/json' \
-  -d '{"email":"owner@example.com","password":"passw0rd!"}')"
+  -d '{"email":"owner@example.com","password":"passw0rd!pass"}')"
 CSRF1="$(printf '%s' "$LOGIN_JSON" | json_get csrfToken)"
 
 curl -fsS -b "$JAR1" "$BASE/me" >/dev/null
@@ -129,7 +130,7 @@ INVITE_TOKEN="$(printf '%s' "$INVITE_JSON" | json_get token)"
 echo "[smoke] accept invite"
 ACCEPT_JSON="$(curl -fsS -c "$JAR2" -X POST "$BASE/t/acme/invites/accept" \
   -H 'content-type: application/json' \
-  -d "{\"token\":\"$INVITE_TOKEN\",\"password\":\"passw0rd!\"}")"
+  -d "{\"token\":\"$INVITE_TOKEN\",\"password\":\"passw0rd!pass\"}")"
 CSRF2="$(printf '%s' "$ACCEPT_JSON" | json_get csrfToken)"
 
 curl -fsS -b "$JAR2" "$BASE/t/acme/me" >/dev/null
@@ -166,7 +167,7 @@ echo "[smoke] logout + login (expect mfaRequired=true)"
 curl -fsS -b "$JAR1" -X POST "$BASE/logout" -H "x-csrf-token: $CSRF1" >/dev/null || true
 LOGIN2_JSON="$(curl -fsS -c "$JAR1" -X POST "$BASE/login" \
   -H 'content-type: application/json' \
-  -d '{"email":"owner@example.com","password":"passw0rd!"}')"
+  -d '{"email":"owner@example.com","password":"passw0rd!pass"}')"
 CSRF1="$(printf '%s' "$LOGIN2_JSON" | json_get csrfToken)"
 CODE2="$("$DART" run "$ROOT/tool/gen_totp.dart" "$SECRET_B32")"
 VERIFY_JSON="$(curl -fsS -b "$JAR1" -c "$JAR1" -X POST "$BASE/mfa/verify" \
@@ -187,6 +188,6 @@ FORGOT_JSON="$(curl -fsS -X POST "$BASE/password/forgot" \
 RESET_TOKEN="$(printf '%s' "$FORGOT_JSON" | json_get token)"
 curl -fsS -X POST "$BASE/password/reset" \
   -H 'content-type: application/json' \
-  -d "{\"token\":\"$RESET_TOKEN\",\"password\":\"newpassw0rd!\"}" >/dev/null
+  -d "{\"token\":\"$RESET_TOKEN\",\"password\":\"newpassw0rd!pass\"}" >/dev/null
 
 echo "[smoke] OK"

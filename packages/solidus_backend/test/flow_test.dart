@@ -107,6 +107,13 @@ void main() {
       emailDeliveryMode: 'async',
       resendApiKey: null,
       resendEndpoint: 'https://api.resend.com/emails',
+      emailOutboxPollInterval: const Duration(milliseconds: 10),
+      emailMaxAttempts: 2,
+      passwordMinLength: 12,
+      authBackoffBase: const Duration(milliseconds: 10),
+      authBackoffMax: const Duration(milliseconds: 50),
+      urlTokenPlacement: 'query',
+      frontendInvitePath: '/accept-invite',
     );
 
     final server = await SolidusBackendServer.start(config);
@@ -118,14 +125,14 @@ void main() {
     // bootstrap
     final boot = await client.postJson('/bootstrap', {
       'email': 'owner@example.com',
-      'password': 'passw0rd!',
+      'password': 'passw0rd!pass',
     });
     expect(boot.status, 201);
 
     // login
     final login = await client.postJson('/login', {
       'email': 'owner@example.com',
-      'password': 'passw0rd!',
+      'password': 'passw0rd!pass',
     });
     expect(login.status, 200);
     final loginJson = jsonDecode(login.body) as Map<String, Object?>;
@@ -170,7 +177,7 @@ void main() {
     addTearDown(invited.close);
     final accept = await invited.postJson('/t/acme/invites/accept', {
       'token': inviteToken,
-      'password': 'passw0rd!',
+      'password': 'passw0rd!pass',
     });
     expect(accept.status, 200);
     final acceptJson = jsonDecode(accept.body) as Map<String, Object?>;
@@ -246,7 +253,7 @@ void main() {
 
     final login2 = await client.postJson('/login', {
       'email': 'owner@example.com',
-      'password': 'passw0rd!',
+      'password': 'passw0rd!pass',
     });
     expect(login2.status, 200);
     final login2Json = jsonDecode(login2.body) as Map<String, Object?>;
@@ -272,7 +279,7 @@ void main() {
 
     final reset = await client.postJson('/password/reset', {
       'token': resetToken,
-      'password': 'newpassw0rd!',
+      'password': 'newpassw0rd!pass',
     });
     expect(reset.status, 200);
 
@@ -283,7 +290,7 @@ void main() {
     // Login with new password works.
     final loginAfterReset = await client.postJson('/login', {
       'email': 'owner@example.com',
-      'password': 'newpassw0rd!',
+      'password': 'newpassw0rd!pass',
     });
     expect(loginAfterReset.status, 200);
 

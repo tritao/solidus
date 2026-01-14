@@ -3,6 +3,7 @@ import 'package:web/web.dart' as web;
 import './app/app_component.dart';
 import './app/counter_component.dart';
 import './app/backend_playground_component.dart';
+import './app/admin/admin_app_component.dart';
 import './app/intro_component.dart';
 import './app/todos_component.dart';
 import './app/users_component.dart';
@@ -21,6 +22,7 @@ void main() {
   final lab = params["lab"];
   final demos = params["demos"];
   final backend = params["backend"];
+  final admin = params["admin"];
 
   // Split bundles: redirect to dedicated entrypoints for docs/labs.
   if (docs != null) {
@@ -43,6 +45,11 @@ void main() {
 
   if (backend == "1" || backend == "true") {
     BackendPlaygroundComponent().mountInto(mount);
+    return;
+  }
+
+  if (admin != null) {
+    AdminAppComponent().mountInto(mount);
     return;
   }
 

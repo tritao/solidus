@@ -6,7 +6,8 @@ import "package:solidus/dom_ui/dom.dart" as dom;
 final class IntroComponent extends Component {
   @override
   web.Element render() {
-    return dom.div(id: "intro-root", className: "container containerWide", children: [
+    return dom
+        .div(id: "intro-root", className: "container containerWide", children: [
       dom.div(className: "header introHeader", children: [
         dom.div(className: "introTitleRow", children: [
           web.HTMLImageElement()
@@ -23,13 +24,15 @@ final class IntroComponent extends Component {
           dom.linkButton("Docs", href: "docs.html#/"),
           dom.linkButton("Labs", href: "labs.html?lab=catalog"),
           dom.linkButton("Demos", href: "?demos=1", kind: "primary"),
+          dom.linkButton("Admin", href: "?admin=1"),
           dom.linkButton("Backend", href: "?backend=1"),
         ]),
       ]),
       dom.spacer(),
       dom.section(
         title: "What’s here",
-        subtitle: "Docs are copy-paste examples; Labs are conformance/edge-cases; Demos are the original playground apps.",
+        subtitle:
+            "Docs are copy-paste examples; Labs are conformance/edge-cases; Demos are the original playground apps.",
         children: [
           dom.spacer(),
           dom.list(children: [

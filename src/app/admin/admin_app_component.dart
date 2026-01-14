@@ -172,7 +172,8 @@ final class AdminShellComponent extends Component {
     final tenants = _ctrl.tenants;
 
     web.Element tenantSelect() {
-      final select = web.HTMLSelectElement()..className = 'input';
+      final select = web.HTMLSelectElement()
+        ..className = 'input inputSm adminTenantSelect';
       select.id = 'admin-tenant-select';
 
       final placeholder = web.HTMLOptionElement()

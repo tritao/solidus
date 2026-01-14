@@ -19,6 +19,17 @@
     justify-content: flex-start;
   }
 
+  .adminTenantSelect {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .input.inputSm {
+    min-width: 0;
+    height: 36px;
+    padding: 8px 10px;
+  }
+
   .codeBlock {
     margin: 0;
     padding: 12px;

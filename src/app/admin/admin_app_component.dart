@@ -139,9 +139,10 @@ final class AdminAppComponent extends Component {
           ],
         ),
         dom.spacer(),
-        dom.mountPoint(_mountShell),
-        dom.spacer(),
-        dom.mountPoint(_mountPage),
+        dom.div(className: 'adminLayout', children: [
+          dom.mountPoint(_mountShell),
+          dom.mountPoint(_mountPage),
+        ]),
       ],
     );
   }
@@ -189,53 +190,65 @@ final class AdminShellComponent extends Component {
       return select;
     }
 
-    web.Element tab(String label, String p) {
+    web.Element navButton(String label, String p) {
       final active = page == p;
       return dom.button(
         label,
-        kind: active ? 'primary' : 'secondary',
+        kind: active ? 'secondary adminNavButton' : 'ghost adminNavButton',
         disabled: !(_ctrl.isAuthenticated),
         action: 'admin-nav-$p',
       );
     }
 
-    return dom.section(
-      title: 'Navigation',
-      subtitle: me == null ? 'Not logged in.' : 'Logged in as ${me.email}',
-      children: [
-        dom.spacer(),
-        dom.row(children: [
-          tab('Tenants', 'tenants'),
-          tab('Members', 'members'),
-          tab('Invites', 'invites'),
-          tab('Outbox', 'outbox'),
-          dom.secondaryButton(
-            'Refresh /me',
-            action: AdminActions.refreshMe,
-            disabled: _ctrl.isDisabledFor(AdminActions.refreshMe),
-          ),
-          dom.secondaryButton(
-            'Logout',
-            action: AdminActions.logout,
-            disabled: _ctrl.isDisabledFor(AdminActions.logout),
-          ),
-        ]),
-        dom.spacer(),
-        dom.row(children: [
-          tenantSelect(),
-          dom.secondaryButton(
-            'Reload tenants',
-            action: AdminActions.listTenants,
-            disabled: _ctrl.isDisabledFor(AdminActions.listTenants),
-          ),
-        ]),
-        dom.spacer(),
-        dom.statusText(
-          text: _ctrl.status,
-          isError: _ctrl.status.toLowerCase().contains('error'),
+    return dom.div(className: 'card adminSidebar', children: [
+      dom.h2('Navigation'),
+      dom.p(
+        me == null ? 'Not logged in.' : 'Logged in as ${me.email}',
+        className: 'muted',
+      ),
+      dom.spacer(),
+      dom.stack(children: [
+        if (_ctrl.isAuthenticated) ...[
+          navButton('Tenants', 'tenants'),
+          navButton('Members', 'members'),
+          navButton('Invites', 'invites'),
+          navButton('Outbox', 'outbox'),
+        ] else ...[
+          navButton('Login', 'login'),
+        ],
+      ]),
+      dom.spacer(),
+      dom.p('Tenant', className: 'muted'),
+      dom.spacer(),
+      dom.stack(children: [
+        tenantSelect(),
+        dom.secondaryButton(
+          'Reload tenants',
+          action: AdminActions.listTenants,
+          disabled: _ctrl.isDisabledFor(AdminActions.listTenants),
         ),
-      ],
-    );
+      ]),
+      dom.spacer(),
+      dom.p('Session', className: 'muted'),
+      dom.spacer(),
+      dom.stack(children: [
+        dom.secondaryButton(
+          'Refresh /me',
+          action: AdminActions.refreshMe,
+          disabled: _ctrl.isDisabledFor(AdminActions.refreshMe),
+        ),
+        dom.secondaryButton(
+          'Logout',
+          action: AdminActions.logout,
+          disabled: _ctrl.isDisabledFor(AdminActions.logout),
+        ),
+      ]),
+      dom.spacer(),
+      dom.statusText(
+        text: _ctrl.status,
+        isError: _ctrl.status.toLowerCase().contains('error'),
+      ),
+    ]);
   }
 
   void _onClick(web.MouseEvent event) {

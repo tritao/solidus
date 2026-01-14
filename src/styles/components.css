@@ -1,6 +1,24 @@
 @layer components {
   /* Intentionally kept minimal: layout/util helpers only. */
 
+  .adminLayout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .adminSidebar {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+
+  .adminNavButton {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .codeBlock {
     margin: 0;
     padding: 12px;
@@ -13,5 +31,15 @@
       monospace;
     white-space: pre-wrap;
     word-break: break-word;
+  }
+
+  @media (max-width: 920px) {
+    .adminLayout {
+      grid-template-columns: 1fr;
+    }
+
+    .adminSidebar {
+      position: static;
+    }
   }
 }
